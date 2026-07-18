@@ -1,0 +1,49 @@
+name: Prisma migration SQL diff
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  migration-diff:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma generate
+
+      - name: Produce SQL migration diff
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "Generating SQL migration diff..."
+          # Generate SQL diff between current database and Prisma schema. If the DB is unreachable this step may fail.
+          npx prisma migrate diff --from-schema-datamodel=./prisma/schema.prisma --to-url="$DATABASE_URL" --script > migration-diff.sql || true
+          if [ -s migration-diff.sql ]; then
+            echo "Migration diff generated (migration-diff.sql)"
+          else
+            echo "No SQL diff generated or file is empty. See logs for details."
+          fi
+
+      - name: Upload migration diff artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: prisma-migration-diff
+          path: migration-diff.sql

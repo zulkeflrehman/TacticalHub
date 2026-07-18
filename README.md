@@ -311,3 +311,12 @@ Notes on migrations in CI:
 - If your DB is private (e.g., private Cloud SQL), use a runner inside your GCP project or Cloud Build so the migration job can reach the DB.
 - Consider adding a manual approval step or workflow gating for prod migrations (already implemented via GitHub Environments).
 
+### Automatic migration SQL diff (PR / push preview)
+
+A dedicated workflow `prisma-migration-diff.yml` runs on pull requests and pushes to `main` and produces a SQL diff artifact named `prisma-migration-diff`. This lets reviewers inspect the exact SQL that would be applied to the target database before approving migrations:
+
+- The workflow runs `npx prisma migrate diff --from-schema-datamodel=./prisma/schema.prisma --to-url="$DATABASE_URL" --script` and uploads the resulting `migration-diff.sql` file as an artifact.
+- Reviewers can download the artifact from the workflow run and inspect the SQL statements.
+
+Important: The diff workflow requires the `DATABASE_URL` secret to point at a reachable database. For private DBs, run this workflow from a self-hosted runner or use a staging DB reachable from GitHub Actions.
+
