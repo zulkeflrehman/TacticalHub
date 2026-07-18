@@ -1,0 +1,47 @@
+name: Manual migrate (dispatch)
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  manual-migrate:
+    name: Manual Prisma migrate (dispatch + approval)
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma generate
+
+      - name: Show pending migrations and upload plan
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          npx prisma migrate status --schema=prisma/schema.prisma > migration-plan.txt || true
+
+      - name: Upload migration plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: manual-migration-plan
+          path: migration-plan.txt
+
+      - name: Run Prisma migrations (deploy)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma migrate deploy

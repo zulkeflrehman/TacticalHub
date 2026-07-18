@@ -269,15 +269,45 @@ Which of (2) or (3) would you like me to add now (or none)?
 
 ### About protected deployments and manual approval
 
-The GitHub Actions Cloud Run workflow has been split into two jobs: `migrate` and `build-and-deploy`. The `migrate` job is configured to run in the GitHub Environment named `production` which can be configured in your repository settings to require manual approval and specific reviewers.
+The GitHub Actions Cloud Run workflow has been split into three jobs: `migration-preview`, `migrate` and `build-and-deploy`.
+
+- `migration-preview` runs automatically on push and produces a migration plan artifact (`migration-plan`) that reviewers can inspect.
+- `migrate` is the protected job that requires a GitHub Environment approval (create an environment named `production`) and runs the actual `prisma migrate deploy`.
+- `build-and-deploy` depends on `migrate` and will only proceed after migrations complete.
 
 To enable manual approval:
 1. Go to your repository -> Settings -> Environments -> New environment, name it exactly `production`.
 2. Under the environment, add required reviewers (users or teams) and set any protection rules you want.
 3. When the workflow reaches the `migrate` job, it will pause and request approval from the configured reviewers.
 
-This provides an extra safety gate so migrations to production run only after an explicit human check.
+Reviewers can inspect the migration plan artifact produced by the automatic `migration-preview` job (download it from the workflow run page) before approving the protected `migrate` job.
 
 Notes:
+- The `migration-preview` job prints `prisma migrate status` to an artifact so reviewers can see pending changes without running migrations.
 - The `migrate` job still requires the database to be reachable from the GitHub Actions runner; if your DB is private, consider running migrations from a runner inside your cloud network instead.
 - You can change the environment name in `.github/workflows/deploy-cloud-run.yml` if you prefer a different name (e.g., `staging`, `prod-migrations`) but the environment must exist in repo settings for approvals to work.
+
+
+### Manual migrate dispatch
+
+A dedicated workflow `manual-migrate.yml` allows authorized users to trigger migrations manually from the Actions tab (workflow_dispatch). This job is also environment-protected and uploads a `manual-migration-plan` artifact for review prior to applying the migrations.
+
+
+### Helper: create GCP service account
+
+A helper script is included to create a service account and grant typical roles required for deployments. Use it from Cloud Shell or a machine with the Google Cloud SDK installed:
+
+```bash
+# Create SA and download key
+./scripts/create-gcp-service-account.sh <GCP_PROJECT_ID> tecticalhub-deployer
+
+# Add the downloaded JSON as a GitHub repository secret named: GCP_SA_KEY
+# Remove the downloaded file after uploading the secret for safety
+rm tecticalhub-deployer-key.json
+```
+
+Notes on migrations in CI:
+- Ensure DATABASE_URL points to the correct environment (staging vs production).
+- If your DB is private (e.g., private Cloud SQL), use a runner inside your GCP project or Cloud Build so the migration job can reach the DB.
+- Consider adding a manual approval step or workflow gating for prod migrations (already implemented via GitHub Environments).
+
