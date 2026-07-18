@@ -1,0 +1,53 @@
+name: Build and deploy to Google Cloud Run
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ secrets.GCP_PROJECT }}
+
+      - name: Configure Docker to use gcloud auth
+        run: gcloud auth configure-docker --quiet
+
+      - name: Build and push image to GCR
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            gcr.io/${{ secrets.GCP_PROJECT }}/tecticalhub:latest
+            gcr.io/${{ secrets.GCP_PROJECT }}/tecticalhub:${{ github.sha }}
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v1
+        with:
+          service: tecticalhub
+          image: gcr.io/${{ secrets.GCP_PROJECT }}/tecticalhub:${{ github.sha }}
+          region: ${{ secrets.GCP_REGION }}
+          project_id: ${{ secrets.GCP_PROJECT }}
+          env_vars: |
+            NODE_ENV=production
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
+          allow_unauthenticated: true

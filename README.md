@@ -228,7 +228,35 @@ Notes:
 - Update JWT_SECRET and DATABASE_URL with strong values in production.
 
 If you want, the next steps are:
-- (A) Add managed secrets for Vercel and CI
-- (B) Create a small GitHub Actions workflow to build and push a Docker image to a registry and deploy via docker compose on a server
+- (A) Add managed secrets for Vercel, GCP and CI (required for automated deploys)
+- (B) Create a small GitHub Actions workflow to build & push a Docker image to a registry and deploy to Google Cloud Run (recommended for SSR + Firebase) — this repository already includes GHCR publish and a Cloud Run deploy workflow
+- (C) Use Vercel for production Next.js SSR — this repo contains an example Vercel deploy workflow that triggers on push to main
 
-Tell me which (A), (B), or both to implement next and any target registry or server you prefer.
+Repository secrets required for the automated workflows in .github/workflows:
+
+For Cloud Run workflow (deploy-cloud-run.yml):
+- GCP_SA_KEY — JSON service account key for a GCP service account with roles: roles/run.admin, roles/storage.admin (if pushing to GCR), roles/iam.serviceAccountUser, roles/run.developer (store as GitHub secret)
+- GCP_PROJECT — GCP project id
+- GCP_REGION — Cloud Run region (e.g., asia-south1)
+- JWT_SECRET — (production secret)
+- DATABASE_URL — (Postgres DB URL if using DB)
+- NEXT_PUBLIC_APP_URL — production URL
+
+For Vercel workflow (deploy-vercel.yml):
+- VERCEL_TOKEN — a personal token (or project token) from Vercel
+- VERCEL_ORG_ID — organization id (found in Vercel project settings)
+- VERCEL_PROJECT_ID — project id (found in Vercel project settings)
+
+Notes on setup:
+- Create a GCP service account and grant the minimum roles required. Download the JSON key and add it to the repository secrets as GCP_SA_KEY.
+- For Vercel, add the listed Vercel values to GitHub repository secrets.
+
+Once secrets are added:
+- Pushing to the main branch will: build the app, push Docker image(s) and run the Cloud Run deploy workflow and also trigger a Vercel deploy (both workflows run on push to main).
+
+If you'd like, I can:
+- (1) Add the GitHub Actions workflows (done)
+- (2) Add an optional GitHub Action that runs prisma migrate/generate against the Cloud Run Postgres instance (if you want DB migrations automated)
+- (3) Create a script to generate a minimal GCP service account and a guide to set IAM roles
+
+Which of (2) or (3) would you like me to add now (or none)?
