@@ -1,26 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F6F6F6;
+  --foreground: #010101;
+  
+  --color-accent: #B8EC44;
+  --color-accent-hover: #9ad42c;
+  --color-black: #010101;
+  --color-dark-gray: #434343;
+  --color-light-gray: #F6F6F6;
+  --color-white: #FFFFFF;
+  
+  --color-success: #10B981;
+  --color-error: #EF4444;
+  --color-warning: #F59E0B;
+  --color-info: #3B82F6;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Plus Jakarta Sans", sans-serif;
+  --color-accent: #B8EC44;
+  --color-accent-hover: #9ad42c;
+  --color-brand-black: #010101;
+  --color-brand-dark-gray: #434343;
+  --color-brand-light-gray: #F6F6F6;
+  --color-brand-white: #FFFFFF;
+  
+  --color-success: #10B981;
+  --color-error: #EF4444;
+  --color-warning: #F59E0B;
+  --color-info: #3B82F6;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html, body {
+  background-color: var(--color-light-gray);
+  color: var(--color-black);
+  scroll-behavior: smooth;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Custom Tactical Clipped Corner Utility */
+.clip-angled {
+  clip-path: polygon(
+    0 0, 
+    100% 0, 
+    100% calc(100% - 10px), 
+    calc(100% - 10px) 100%, 
+    0 100%
+  );
+}
+
+.clip-angled-lg {
+  clip-path: polygon(
+    0 0, 
+    100% 0, 
+    100% calc(100% - 20px), 
+    calc(100% - 20px) 100%, 
+    0 100%
+  );
+}
+
+.clip-angled-sm {
+  clip-path: polygon(
+    0 0, 
+    100% 0, 
+    100% calc(100% - 6px), 
+    calc(100% - 6px) 100%, 
+    0 100%
+  );
+}
+
+/* Smooth transitions */
+.transition-standard {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Focus outline styles for accessibility */
+.focus-ring {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }

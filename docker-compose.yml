@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: tecticalhub-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_password
+      POSTGRES_DB: tecticalhub_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tecticalhub-web
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: "postgresql://postgres:postgres_password@postgres:5432/tecticalhub_db?schema=public"
+      JWT_SECRET: "change-this-in-prod"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+      SHIPPING_COST_PKR: "250"
+      FREE_SHIPPING_THRESHOLD_PKR: "5000"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+    driver: local

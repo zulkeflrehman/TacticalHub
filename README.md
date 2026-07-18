@@ -1,36 +1,234 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TECTICALHUB — Full-Stack E-Commerce Platform
 
-## Getting Started
+A production-ready, independent full-stack e-commerce website for TecticalHub — Pakistan's premier supplier of military-grade tactical gear, camping equipment, and outdoor accessories.
 
-First, run the development server:
+**Built with:** Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · Prisma ORM · PostgreSQL · Zustand · JWT Auth
+
+---
+
+## 🚀 Quick Start (No Database Required)
+
+The app runs fully without a database — all products are served from `Product_details.json`.
 
 ```bash
+# Clone and install
+cd d:\TACTICALHUB
+npm install
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open **http://localhost:3000**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🗄️ Full Database Setup
 
-## Learn More
+```bash
+# 1. Install and start PostgreSQL locally (or use a cloud DB)
+# 2. Edit DATABASE_URL in .env
+nano .env
 
-To learn more about Next.js, take a look at the following resources:
+# 3. Generate Prisma client
+npx prisma generate
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# 4. Push schema to database
+npx prisma db push
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# 5. Seed admin + demo user accounts
+npx tsx prisma/seed.ts
 
-## Deploy on Vercel
+# 6. Import products from JSON
+npx tsx scripts/import-products.ts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# 7. Start development server
+npm run dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🔑 Demo Credentials
+
+| Role     | Email                       | Password             |
+|----------|-----------------------------|----------------------|
+| Admin    | admin@tecticalhub.com       | admin_password_123   |
+| Customer | user@tecticalhub.com        | user_password_123    |
+
+### Mock Coupon Codes (no DB needed)
+| Code        | Discount        |
+|-------------|-----------------|
+| `WELCOME10` | 10% off         |
+| `FREE250`   | Rs. 250 off     |
+
+---
+
+## 📁 Project Structure
+
+```
+TACTICALHUB/
+├── app/
+│   ├── (storefront)/          # Customer-facing pages
+│   │   ├── page.tsx           # Homepage
+│   │   ├── cart/              # Shopping cart
+│   │   ├── checkout/          # COD checkout + order confirmation
+│   │   ├── categories/[slug]/ # Category listing + filter sidebar
+│   │   ├── products/[slug]/   # Product detail page
+│   │   ├── search/            # Search results
+│   │   ├── wishlist/          # Saved wishlist
+│   │   └── pages/[slug]/      # CMS content pages
+│   ├── account/               # Auth pages (login, register, profile)
+│   ├── admin/                 # Admin control panel
+│   │   ├── dashboard/         # KPI overview
+│   │   ├── products/          # Product CRUD
+│   │   ├── categories/        # Category management
+│   │   ├── orders/            # Order workflow
+│   │   ├── coupons/           # Discount codes
+│   │   └── content/           # CMS pages editor
+│   └── api/                   # REST API routes
+├── components/
+│   ├── layout/                # Header, Footer, AnnouncementBar
+│   ├── product/               # ProductCard, ProductDetails
+│   ├── cart/                  # CartDrawer
+│   └── storefront/            # CategoryListing, ContactForm, HeroSection
+├── lib/
+│   ├── auth.ts                # JWT session (jose)
+│   ├── db.ts                  # Prisma singleton
+│   ├── store.ts               # Zustand cart + wishlist
+│   └── services/              # ProductService, OrderService
+├── prisma/
+│   ├── schema.prisma          # Full e-commerce schema
+│   └── seed.ts                # User seeder
+├── scripts/
+│   └── import-products.ts     # JSON → DB product importer
+├── proxy.ts                   # Route protection (Next.js 16)
+└── Product_details.json       # 200+ real products (Shopify export)
+```
+
+---
+
+## 🛍️ Features
+
+### Storefront
+- **Homepage** — Hero banner, featured products, new arrivals, bestsellers, brand partners strip, newsletter signup
+- **Category Pages** — Filter by brand/price/availability, sort by name/price, mobile filter drawer
+- **Product Pages** — Image gallery with zoom, variant selector (size/color), add to cart/wishlist, stock status
+- **Cart** — Persistent cart (localStorage via Zustand), quantity controls, shipping estimate
+- **Checkout** — Full shipping form (Zod validation), COD + Bank Transfer, coupon codes, order summary
+- **Order Confirmation** — Inline after checkout with order number, payment instructions
+- **Search** — Full-text search with autocomplete suggestions in header
+- **Wishlist** — Save products, move to cart
+- **Content Pages** — About, FAQ, Shipping Policy, Returns, Privacy Policy, Contact (with form)
+
+### Authentication
+- Cookie-based JWT sessions via `jose`
+- Login, Register, Profile page with order history
+- Route protection via `proxy.ts` (Next.js 16 middleware)
+- Guest cart merge on login
+
+### Admin Panel (`/admin`)
+- **Dashboard** — Revenue, order count, low-stock alerts, recent orders
+- **Products** — Full CRUD with variant grid editor and image management
+- **Categories** — Add/edit/delete product collections
+- **Orders** — Status workflow (Pending → Processing → Shipped → Delivered), payment status toggle
+- **Coupons** — Create percentage or fixed discount codes with expiry and usage limits
+- **Content Pages** — Edit all CMS pages from the admin
+
+---
+
+## 🎨 Design System
+
+| Token              | Value                  |
+|--------------------|------------------------|
+| `brand-black`      | `#010101`              |
+| `brand-white`      | `#FFFFFF`              |
+| `brand-light-gray` | `#F6F6F6`              |
+| `brand-dark-gray`  | `#434343`              |
+| `brand-accent`     | `#B8EC44` (Tactical Green) |
+| Font               | Inter (Google Fonts)   |
+| Style              | Military-tactical, clip-angled corners, uppercase typography |
+
+---
+
+## ⚙️ Environment Variables
+
+```env
+# Database Connection
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/tecticalhub_db?schema=public"
+
+# Authentication
+JWT_SECRET="change-this-to-a-secure-random-string-in-production"
+
+# Application
+NEXT_PUBLIC_APP_URL="https://yourdomain.com"
+
+# E-commerce Rules
+SHIPPING_COST_PKR="250"
+FREE_SHIPPING_THRESHOLD_PKR="5000"
+```
+
+---
+
+## 🏗️ Production Build
+
+```bash
+npm run build
+npm start
+```
+
+---
+
+## 📦 Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| Language | TypeScript 5 |
+| Styling | Tailwind CSS v4 |
+| Database ORM | Prisma v5.22.0 |
+| Database | PostgreSQL |
+| Auth | JWT via `jose` (HTTP-only cookies) |
+| State | Zustand (cart, wishlist, toasts) |
+| Forms | react-hook-form + Zod |
+| Icons | Lucide React |
+
+---
+
+## 📞 Support
+
+For queries about this platform, contact: support@tecticalhub.com.pk
+
+---
+
+## 🚢 Deployment
+
+Two deployment options are provided: Vercel (zero-config for Next.js) and Docker Compose (self-hostable, with Postgres).
+
+Vercel (quick, recommended):
+1. Sign in to https://vercel.com and import the repository.
+2. In Project Settings, set the Environment Variables listed in the "⚙️ Environment Variables" section above (DATABASE_URL, JWT_SECRET, NEXT_PUBLIC_APP_URL, etc.).
+3. Deploy — Vercel will detect Next.js and build automatically.
+
+Docker Compose (self-hostable):
+1. Build and run locally:
+
+   cd d:\\TACTICALHUB
+   docker compose up --build -d
+
+2. Example production env variables are set in docker-compose.yml. Update them before deploying to a server.
+
+3. To apply Prisma schema to the Postgres service (when using DB):
+
+   # Generate client (on host)
+   npm run db:push
+   npm run db:seed
+
+Notes:
+- The app also runs in "no-database" mode and falls back to Product_details.json for product data when DB or external credentials are not provided (useful for quick demos).
+- Update JWT_SECRET and DATABASE_URL with strong values in production.
+
+If you want, the next steps are:
+- (A) Add managed secrets for Vercel and CI
+- (B) Create a small GitHub Actions workflow to build and push a Docker image to a registry and deploy via docker compose on a server
+
+Tell me which (A), (B), or both to implement next and any target registry or server you prefer.
