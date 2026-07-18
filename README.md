@@ -254,6 +254,11 @@ Notes on setup:
 Once secrets are added:
 - Pushing to the main branch will: build the app, push Docker image(s) and run the Cloud Run deploy workflow and also trigger a Vercel deploy (both workflows run on push to main).
 
+Important: The Cloud Run workflow now auto-runs Prisma in CI. It will execute `npx prisma generate` and `npx prisma migrate deploy` before building and pushing the Docker image. This is convenient but has operational implications:
+- Ensure DATABASE_URL points to the correct target database (staging vs production). Prefer testing migrations in a staging environment before applying to production.
+- Prisma migrations run in CI require the database to be reachable from the GitHub Actions runner (or via a secure tunnel). If your DB is private behind VPC, configure a deployment environment that can reach the database (e.g., run migrations from a Cloud Build step or a runner inside your GCP project).
+- Keep migration files reviewed and tested. Automated migrations are powerful but irreversible without backups — enable regular backups/export of your Postgres database.
+
 If you'd like, I can:
 - (1) Add the GitHub Actions workflows (done)
 - (2) Add an optional GitHub Action that runs prisma migrate/generate against the Cloud Run Postgres instance (if you want DB migrations automated)
