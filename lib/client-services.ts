@@ -1,6 +1,6 @@
 'use client';
 
-import type { User } from 'firebase/auth';
+import { getIdToken, reload, type User } from 'firebase/auth';
 import {
   collection,
   deleteDoc,
@@ -8,6 +8,8 @@ import {
   getDoc,
   getDocs,
   limit,
+  onSnapshot,
+  orderBy,
   query,
   runTransaction,
   serverTimestamp,
@@ -18,6 +20,8 @@ import {
   writeBatch,
   type DocumentSnapshot,
   type DocumentData,
+  type Firestore,
+  type Unsubscribe,
 } from 'firebase/firestore';
 import { clientDb } from './firebase-client';
 import type {
@@ -40,6 +44,20 @@ import {
   MAX_ORDER_LINES,
   SHIPPING_COST_PKR,
 } from './checkout-policy';
+import {
+  isOrderStatus,
+  isPaymentStatus,
+  isPhoneConfirmationStatus,
+  normalizePakistaniMobile,
+  type OrderStatus,
+  type PaymentStatus,
+  type PhoneConfirmationStatus,
+} from './order-policy';
+import {
+  saveOrderOperations,
+  transitionOrderStatus as transitionOrderStatusTransaction,
+  type OrderOperationsUpdate,
+} from './order-operations';
 
 export { FREE_SHIPPING_THRESHOLD_PKR, MAX_ITEM_QUANTITY, MAX_ORDER_LINES, SHIPPING_COST_PKR };
 
@@ -66,6 +84,12 @@ function dateValue(value: unknown): Date {
   }
   const parsed = new Date(String(value || 0));
   return Number.isNaN(parsed.getTime()) ? new Date(0) : parsed;
+}
+
+function nullableDateValue(value: unknown): Date | null {
+  if (value == null) return null;
+  const parsed = dateValue(value);
+  return parsed.getTime() === 0 ? null : parsed;
 }
 
 function productFromDocument(id: string, data: DocumentData, inventory?: Map<string, DocumentData>): ProductDto {
@@ -176,11 +200,11 @@ export async function getUserProfile(user: User): Promise<StoreUserDto | null> {
   };
 }
 
-export async function createCustomerProfile(user: User, name: string, phone: string): Promise<void> {
+export async function createCustomerProfile(user: User, name: string, phone = ''): Promise<void> {
   await setDoc(doc(clientDb, 'users', user.uid), {
-    email: String(user.email || '').toLowerCase(),
+    email: String(user.email || '').trim(),
     name: name.trim(),
-    phone: phone.trim(),
+    ...(phone.trim() ? { phone: phone.trim() } : {}),
     role: 'CUSTOMER',
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -188,21 +212,26 @@ export async function createCustomerProfile(user: User, name: string, phone: str
 }
 
 function orderFromDocument(id: string, data: DocumentData): OrderDto {
+  const firstName = String(data.firstName || '');
+  const lastName = String(data.lastName || '');
   return {
     id,
     orderNumber: String(data.orderNumber || id),
     userId: String(data.userId || ''),
+    customerName: String(data.customerName || `${firstName} ${lastName}`.trim()),
     email: String(data.email || ''),
+    emailVerified: data.emailVerified === true,
     phone: String(data.phone || ''),
-    firstName: String(data.firstName || ''),
-    lastName: String(data.lastName || ''),
+    firstName,
+    lastName,
     address: String(data.address || ''),
     city: String(data.city || ''),
     state: String(data.state || ''),
     postalCode: String(data.postalCode || ''),
     paymentMethod: 'COD',
-    paymentStatus: String(data.paymentStatus || 'PENDING'),
-    status: String(data.status || 'PENDING'),
+    paymentStatus: isPaymentStatus(data.paymentStatus) ? data.paymentStatus : 'PENDING',
+    status: isOrderStatus(data.status) ? data.status : 'PENDING',
+    phoneConfirmation: isPhoneConfirmationStatus(data.phoneConfirmation) ? data.phoneConfirmation : 'PENDING',
     notes: String(data.notes || ''),
     items: Array.isArray(data.items) ? data.items : [],
     subtotal: numberValue(data.subtotal),
@@ -210,7 +239,16 @@ function orderFromDocument(id: string, data: DocumentData): OrderDto {
     shippingCost: numberValue(data.shippingCost),
     total: numberValue(data.total),
     couponCode: data.couponCode ? String(data.couponCode) : null,
+    courierName: String(data.courierName || ''),
+    trackingNumber: String(data.trackingNumber || ''),
+    dispatchDate: nullableDateValue(data.dispatchDate),
+    cancellationReason: String(data.cancellationReason || ''),
+    deliveryNotes: String(data.deliveryNotes || ''),
+    inventoryRestored: data.inventoryRestored === true,
+    inventoryRestoredAt: nullableDateValue(data.inventoryRestoredAt),
+    cancelledAt: nullableDateValue(data.cancelledAt),
     createdAt: dateValue(data.createdAt),
+    updatedAt: dateValue(data.updatedAt || data.createdAt),
   };
 }
 
@@ -222,10 +260,29 @@ export async function listUserOrders(userId: string): Promise<OrderDto[]> {
 }
 
 export async function listAllOrders(): Promise<OrderDto[]> {
-  const snapshot = await getDocs(collection(clientDb, 'orders'));
+  const snapshot = await getDocs(query(collection(clientDb, 'orders'), orderBy('createdAt', 'desc'), limit(100)));
   return snapshot.docs
     .map((entry) => orderFromDocument(entry.id, entry.data()))
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+}
+
+export function subscribeAllOrders(
+  onOrders: (orders: OrderDto[], newOrderIds: string[]) => void,
+  onError: (error: Error) => void,
+  database: Firestore = clientDb,
+): Unsubscribe {
+  let receivedInitialSnapshot = false;
+  return onSnapshot(
+    query(collection(database, 'orders'), orderBy('createdAt', 'desc'), limit(100)),
+    (snapshot) => {
+      const newOrderIds = receivedInitialSnapshot
+        ? snapshot.docChanges().filter((change) => change.type === 'added').map((change) => change.doc.id)
+        : [];
+      receivedInitialSnapshot = true;
+      onOrders(snapshot.docs.map((entry) => orderFromDocument(entry.id, entry.data())), newOrderIds);
+    },
+    (error) => onError(error),
+  );
 }
 
 export interface CouponQuote {
@@ -270,6 +327,13 @@ export async function placeCodOrder(
   details: CheckoutDetails,
   couponCode?: string,
 ): Promise<OrderDto> {
+  await reload(user);
+  await getIdToken(user, true);
+  if (!user.emailVerified || !user.email) {
+    throw new Error('Verify your email address before placing an order.');
+  }
+  const verifiedEmail = user.email.trim();
+  const normalizedPhone = normalizePakistaniMobile(details.phone);
   if (cart.length < 1 || cart.length > MAX_ORDER_LINES) {
     throw new Error(`Checkout supports 1 to ${MAX_ORDER_LINES} different items per order.`);
   }
@@ -284,22 +348,47 @@ export async function placeCodOrder(
     const inventorySnapshots: DocumentSnapshot<DocumentData>[] = [];
     for (const inventoryRef of inventoryRefs) inventorySnapshots.push(await transaction.get(inventoryRef));
 
+    const inventoryRecords = inventorySnapshots.map((snapshot) => {
+      if (!snapshot.exists()) throw new Error('One cart variant is no longer available.');
+      return snapshot.data();
+    });
+    const productIds = [...new Set(inventoryRecords.map((inventory) => String(inventory.productId || '')))];
+    if (productIds.some((productId) => !productId)) throw new Error('A cart item has an invalid product reference.');
+    const productSnapshots: DocumentSnapshot<DocumentData>[] = [];
+    for (const productId of productIds) {
+      productSnapshots.push(await transaction.get(doc(clientDb, 'products', productId)));
+    }
+    const products = new Map(productSnapshots.map((snapshot) => {
+      if (!snapshot.exists()) throw new Error('One cart product is no longer available.');
+      return [snapshot.id, snapshot.data()] as const;
+    }));
+
     const cleanCoupon = couponCode?.trim().toUpperCase() || null;
     const couponRef = cleanCoupon ? doc(clientDb, 'coupons', cleanCoupon) : null;
     const couponSnapshot = couponRef ? await transaction.get(couponRef) : null;
 
     const items: OrderItemDto[] = inventorySnapshots.map((snapshot, index) => {
-      if (!snapshot.exists()) throw new Error('One cart variant is no longer available.');
-      const inventory = snapshot.data();
+      const inventory = inventoryRecords[index];
       const requested = cart[index];
       const quantity = Math.trunc(requested.quantity);
+      const productId = String(inventory.productId || '');
+      const product = products.get(productId);
+      const variants = Array.isArray(product?.variants) ? product.variants as DocumentData[] : [];
+      const productVariant = variants.find((variant) => String(variant.inventoryId || '') === snapshot.id);
+      if (!product || product.status !== 'PUBLISHED' || !productVariant) {
+        throw new Error(`${String(inventory.name || requested.name)} is no longer published.`);
+      }
+      if (String(productVariant.sku || '') !== String(inventory.sku || '')
+        || numberValue(productVariant.price) !== numberValue(inventory.price)) {
+        throw new Error(`${String(inventory.name || requested.name)} pricing is being updated. Refresh and try again.`);
+      }
       if (quantity < 1 || quantity > MAX_ITEM_QUANTITY) throw new Error('A cart quantity is invalid.');
       if (inventory.status !== 'ACTIVE' || numberValue(inventory.stock) < quantity) {
         throw new Error(`${String(inventory.name || requested.name)} does not have enough stock.`);
       }
       return {
         inventoryId: snapshot.id,
-        productId: String(inventory.productId || ''),
+        productId,
         variantSku: String(inventory.sku || ''),
         name: String(inventory.name || ''),
         price: numberValue(inventory.price),
@@ -322,28 +411,40 @@ export async function placeCodOrder(
     }
     const shippingCost = calculateShippingCost(subtotal);
     const total = subtotal - discount + shippingCost;
+    const firstName = details.firstName.trim();
+    const lastName = details.lastName.trim();
     const orderData = {
       orderNumber,
       userId: user.uid,
-      email: details.email.trim().toLowerCase(),
-      phone: details.phone.trim(),
-      firstName: details.firstName.trim(),
-      lastName: details.lastName.trim(),
+      customerName: `${firstName} ${lastName}`.trim(),
+      email: verifiedEmail,
+      emailVerified: true,
+      phone: normalizedPhone,
+      firstName,
+      lastName,
       address: details.address.trim(),
       city: details.city.trim(),
       state: details.state.trim(),
       postalCode: details.postalCode.trim(),
       paymentMethod: 'COD' as const,
-      paymentStatus: 'PENDING',
-      status: 'PENDING',
+      paymentStatus: 'PENDING' as const,
+      status: 'PENDING' as const,
+      phoneConfirmation: 'PENDING' as const,
       notes: details.notes?.trim() || '',
       items,
-      inventoryIds: items.map((item) => item.inventoryId),
       subtotal,
       discount,
       shippingCost,
       total,
       couponCode: cleanCoupon,
+      courierName: '',
+      trackingNumber: '',
+      dispatchDate: null,
+      cancellationReason: '',
+      deliveryNotes: '',
+      inventoryRestored: false,
+      inventoryRestoredAt: null,
+      cancelledAt: null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -358,7 +459,7 @@ export async function placeCodOrder(
       });
     });
 
-    return { ...orderData, id: orderRef.id, createdAt: new Date() };
+    return { ...orderData, id: orderRef.id, createdAt: new Date(), updatedAt: new Date() };
   });
 
   return result as OrderDto;
@@ -532,6 +633,16 @@ export async function archiveProduct(product: ProductDto): Promise<void> {
   resetCatalogCache();
 }
 
-export async function updateOrder(id: string, changes: { status?: string; paymentStatus?: string }): Promise<void> {
-  await updateDoc(doc(clientDb, 'orders', id), { ...changes, updatedAt: serverTimestamp() });
+export async function saveAdminOrderOperations(id: string, changes: OrderOperationsUpdate): Promise<void> {
+  await saveOrderOperations(clientDb, id, changes);
 }
+
+export async function transitionAdminOrderStatus(
+  id: string,
+  status: OrderStatus,
+  cancellationReason = '',
+): Promise<{ restored: boolean }> {
+  return transitionOrderStatusTransaction(clientDb, id, status, cancellationReason);
+}
+
+export type { OrderStatus, PaymentStatus, PhoneConfirmationStatus };

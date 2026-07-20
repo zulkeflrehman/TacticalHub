@@ -10,6 +10,7 @@ import { useToastStore } from '@/lib/toast-store';
 import { auth } from '@/lib/firebase-client';
 import { sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
 import { LogIn, ShieldAlert } from 'lucide-react';
+import { safeAccountRedirect } from '@/lib/email-verification';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -28,9 +29,7 @@ function LoginContent() {
   const [errorMsg, setErrorMsg] = useState('');
 
   const requestedRedirect = searchParams.get('redirect');
-  const redirectUrl = requestedRedirect?.startsWith('/') && !requestedRedirect.startsWith('//')
-    ? requestedRedirect
-    : '/account/profile';
+  const redirectUrl = safeAccountRedirect(requestedRedirect);
 
   const {
     register,
@@ -63,9 +62,11 @@ function LoginContent() {
     setLoading(true);
     setErrorMsg('');
     try {
-      await signInWithEmailAndPassword(auth, data.email.trim().toLowerCase(), data.password);
+      const credential = await signInWithEmailAndPassword(auth, data.email.trim().toLowerCase(), data.password);
       addToast('Logged in successfully.', 'success');
-      router.push(redirectUrl);
+      router.push(credential.user.emailVerified
+        ? redirectUrl
+        : `/account/verify-email?redirect=${encodeURIComponent(redirectUrl)}`);
     } catch (error) {
       const code = typeof error === 'object' && error && 'code' in error ? String(error.code) : '';
       setErrorMsg(
@@ -137,7 +138,7 @@ function LoginContent() {
 
       <div className="text-center text-xs font-semibold text-brand-dark-gray pt-2">
         Don&apos;t have an account?{' '}
-        <Link href="/account/register" className="text-brand-black font-bold hover:underline">
+        <Link href={`/account/register?redirect=${encodeURIComponent(redirectUrl)}`} className="text-brand-black font-bold hover:underline">
           Register Here
         </Link>
       </div>

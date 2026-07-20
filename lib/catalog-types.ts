@@ -1,3 +1,9 @@
+import type {
+  OrderStatus,
+  PaymentStatus,
+  PhoneConfirmationStatus,
+} from './order-policy';
+
 export interface ProductImageDto {
   url: string;
   isPrimary?: boolean;
@@ -68,7 +74,9 @@ export interface OrderDto {
   id: string;
   orderNumber: string;
   userId: string;
+  customerName: string;
   email: string;
+  emailVerified: boolean;
   phone: string;
   firstName: string;
   lastName: string;
@@ -77,8 +85,9 @@ export interface OrderDto {
   state: string;
   postalCode: string;
   paymentMethod: 'COD';
-  paymentStatus: string;
-  status: string;
+  paymentStatus: PaymentStatus;
+  status: OrderStatus;
+  phoneConfirmation: PhoneConfirmationStatus;
   notes: string;
   items: OrderItemDto[];
   subtotal: number;
@@ -86,7 +95,16 @@ export interface OrderDto {
   shippingCost: number;
   total: number;
   couponCode: string | null;
+  courierName: string;
+  trackingNumber: string;
+  dispatchDate: Date | null;
+  cancellationReason: string;
+  deliveryNotes: string;
+  inventoryRestored: boolean;
+  inventoryRestoredAt: Date | null;
+  cancelledAt: Date | null;
   createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface ContactMessageDto {

@@ -15,6 +15,37 @@ test('unknown static routes render the not-found experience', async ({ page }) =
   await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
 });
 
+test('checkout preserves the local cart while directing customers through account verification', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('tecticalhub-cart-storage', JSON.stringify({
+      state: {
+        cart: [{
+          productId: 'browser-product',
+          inventoryId: 'browser-inventory',
+          variantSku: 'BROWSER-SKU',
+          name: 'Browser Test Backpack',
+          price: 2500,
+          image: '/file.svg',
+          quantity: 1,
+          vendor: 'TecticalHub',
+        }],
+        wishlist: [],
+      },
+      version: 0,
+    }));
+  });
+
+  await page.goto('/checkout');
+  await expect(page.getByRole('heading', { name: /account required/i })).toBeVisible();
+  const registerLink = page.getByRole('link', { name: 'Register' });
+  await expect(registerLink).toHaveAttribute('href', '/account/register/?redirect=%2Fcheckout');
+  await registerLink.click();
+  await expect(page.getByRole('heading', { name: /create an account/i })).toBeVisible();
+
+  await page.goto('/cart');
+  await expect(page.getByRole('heading', { level: 1, name: /shopping cart \(1\)/i })).toBeVisible();
+});
+
 test('live catalog data can be opened and added to the local cart', async ({ page }) => {
   test.skip(process.env.PLAYWRIGHT_REQUIRE_CATALOG !== 'true', 'Runs only during post-deployment verification.');
   await page.goto('/');

@@ -11,39 +11,58 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
     }
 
+    function verifiedEmailUser() {
+      return signedIn() && request.auth.token.email_verified == true;
+    }
+
     function validText(value, minimum, maximum) {
       return value is string && value.size() >= minimum && value.size() <= maximum;
+    }
+
+    function validOrderStatus(value) {
+      return value in ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+    }
+
+    function validPaymentStatus(value) {
+      return value in ['PENDING', 'PAID', 'CANCELLED', 'REFUNDED'];
+    }
+
+    function validPhoneConfirmation(value) {
+      return value in ['PENDING', 'CONFIRMED', 'UNREACHABLE', 'INVALID'];
+    }
+
+    function validStatusTransition(before, after) {
+      return before == after
+        || (before == 'PENDING' && after in ['CONFIRMED', 'CANCELLED'])
+        || (before == 'CONFIRMED' && after in ['PROCESSING', 'CANCELLED'])
+        || (before == 'PROCESSING' && after in ['SHIPPED', 'CANCELLED'])
+        || (before == 'SHIPPED' && after == 'DELIVERED');
+    }
+
+    function validPaymentTransition(before, after) {
+      return before == after
+        || (before == 'PENDING' && after == 'PAID');
     }
 
     function lineTotal(items, index) {
       return index < items.size() ? items[index].price * items[index].quantity : 0;
     }
 
-    function itemInventory(items, index) {
-      return getAfter(/databases/$(database)/documents/inventory/$(items[index].inventoryId)).data;
-    }
-
     function validOrderItem(items, index, orderId) {
+      let inventory = index < items.size()
+        ? getAfter(/databases/$(database)/documents/inventory/$(items[index].inventoryId)).data
+        : null;
       return index >= items.size() || (
         items[index].keys().hasOnly(['inventoryId', 'productId', 'variantSku', 'name', 'price', 'quantity'])
-        && validText(items[index].inventoryId, 1, 500)
-        && validText(items[index].productId, 1, 500)
-        && validText(items[index].variantSku, 1, 200)
-        && validText(items[index].name, 1, 300)
         && items[index].price is int && items[index].price >= 0
         && items[index].quantity is int && items[index].quantity >= 1 && items[index].quantity <= 20
-        && itemInventory(items, index).productId == items[index].productId
-        && itemInventory(items, index).sku == items[index].variantSku
-        && itemInventory(items, index).name == items[index].name
-        && itemInventory(items, index).price == items[index].price
-        && itemInventory(items, index).status == 'ACTIVE'
-        && itemInventory(items, index).stock >= 0
-        && itemInventory(items, index).lastOrderId == orderId
+        && inventory.productId == items[index].productId
+        && inventory.sku == items[index].variantSku
+        && inventory.name == items[index].name
+        && inventory.price == items[index].price
+        && inventory.status == 'ACTIVE'
+        && inventory.lastOrderId == orderId
       );
-    }
-
-    function itemId(items, index) {
-      return index < items.size() ? items[index].inventoryId : '';
     }
 
     function quantityFor(items, inventoryId) {
@@ -54,10 +73,11 @@ service cloud.firestore {
         + (items.size() > 4 && items[4].inventoryId == inventoryId ? items[4].quantity : 0);
     }
 
-    function validCoupon(order) {
+    function validCoupon(order, orderId) {
       let coupon = get(/databases/$(database)/documents/coupons/$(order.couponCode)).data;
+      let couponAfter = getAfter(/databases/$(database)/documents/coupons/$(order.couponCode)).data;
       let calculated = coupon.discountType == 'PERCENTAGE'
-        ? (order.subtotal * coupon.discountValue / 100)
+        ? int(order.subtotal * coupon.discountValue / 100)
         : coupon.discountValue;
       return coupon.code == order.couponCode
         && coupon.isActive == true
@@ -65,6 +85,8 @@ service cloud.firestore {
         && coupon.minOrderValue <= order.subtotal
         && coupon.startsAt <= request.time && coupon.expiresAt > request.time
         && (coupon.maxUsage == null || coupon.usedCount < coupon.maxUsage)
+        && couponAfter.usedCount == coupon.usedCount + 1
+        && couponAfter.lastOrderId == orderId
         && order.discount == (calculated > order.subtotal ? order.subtotal : calculated);
     }
 
@@ -76,35 +98,124 @@ service cloud.firestore {
       let expectedShipping = computedSubtotal >= 5000 ? 0 : 250;
       return order.keys().hasOnly([
           'orderNumber', 'userId', 'email', 'phone', 'firstName', 'lastName', 'address',
-          'city', 'state', 'postalCode', 'paymentMethod', 'paymentStatus', 'status', 'notes',
-          'items', 'inventoryIds', 'subtotal', 'discount', 'shippingCost', 'total',
-          'couponCode', 'createdAt', 'updatedAt'
+          'customerName', 'emailVerified', 'city', 'state', 'postalCode',
+          'paymentMethod', 'paymentStatus', 'status', 'phoneConfirmation', 'notes',
+          'items', 'subtotal', 'discount', 'shippingCost', 'total',
+          'couponCode', 'courierName', 'trackingNumber', 'dispatchDate', 'cancellationReason',
+          'deliveryNotes', 'inventoryRestored', 'inventoryRestoredAt', 'cancelledAt',
+          'createdAt', 'updatedAt'
         ])
         && order.userId == request.auth.uid
         && order.email == request.auth.token.email
+        && order.emailVerified == true
         && validText(order.orderNumber, 5, 80)
-        && validText(order.phone, 9, 30)
+        && order.phone.matches('^[+]923[0-9]{9}$')
         && validText(order.firstName, 2, 80) && validText(order.lastName, 2, 80)
+        && order.customerName == order.firstName + ' ' + order.lastName
         && validText(order.address, 5, 300) && validText(order.city, 2, 100)
         && validText(order.state, 2, 100) && validText(order.postalCode, 3, 20)
         && validText(order.notes, 0, 500)
-        && order.paymentMethod == 'COD' && order.paymentStatus == 'PENDING' && order.status == 'PENDING'
+        && order.paymentMethod == 'COD' && order.paymentStatus == 'PENDING'
+        && order.status == 'PENDING' && order.phoneConfirmation == 'PENDING'
+        && order.courierName == '' && order.trackingNumber == '' && order.dispatchDate == null
+        && order.cancellationReason == '' && order.deliveryNotes == ''
+        && order.inventoryRestored == false && order.inventoryRestoredAt == null && order.cancelledAt == null
         && order.createdAt == request.time && order.updatedAt == request.time
         && items is list && items.size() >= 1 && items.size() <= 5
-        && order.inventoryIds is list && order.inventoryIds.size() == items.size()
-        && order.inventoryIds[0] == itemId(items, 0)
-        && (items.size() < 2 || order.inventoryIds[1] == itemId(items, 1))
-        && (items.size() < 3 || order.inventoryIds[2] == itemId(items, 2))
-        && (items.size() < 4 || order.inventoryIds[3] == itemId(items, 3))
-        && (items.size() < 5 || order.inventoryIds[4] == itemId(items, 4))
-        && order.inventoryIds.toSet().size() == order.inventoryIds.size()
         && validOrderItem(items, 0, orderId) && validOrderItem(items, 1, orderId)
         && validOrderItem(items, 2, orderId) && validOrderItem(items, 3, orderId)
         && validOrderItem(items, 4, orderId)
         && order.subtotal == computedSubtotal
         && order.shippingCost == expectedShipping
-        && ((order.couponCode == null && order.discount == 0) || validCoupon(order))
+        && ((order.couponCode == null && order.discount == 0) || validCoupon(order, orderId))
         && order.total == order.subtotal - order.discount + order.shippingCost;
+    }
+
+    function restoredInventoryMarked(items, index, orderId) {
+      return index >= items.size()
+        || getAfter(/databases/$(database)/documents/inventory/$(items[index].inventoryId)).data.lastRestoredOrderId == orderId;
+    }
+
+    function validAdminOrderUpdate(orderId) {
+      let before = resource.data;
+      let after = request.resource.data;
+      let changed = after.diff(before).affectedKeys();
+      let cancelling = before.status != 'CANCELLED' && after.status == 'CANCELLED';
+      let beforeDispatchDate = before.keys().hasAll(['dispatchDate']) ? before.dispatchDate : null;
+      let beforeCancellationReason = before.keys().hasAll(['cancellationReason']) ? before.cancellationReason : '';
+      let beforeInventoryRestored = before.keys().hasAll(['inventoryRestored']) ? before.inventoryRestored : false;
+      let beforeInventoryRestoredAt = before.keys().hasAll(['inventoryRestoredAt']) ? before.inventoryRestoredAt : null;
+      let beforeCancelledAt = before.keys().hasAll(['cancelledAt']) ? before.cancelledAt : null;
+      return admin()
+        && changed.hasOnly([
+          'status', 'paymentStatus', 'phoneConfirmation', 'courierName', 'trackingNumber',
+          'dispatchDate', 'cancellationReason', 'deliveryNotes', 'inventoryRestored',
+          'inventoryRestoredAt', 'cancelledAt', 'updatedAt'
+        ])
+        && after.keys().hasAll([
+          'phoneConfirmation', 'courierName', 'trackingNumber', 'dispatchDate',
+          'cancellationReason', 'deliveryNotes', 'inventoryRestored',
+          'inventoryRestoredAt', 'cancelledAt'
+        ])
+        && validOrderStatus(after.status) && validStatusTransition(before.status, after.status)
+        && validPaymentStatus(after.paymentStatus)
+        && (cancelling
+          ? ((before.paymentStatus == 'PAID' && after.paymentStatus == 'REFUNDED')
+            || (before.paymentStatus == 'PENDING' && after.paymentStatus == 'CANCELLED'))
+          : validPaymentTransition(before.paymentStatus, after.paymentStatus))
+        && (after.status == 'CANCELLED'
+          ? after.paymentStatus in ['CANCELLED', 'REFUNDED']
+          : after.paymentStatus in ['PENDING', 'PAID'])
+        && validPhoneConfirmation(after.phoneConfirmation)
+        && validText(after.courierName, 0, 120) && validText(after.trackingNumber, 0, 160)
+        && validText(after.deliveryNotes, 0, 1000)
+        && after.updatedAt == request.time
+        && (beforeInventoryRestored != true || after.inventoryRestored == true)
+        && (before.status == 'SHIPPED' && after.status == 'DELIVERED'
+          ? after.dispatchDate == beforeDispatchDate
+          : (after.status == 'SHIPPED' && before.status != 'SHIPPED'
+            ? after.dispatchDate == request.time
+            : after.dispatchDate == beforeDispatchDate))
+        && (cancelling
+          ? after.inventoryRestored == true
+            && after.inventoryRestoredAt == request.time && after.cancelledAt == request.time
+            && validText(after.cancellationReason, 3, 500)
+            && ((before.paymentStatus == 'PAID' && after.paymentStatus == 'REFUNDED')
+              || (before.paymentStatus == 'PENDING' && after.paymentStatus == 'CANCELLED'))
+            && restoredInventoryMarked(after.items, 0, orderId)
+            && restoredInventoryMarked(after.items, 1, orderId)
+            && restoredInventoryMarked(after.items, 2, orderId)
+            && restoredInventoryMarked(after.items, 3, orderId)
+            && restoredInventoryMarked(after.items, 4, orderId)
+          : after.inventoryRestored == beforeInventoryRestored
+            && after.inventoryRestoredAt == beforeInventoryRestoredAt
+            && after.cancelledAt == beforeCancelledAt
+            && after.cancellationReason == beforeCancellationReason);
+    }
+
+    function validCustomerInventoryUpdate(inventoryId) {
+      let order = getAfter(/databases/$(database)/documents/orders/$(request.resource.data.lastOrderId)).data;
+      let orderedQuantity = quantityFor(order.items, inventoryId);
+      return signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock', 'lastOrderId', 'updatedAt'])
+        && request.resource.data.lastOrderId is string
+        && order.userId == request.auth.uid
+        && order.createdAt == request.time
+        && orderedQuantity > 0
+        && request.resource.data.stock == resource.data.stock - orderedQuantity
+        && request.resource.data.stock >= 0
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function validCustomerCouponUpdate(couponId) {
+      let order = getAfter(/databases/$(database)/documents/orders/$(request.resource.data.lastOrderId)).data;
+      return signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedCount', 'lastOrderId', 'updatedAt'])
+        && request.resource.data.usedCount == resource.data.usedCount + 1
+        && request.resource.data.updatedAt == request.time
+        && order.userId == request.auth.uid
+        && order.createdAt == request.time
+        && order.couponCode == couponId;
     }
 
     match /products/{productId} {
@@ -140,33 +251,27 @@ service cloud.firestore {
     match /inventory/{inventoryId} {
       allow read: if true;
       allow create, delete: if admin();
-      allow update: if admin() || (signedIn()
+      allow update: if (signedIn()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock', 'lastOrderId', 'updatedAt'])
         && request.resource.data.lastOrderId is string
-        && getAfter(/databases/$(database)/documents/orders/$(request.resource.data.lastOrderId)).data.userId == request.auth.uid
-        && getAfter(/databases/$(database)/documents/orders/$(request.resource.data.lastOrderId)).data.inventoryIds.hasAny([inventoryId])
-        && request.resource.data.stock == resource.data.stock
-          - quantityFor(getAfter(/databases/$(database)/documents/orders/$(request.resource.data.lastOrderId)).data.items, inventoryId)
-        && request.resource.data.stock >= 0
-        && request.resource.data.updatedAt == request.time);
+        && validCustomerInventoryUpdate(inventoryId)) || admin();
     }
 
     match /orders/{orderId} {
-      allow create: if signedIn() && validOrder(orderId);
+      allow create: if verifiedEmailUser() && validOrder(orderId);
       allow get, list: if admin() || (signedIn() && resource.data.userId == request.auth.uid);
-      allow update, delete: if admin();
+      allow update: if validAdminOrderUpdate(orderId);
+      allow delete: if false;
     }
 
     match /coupons/{couponId} {
       allow get: if true;
       allow list: if admin();
       allow create, delete: if admin();
-      allow update: if admin() || (signedIn()
+      allow update: if (signedIn()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedCount', 'lastOrderId', 'updatedAt'])
-        && request.resource.data.usedCount == resource.data.usedCount + 1
-        && request.resource.data.updatedAt == request.time
-        && getAfter(/databases/$(database)/documents/orders/$(request.resource.data.lastOrderId)).data.userId == request.auth.uid
-        && getAfter(/databases/$(database)/documents/orders/$(request.resource.data.lastOrderId)).data.couponCode == couponId);
+        && request.resource.data.lastOrderId is string
+        && validCustomerCouponUpdate(couponId)) || admin();
     }
 
     match /contactMessages/{messageId} {
@@ -184,7 +289,9 @@ service cloud.firestore {
     match /newsletterSubscribers/{subscriberId} {
       allow create: if request.resource.data.keys().hasOnly(['email', 'status', 'createdAt'])
         && validText(request.resource.data.email, 5, 254)
-        && request.resource.data.status == 'ACTIVE';
+        && subscriberId == request.resource.data.email
+        && request.resource.data.status == 'ACTIVE'
+        && request.resource.data.createdAt == request.time;
       allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'createdAt'])
         && request.resource.data.email == resource.data.email
         && request.resource.data.status == 'ACTIVE';

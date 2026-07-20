@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import CatalogImage from '@/components/ui/CatalogImage';
@@ -11,6 +11,9 @@ import { useStore } from '@/lib/store';
 import { useToastStore } from '@/lib/toast-store';
 import { auth } from '@/lib/firebase-client';
 import { FREE_SHIPPING_THRESHOLD_PKR, placeCodOrder, quoteCoupon, SHIPPING_COST_PKR } from '@/lib/client-services';
+import EmailVerificationPanel from '@/components/auth/EmailVerificationPanel';
+import { getIdToken, onAuthStateChanged, reload, type User } from 'firebase/auth';
+import { isPakistaniMobile } from '@/lib/order-policy';
 import { 
   ShoppingBag, ShieldCheck, CheckCircle2,
   ArrowRight, Landmark, Truck
@@ -18,16 +21,16 @@ import {
 
 // Validation Schema
 const checkoutSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  phone: z.string().min(10, 'Phone number must be at least 10 digits').max(15, 'Invalid phone number format'),
-  firstName: z.string().min(2, 'First name is required'),
-  lastName: z.string().min(2, 'Last name is required'),
-  address: z.string().min(5, 'Detailed shipping address is required'),
-  city: z.string().min(2, 'City is required'),
-  state: z.string().min(2, 'State/Province is required'),
-  postalCode: z.string().min(4, 'Postal code must be at least 4 digits'),
+  email: z.string().trim().email('Please enter a valid email address').max(254),
+  phone: z.string().refine(isPakistaniMobile, 'Enter a Pakistani mobile number as 03XXXXXXXXX.'),
+  firstName: z.string().trim().min(2, 'First name is required').max(80),
+  lastName: z.string().trim().min(2, 'Last name is required').max(80),
+  address: z.string().trim().min(5, 'Detailed shipping address is required').max(300),
+  city: z.string().trim().min(2, 'City is required').max(100),
+  state: z.string().trim().min(2, 'State/Province is required').max(100),
+  postalCode: z.string().trim().min(3, 'Postal code must be at least 3 characters').max(20),
   paymentMethod: z.literal('COD'),
-  notes: z.string().optional()
+  notes: z.string().trim().max(500).optional()
 });
 
 type CheckoutFormData = z.infer<typeof checkoutSchema>;
@@ -62,6 +65,9 @@ export default function CheckoutPage() {
   const [checkingCoupon, setCheckingCoupon] = useState(false);
   const [submittingOrder, setSubmittingOrder] = useState(false);
   const [placedOrder, setPlacedOrder] = useState<PlacedOrder | null>(null);
+  const [checkoutUser, setCheckoutUser] = useState<User | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
 
   const localSubtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const subtotal = serverQuote?.subtotal ?? localSubtotal;
@@ -99,6 +105,7 @@ export default function CheckoutPage() {
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors }
   } = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema),
@@ -108,12 +115,26 @@ export default function CheckoutPage() {
   });
   const selectedPaymentMethod = useWatch({ control, name: 'paymentMethod' });
 
+  useEffect(() => onAuthStateChanged(auth, (user) => {
+    setCheckoutUser(user);
+    setEmailVerified(Boolean(user?.emailVerified));
+    if (user?.email) setValue('email', user.email, { shouldValidate: true });
+    setAuthReady(true);
+  }), [setValue]);
+
+  const handleVerified = useCallback(() => {
+    const user = auth.currentUser;
+    setCheckoutUser(user);
+    setEmailVerified(Boolean(user?.emailVerified));
+    if (user?.email) setValue('email', user.email, { shouldValidate: true });
+  }, [setValue]);
+
   const onSubmit = async (data: CheckoutFormData) => {
     if (cart.length === 0) {
       addToast('Your cart is empty.', 'error');
       return;
     }
-    const user = auth.currentUser;
+    const user = checkoutUser || auth.currentUser;
     if (!user) {
       addToast('Log in or create an account before placing your order.', 'info');
       router.push('/account/login?redirect=/checkout');
@@ -122,7 +143,13 @@ export default function CheckoutPage() {
 
     setSubmittingOrder(true);
     try {
-      const order = await placeCodOrder(user, cart, data, appliedCoupon || undefined);
+      await reload(user);
+      await getIdToken(user, true);
+      if (!user.emailVerified || !user.email) {
+        setEmailVerified(false);
+        throw new Error('Verify your email address before placing an order.');
+      }
+      const order = await placeCodOrder(user, cart, { ...data, email: user.email }, appliedCoupon || undefined);
       setPlacedOrder(order);
       clearCart();
       addToast('Order placed successfully!', 'success');
@@ -141,14 +168,15 @@ export default function CheckoutPage() {
           <CheckCircle2 className="w-16 h-16 text-success mx-auto animate-pulse" />
           <div className="space-y-1">
             <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-brand-black">
-              Order Confirmed!
+              Your order has been received.
             </h1>
             <p className="text-xs text-brand-dark-gray font-bold uppercase tracking-wider">
               Order Number: <span className="text-brand-black font-black">{placedOrder.orderNumber}</span>
             </p>
           </div>
           <p className="text-xs sm:text-sm text-brand-dark-gray max-w-lg mx-auto font-semibold leading-relaxed">
-            Thank you for shopping at TecticalHub. Your order has been saved and is awaiting confirmation by our fulfillment team.
+            Your order has been saved and is awaiting confirmation by our fulfillment team.
+            Our team may call or WhatsApp you to confirm your phone number and delivery details.
           </p>
         </div>
 
@@ -234,6 +262,21 @@ export default function CheckoutPage() {
             Explore Catalog
           </Link>
         </div>
+      ) : !authReady ? (
+        <p className="py-16 text-center text-xs font-bold uppercase">Checking your Firebase account...</p>
+      ) : !checkoutUser ? (
+        <div className="mx-auto max-w-xl space-y-5 border border-brand-black/5 bg-brand-white p-8 text-center clip-angled-lg">
+          <h2 className="text-lg font-black uppercase">Account required</h2>
+          <p className="text-xs font-semibold leading-relaxed text-brand-dark-gray">
+            Register with email and password, verify the address, then return here. Your cart stays saved in this browser.
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link href="/account/register?redirect=%2Fcheckout" className="bg-brand-black px-5 py-3 text-xs font-black uppercase text-brand-white">Register</Link>
+            <Link href="/account/login?redirect=%2Fcheckout" className="border border-brand-black px-5 py-3 text-xs font-black uppercase">Log in</Link>
+          </div>
+        </div>
+      ) : !emailVerified ? (
+        <EmailVerificationPanel user={checkoutUser} redirectTo="/checkout" onVerified={handleVerified} />
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
@@ -250,9 +293,12 @@ export default function CheckoutPage() {
                   <label className="text-[10px] font-black uppercase text-brand-dark-gray block">Email Address</label>
                   <input
                     type="email"
+                    readOnly
+                    aria-describedby="verified-email-help"
                     {...register('email')}
-                    className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black"
+                    className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold text-brand-dark-gray"
                   />
+                  <p id="verified-email-help" className="text-[9px] font-bold text-green-700">Verified by Firebase Authentication</p>
                   {errors.email && <p className="text-[10px] font-bold text-red-500">{errors.email.message}</p>}
                 </div>
                 <div className="space-y-1">
@@ -260,6 +306,8 @@ export default function CheckoutPage() {
                   <input
                     type="text"
                     placeholder="e.g. 03001234567"
+                    inputMode="tel"
+                    autoComplete="tel-national"
                     {...register('phone')}
                     className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black"
                   />

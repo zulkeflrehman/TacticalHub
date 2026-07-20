@@ -32,6 +32,26 @@ async function adminCommit(writes: Array<Record<string, unknown>>) {
   if (!response.ok) throw new Error(`Admin smoke-test commit failed (${response.status}): ${await response.text()}`);
 }
 
+async function updateAuthUser(localId: string, update: Record<string, unknown>): Promise<void> {
+  const response = await fetch(`https://identitytoolkit.googleapis.com/v1/projects/${projectId}/accounts:update`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ localId, ...update }),
+  });
+  if (!response.ok) throw new Error(`Admin Auth smoke-test update failed (${response.status}): ${await response.text()}`);
+}
+
+async function deleteAuthUser(localId: string): Promise<void> {
+  const response = await fetch(`https://identitytoolkit.googleapis.com/v1/projects/${projectId}/accounts:delete`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ localId }),
+  });
+  if (!response.ok && response.status !== 404) {
+    throw new Error(`Admin Auth smoke-test cleanup failed (${response.status}): ${await response.text()}`);
+  }
+}
+
 const suffix = crypto.randomUUID().replaceAll('-', '').slice(0, 12);
 const inventoryId = `smoke-inventory-${suffix}`;
 const couponCode = `SMOKE${suffix.toUpperCase()}`;
@@ -39,21 +59,27 @@ const email = `tecticalhub-smoke-${suffix}@example.com`;
 const password = `Smoke-${suffix}-Aa9!`;
 let uid = '';
 let orderId = '';
+let authUserDeleted = false;
 
 async function main() {
  try {
   await adminCommit([
+    { update: { name: `${root}/products/smoke-product-${suffix}`, fields: fields({ name: 'Checkout security test item', status: 'PUBLISHED', variants: [{ inventoryId, sku: `SMOKE-${suffix}`, name: 'Standard', price: 1000 }] }) } },
     { update: { name: `${root}/inventory/${inventoryId}`, fields: fields({ productId: `smoke-product-${suffix}`, sku: `SMOKE-${suffix}`, name: 'Checkout security test item', price: 1000, stock: 2, status: 'ACTIVE', updatedAt: new Date() }) } },
     { update: { name: `${root}/coupons/${couponCode}`, fields: fields({ code: couponCode, discountType: 'PERCENTAGE', discountValue: 10, minOrderValue: 0, maxUsage: 2, usedCount: 0, isActive: true, startsAt: new Date(Date.now() - 60_000), expiresAt: new Date(Date.now() + 3_600_000), updatedAt: new Date() }) } },
   ]);
 
-  const { createUserWithEmailAndPassword, deleteUser, signInWithEmailAndPassword, signOut } = await import('firebase/auth');
+  const { createUserWithEmailAndPassword, deleteUser, getIdToken, reload, signInWithEmailAndPassword, signOut } = await import('firebase/auth');
   const { doc, setDoc } = await import('firebase/firestore');
   const { auth, clientDb } = await import('../lib/firebase-client');
   const { createCustomerProfile, listUserOrders, placeCodOrder } = await import('../lib/client-services');
   const credential = await createUserWithEmailAndPassword(auth, email, password);
   uid = credential.user.uid;
   await createCustomerProfile(credential.user, 'Checkout Smoke Test', '03001234567');
+  await updateAuthUser(uid, { emailVerified: true });
+  await reload(credential.user);
+  await getIdToken(credential.user, true);
+  if (!credential.user.emailVerified) throw new Error('The smoke-test user did not receive a verified Firebase token.');
   const order = await placeCodOrder(credential.user, [{
     productId: `smoke-product-${suffix}`, inventoryId, variantSku: `SMOKE-${suffix}`,
     name: 'Ignored client name', price: 1, image: '', quantity: 1, vendor: 'Test',
@@ -78,15 +104,18 @@ async function main() {
   if (!denied) throw new Error('Unauthenticated inventory tampering was not denied.');
   const cleanupCredential = await signInWithEmailAndPassword(auth, email, password);
   await deleteUser(cleanupCredential.user);
+  authUserDeleted = true;
   console.log('Live checkout/rules smoke test passed.');
  } finally {
   const deletes = [
     orderId ? { delete: `${root}/orders/${orderId}` } : null,
     uid ? { delete: `${root}/users/${uid}` } : null,
+    { delete: `${root}/products/smoke-product-${suffix}` },
     { delete: `${root}/inventory/${inventoryId}` },
     { delete: `${root}/coupons/${couponCode}` },
   ].filter(Boolean) as Array<Record<string, unknown>>;
   await adminCommit(deletes).catch((error) => console.error('Smoke-test cleanup failed:', error));
+  if (uid && !authUserDeleted) await deleteAuthUser(uid).catch((error) => console.error('Smoke-test Auth cleanup failed:', error));
  }
 }
 
