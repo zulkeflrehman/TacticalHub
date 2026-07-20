@@ -1,46 +1,17 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStore, CartItemState } from '@/lib/store';
 import { useToastStore } from '@/lib/toast-store';
-import { Heart, ShoppingCart, ShieldAlert, Truck, RotateCcw, Star, Plus, Minus } from 'lucide-react';
+import { Heart, ShoppingCart, Truck, RotateCcw, Star, Plus, Minus } from 'lucide-react';
 import ProductCard from './ProductCard';
-
-interface ProductImage {
-  url: string;
-  isPrimary: boolean;
-}
-
-interface ProductVariant {
-  sku: string;
-  name: string;
-  price: number;
-  compareAtPrice: number | null;
-  stock: number;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  shortDescription: string;
-  price: number;
-  compareAtPrice: number | null;
-  vendor: string;
-  categoryName: string;
-  images: ProductImage[];
-  variants: ProductVariant[];
-  isFeatured: boolean;
-  isNewArrival: boolean;
-  isBestSeller: boolean;
-  stock: number;
-}
+import type { ProductDto, ProductVariantDto } from '@/lib/catalog-types';
+import CatalogImage from '@/components/ui/CatalogImage';
 
 interface ProductDetailsProps {
-  product: Product;
-  relatedProducts: any[];
+  product: ProductDto;
+  relatedProducts: ProductDto[];
 }
 
 export default function ProductDetails({ product, relatedProducts }: ProductDetailsProps) {
@@ -57,7 +28,7 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
   // Since variants are named like "Forest Green / 2-4 Persons" or just "Stealth Black",
   // we can parse options from variant names or let the user click the variant directly.
   // Clicking the variant directly is extremely clear!
-  const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(product.variants[0]);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariantDto>(product.variants[0]);
 
   const isLiked = isInWishlist(product.slug);
 
@@ -86,7 +57,8 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
     }
 
     const cartItem: CartItemState = {
-      productId: product.slug,
+      productId: product.id,
+      inventoryId: selectedVariant.inventoryId,
       variantSku: selectedVariant?.sku,
       name: product.name + (selectedVariant && selectedVariant.name !== 'Standard' ? ` (${selectedVariant.name})` : ''),
       price: currentPrice,
@@ -95,7 +67,10 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
       vendor: product.vendor
     };
 
-    addToCart(cartItem);
+    if (!addToCart(cartItem)) {
+      addToast('Checkout supports up to five different product variants per order.', 'error');
+      return;
+    }
     addToast(`Added ${quantity}x "${product.name}" to cart.`, 'success');
   };
 
@@ -106,7 +81,8 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
     }
 
     const cartItem: CartItemState = {
-      productId: product.slug,
+      productId: product.id,
+      inventoryId: selectedVariant.inventoryId,
       variantSku: selectedVariant?.sku,
       name: product.name + (selectedVariant && selectedVariant.name !== 'Standard' ? ` (${selectedVariant.name})` : ''),
       price: currentPrice,
@@ -115,39 +91,19 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
       vendor: product.vendor
     };
 
-    addToCart(cartItem);
+    if (!addToCart(cartItem)) {
+      addToast('Checkout supports up to five different product variants per order.', 'error');
+      return;
+    }
     router.push('/checkout');
   };
 
-  // Mock Specs Table
-  const specs = useMemo(() => {
-    const defaultSpecs = [
-      { key: 'Vendor', value: product.vendor || 'TecticalHub' },
-      { key: 'Category', value: product.categoryName },
-      { key: 'Country of Origin', value: 'Imported LOT' },
-      { key: 'Build Quality', value: 'Military Grade Specifications' }
-    ];
-
-    if (product.categoryName === 'Camping Tents') {
-      return [
-        ...defaultSpecs,
-        { key: 'Material', value: 'Double Layer PU 3000mm Waterproof Oxford Cloth' },
-        { key: 'Pole Material', value: '7.9mm High-Strength Fiberglass Automatic Rods' },
-        { key: 'Seams', value: 'Double Stitching, Heat-Sealed Waterproof Taped Seams' },
-        { key: 'Ventilation', value: 'Mesh Windows with High-Density Anti-Mosquito Nets' }
-      ];
-    }
-    if (product.categoryName === 'Knives & Tasers') {
-      return [
-        ...defaultSpecs,
-        { key: 'Self-Defense Output', value: 'Heavy Duty Volt Discharge' },
-        { key: 'Material', value: 'Aviation Alloy Aluminum Shell / Reinforced ABS' },
-        { key: 'Flashlight Output', value: '180 Lumen Super Beam' },
-        { key: 'Safety Lock', value: 'Rear Dual Safety Switch Guard' }
-      ];
-    }
-    return defaultSpecs;
-  }, [product]);
+  const specs = [
+    { key: 'Vendor', value: product.vendor || 'Not specified' },
+    { key: 'Category', value: product.categoryName || 'Not specified' },
+    { key: 'Variant', value: selectedVariant?.name || 'Standard' },
+    { key: 'SKU', value: selectedVariant?.sku || 'Not specified' },
+  ];
 
   return (
     <div className="space-y-16">
@@ -158,10 +114,11 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
         {/* Left Column: Image Gallery (5 cols) */}
         <div className="lg:col-span-6 space-y-4">
           <div className="bg-brand-white border border-brand-black/5 aspect-square relative overflow-hidden clip-angled-lg">
-            <img
+            <CatalogImage
               src={selectedImage}
               alt={product.name}
-              className="w-full h-full object-cover"
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              priority
             />
           </div>
 
@@ -172,13 +129,13 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
                 <button
                   key={img.url}
                   onClick={() => setSelectedImage(img.url)}
-                  className={`w-20 h-20 bg-brand-white border flex-shrink-0 clip-angled-sm overflow-hidden transition-standard ${
+                  className={`relative w-20 h-20 bg-brand-white border flex-shrink-0 clip-angled-sm overflow-hidden transition-standard ${
                     selectedImage === img.url
                       ? 'border-brand-accent scale-95 shadow-sm'
                       : 'border-brand-black/5 hover:border-brand-black/25'
                   }`}
                 >
-                  <img src={img.url} alt="thumbnail" className="w-full h-full object-cover" />
+                  <CatalogImage src={img.url} alt={`${product.name} thumbnail`} sizes="80px" />
                 </button>
               ))}
             </div>
@@ -291,7 +248,7 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
                 </button>
                 <span className="text-xs font-extrabold w-8 text-center select-none">{quantity}</span>
                 <button
-                  disabled={quantity >= currentStock || currentStock <= 0}
+                  disabled={quantity >= Math.min(currentStock, 20) || currentStock <= 0}
                   onClick={() => setQuantity(prev => prev + 1)}
                   className="px-3 py-3 text-brand-dark-gray hover:text-brand-black disabled:opacity-30 transition-colors"
                 >
@@ -335,11 +292,11 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
           <div className="grid grid-cols-2 gap-4 py-2 text-[10px] font-bold text-brand-dark-gray uppercase tracking-wider">
             <div className="flex items-center gap-1.5">
               <Truck className="w-4.5 h-4.5 text-brand-accent" />
-              <span>Flat Shipping Rs. 250</span>
+              <span>Shipping calculated at checkout</span>
             </div>
             <div className="flex items-center gap-1.5">
               <RotateCcw className="w-4.5 h-4.5 text-brand-accent" />
-              <span>7 Days Return Guarantee</span>
+              <span>See current return policy</span>
             </div>
           </div>
         </div>
@@ -349,14 +306,14 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
       {/* Specifications / Policies / Reviews Tabs */}
       <section className="space-y-6">
         <div className="flex border-b border-brand-black/5">
-          {[
+          {([
             { id: 'specs', label: 'Specifications' },
             { id: 'shipping', label: 'Shipping & Returns' },
-            { id: 'reviews', label: 'Reviews (12)' }
-          ].map((tab) => (
+            { id: 'reviews', label: 'Reviews' }
+          ] satisfies Array<{ id: 'specs' | 'shipping' | 'reviews'; label: string }>).map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id)}
               className={`pb-3.5 px-6 text-xs font-black uppercase tracking-wider relative transition-colors ${
                 activeTab === tab.id
                   ? 'text-brand-black border-b-2 border-brand-accent'
@@ -388,52 +345,19 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
           {activeTab === 'shipping' && (
             <div className="space-y-4 text-xs font-semibold text-brand-dark-gray leading-relaxed">
               <h4 className="font-black text-brand-black uppercase">Standard Shipping Across Pakistan</h4>
-              <p>We deliver all orders using trusted courier partners nationwide. Orders take between 3-5 business days to reach major cities, and up to 7 days for remote locations.</p>
+              <p>Shipping cost and eligibility are calculated from the current store rules at checkout. Delivery timing is confirmed while your order is processed.</p>
               <h4 className="font-black text-brand-black uppercase">Cash on Delivery (COD) Available</h4>
-              <p>Pay only when the package arrives at your doorstep. Please make sure the exact cash amount is ready upon delivery.</p>
-              <h4 className="font-black text-brand-black uppercase">7-Day Free Returns</h4>
-              <p>If you are not satisfied with your purchase, you can return it within 7 days of delivery for a full refund or exchange. Items must be unused, in their original packaging with all tags attached.</p>
+              <p>Payment methods currently offered for this order are shown during checkout.</p>
+              <h4 className="font-black text-brand-black uppercase">Returns</h4>
+              <p>Review the published Returns & Refund Policy for current eligibility, timing, and item-condition requirements.</p>
             </div>
           )}
 
           {activeTab === 'reviews' && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="text-center bg-brand-light-gray p-4 clip-angled w-32 border border-brand-black/5">
-                  <span className="text-2xl font-black block">5.0</span>
-                  <div className="flex text-amber-500 justify-center my-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-3 h-3 fill-current" />
-                    ))}
-                  </div>
-                  <span className="text-[9px] font-bold text-brand-dark-gray">12 reviews</span>
-                </div>
-                <div className="text-xs font-semibold text-brand-dark-gray">
-                  <p className="font-bold text-brand-black">100% of customers recommend this product.</p>
-                  <p className="mt-1">All reviews are verified and submitted by confirmed buyers of this item.</p>
-                </div>
-              </div>
-
-              <div className="divide-y divide-brand-black/5">
-                {[
-                  { name: 'Kamil Khan', date: 'June 12, 2026', title: 'Solid Build Quality', rating: 5, body: 'Extremely durable. Sourced exactly as described. Used it in heavy rains during a camping trip in Babusar and it held up beautifully.' },
-                  { name: 'Zeeshan A.', date: 'May 28, 2026', title: 'Highly Recommend', rating: 5, body: 'Delivery was quick, got it in Lahore in 2 days. The material feels military-grade and the quick setup mechanism is superb.' }
-                ].map((rev, idx) => (
-                  <div key={idx} className="py-4 space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-extrabold">{rev.name}</span>
-                      <span className="text-brand-dark-gray/50">{rev.date}</span>
-                    </div>
-                    <div className="flex text-amber-500 my-0.5">
-                      {[...Array(rev.rating)].map((_, i) => (
-                        <Star key={i} className="w-3 h-3 fill-current" />
-                      ))}
-                    </div>
-                    <h5 className="text-xs font-bold text-brand-black">{rev.title}</h5>
-                    <p className="text-xs text-brand-dark-gray/80 leading-relaxed font-medium">{rev.body}</p>
-                  </div>
-                ))}
-              </div>
+            <div className="py-8 text-center space-y-2">
+              <Star className="w-8 h-8 text-brand-dark-gray/30 mx-auto" />
+              <p className="text-xs font-bold uppercase text-brand-black">No verified reviews yet</p>
+              <p className="text-xs text-brand-dark-gray">Verified buyer reviews will appear here after fulfillment.</p>
             </div>
           )}
         </div>

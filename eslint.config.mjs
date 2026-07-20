@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    ".gcloud/**",
+    ".firebase-config/**",
+    ".tools/**",
+    "test-results/**",
+    "playwright-report/**",
   ]),
 ]);
 

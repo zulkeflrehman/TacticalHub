@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useStore, CartItemState } from '@/lib/store';
 import { useToastStore } from '@/lib/toast-store';
+import CatalogImage from '@/components/ui/CatalogImage';
 import { Heart, ShoppingCart } from 'lucide-react';
 
 interface ProductCardProps {
@@ -16,7 +17,7 @@ interface ProductCardProps {
     vendor: string;
     categoryName: string;
     images: { url: string }[];
-    variants: { sku: string; name: string; price: number; compareAtPrice: number | null; stock: number }[];
+    variants: { inventoryId: string; sku: string; name: string; price: number; compareAtPrice: number | null; stock: number }[];
     isFeatured: boolean;
     isNewArrival: boolean;
     isBestSeller: boolean;
@@ -46,8 +47,13 @@ export default function ProductCard({ product }: ProductCardProps) {
     e.stopPropagation();
 
     const defaultVariant = product.variants[0];
+    if (!defaultVariant || defaultVariant.stock <= 0) {
+      addToast('This product is currently out of stock.', 'error');
+      return;
+    }
     const cartItem: CartItemState = {
-      productId: product.slug,
+      productId: product.id,
+      inventoryId: defaultVariant.inventoryId,
       variantSku: defaultVariant?.sku,
       name: product.name,
       price: defaultVariant?.price || product.price,
@@ -56,7 +62,10 @@ export default function ProductCard({ product }: ProductCardProps) {
       vendor: product.vendor
     };
 
-    addToCart(cartItem);
+    if (!addToCart(cartItem)) {
+      addToast('Checkout supports up to five different product variants per order.', 'error');
+      return;
+    }
     addToast(`Added 1x "${product.name}" to cart.`, 'success');
   };
 
@@ -109,12 +118,12 @@ export default function ProductCard({ product }: ProductCardProps) {
       </button>
 
       {/* Product Image Area */}
-      <Link href={`/products/${product.slug}`} className="block relative aspect-square w-full bg-brand-light-gray overflow-hidden">
-        <img
+      <Link href={`/products?slug=${encodeURIComponent(product.slug)}`} className="block relative aspect-square w-full bg-brand-light-gray overflow-hidden">
+        <CatalogImage
           src={hovered ? hoverImage : primaryImage}
           alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-          loading="lazy"
+          sizes="(max-width: 768px) 50vw, 25vw"
+          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
         />
       </Link>
 
@@ -124,7 +133,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <div className="text-[10px] font-extrabold uppercase tracking-wider text-brand-dark-gray/60 mb-0.5">
             {product.vendor || 'TecticalHub'}
           </div>
-          <Link href={`/products/${product.slug}`} className="block">
+          <Link href={`/products?slug=${encodeURIComponent(product.slug)}`} className="block">
             <h3 className="text-xs sm:text-sm font-bold text-brand-black leading-snug line-clamp-2 hover:underline">
               {product.name}
             </h3>

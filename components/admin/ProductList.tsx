@@ -2,46 +2,26 @@
 
 import { useState } from 'react';
 import { useToastStore } from '@/lib/toast-store';
+import { archiveProduct, inventoryIdFor, saveProduct } from '@/lib/client-services';
+import type { ProductDto, ProductVariantDto } from '@/lib/catalog-types';
+import CatalogImage from '@/components/ui/CatalogImage';
 import { 
   Plus, Search, Edit, Trash2, Check, X, 
   Package, Loader2
 } from 'lucide-react';
 
-interface ProductVariant {
-  sku: string;
-  name: string;
-  price: number;
-  compareAtPrice: number | null;
-  stock: number;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  compareAtPrice: number | null;
-  vendor: string;
-  categoryName: string;
-  images: { url: string; isPrimary?: boolean }[];
-  variants: ProductVariant[];
-  stock: number;
-  isFeatured?: boolean;
-  isNewArrival?: boolean;
-  isBestSeller?: boolean;
-  status?: string;
-}
+export type AdminProductVariant = ProductVariantDto;
+export type AdminProduct = ProductDto;
 
 interface ProductListProps {
-  initialProducts: Product[];
+  initialProducts: AdminProduct[];
+  categories: string[];
 }
 
-const CATEGORIES = ['Camping Tents', 'Travel & Camping', 'Knives & Tasers', 'Premium Items', 'General'];
-
-export default function ProductList({ initialProducts }: ProductListProps) {
+export default function ProductList({ initialProducts, categories }: ProductListProps) {
   const addToast = useToastStore((state) => state.addToast);
 
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<AdminProduct[]>(initialProducts);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState<number>(0);
@@ -54,10 +34,12 @@ export default function ProductList({ initialProducts }: ProductListProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [newName, setNewName] = useState('');
   const [newVendor, setNewVendor] = useState('');
-  const [newCategory, setNewCategory] = useState('Camping Tents');
+  const [newCategory, setNewCategory] = useState(categories[0] || '');
   const [newPrice, setNewPrice] = useState<number | ''>('');
   const [newComparePrice, setNewComparePrice] = useState<number | ''>('');
   const [newStock, setNewStock] = useState<number | ''>('');
+  const [newImageUrl, setNewImageUrl] = useState('');
+  const [newPublishNow, setNewPublishNow] = useState(false);
 
   const filteredProducts = products.filter(p =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -65,7 +47,7 @@ export default function ProductList({ initialProducts }: ProductListProps) {
     p.categoryName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleEditStart = (p: Product) => {
+  const handleEditStart = (p: AdminProduct) => {
     setEditingId(p.id);
     setEditPrice(p.price);
     setEditStock(p.stock);
@@ -74,51 +56,32 @@ export default function ProductList({ initialProducts }: ProductListProps) {
   const handleEditSave = async (id: string) => {
     setSavingId(id);
     try {
-      const res = await fetch(`/api/admin/products/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ price: editPrice, stock: editStock })
-      });
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        // Recalculate total stock from updated variants
-        const updatedVariants: ProductVariant[] = data.product?.variants || [];
-        const totalStock = updatedVariants.reduce((acc: number, v: ProductVariant) => acc + v.stock, 0);
-
-        setProducts(prev => prev.map(p =>
-          p.id === id
-            ? { ...p, price: editPrice, stock: totalStock, variants: updatedVariants }
-            : p
-        ));
-        addToast('Product updated successfully.', 'success');
-        setEditingId(null);
-      } else {
-        addToast(data.message || 'Failed to save product.', 'error');
-      }
-    } catch {
-      addToast('Network error saving product.', 'error');
+      const current = products.find((product) => product.id === id);
+      if (!current) throw new Error('Product not found.');
+      const updatedVariants = current.variants.map((variant, index) => ({ ...variant, price: editPrice, stock: index === 0 ? editStock : 0 }));
+      const updated = await saveProduct({ ...current, price: editPrice, stock: editStock, variants: updatedVariants });
+      setProducts(prev => prev.map(p => p.id === id ? updated : p));
+      addToast('Product updated successfully.', 'success');
+      setEditingId(null);
+    } catch (error) {
+      addToast(error instanceof Error ? error.message : 'Unable to save product.', 'error');
     } finally {
       setSavingId(null);
     }
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to permanently delete "${name}" from Firestore?`)) return;
+    if (!confirm(`Archive "${name}" and remove it from the storefront?`)) return;
 
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        setProducts(prev => prev.filter(p => p.id !== id));
-        addToast(`"${name}" deleted successfully.`, 'success');
-      } else {
-        addToast(data.message || 'Failed to delete product.', 'error');
-      }
-    } catch {
-      addToast('Network error deleting product.', 'error');
+      const current = products.find((product) => product.id === id);
+      if (!current) throw new Error('Product not found.');
+      await archiveProduct(current);
+      setProducts(prev => prev.filter(p => p.id !== id));
+      addToast(`"${name}" archived successfully.`, 'success');
+    } catch (error) {
+      addToast(error instanceof Error ? error.message : 'Unable to archive product.', 'error');
     } finally {
       setDeletingId(null);
     }
@@ -126,45 +89,29 @@ export default function ProductList({ initialProducts }: ProductListProps) {
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName || !newPrice || !newStock) {
+    if (!newName || !newCategory || !newPrice || newStock === '' || !newImageUrl) {
       addToast('Please fill out all required fields.', 'error');
       return;
     }
 
     setIsCreating(true);
     try {
-      const res = await fetch('/api/admin/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newName,
-          vendor: newVendor || 'TecticalHub',
-          categoryName: newCategory,
-          price: Number(newPrice),
-          compareAtPrice: newComparePrice ? Number(newComparePrice) : null,
-          stock: Number(newStock)
-        })
+      const slug = newName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const sku = `TH-${slug.slice(0, 20).toUpperCase()}-STD`;
+      const product = await saveProduct({
+        id: slug, slug, name: newName.trim(), vendor: newVendor.trim() || 'TecticalHub', categoryName: newCategory,
+        description: `${newName.trim()} from TecticalHub.`, shortDescription: newName.trim(), price: Number(newPrice),
+        compareAtPrice: newComparePrice ? Number(newComparePrice) : null,
+        images: [{ url: newImageUrl.trim(), isPrimary: true }],
+        variants: [{ inventoryId: inventoryIdFor(slug, sku), sku, name: 'Standard', price: Number(newPrice), compareAtPrice: newComparePrice ? Number(newComparePrice) : null, stock: Number(newStock) }],
+        stock: Number(newStock), isFeatured: false, isNewArrival: false, isBestSeller: false,
+        status: newPublishNow ? 'PUBLISHED' : 'DRAFT',
       });
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        const p = data.product;
-        const totalStock = (p.variants || []).reduce((acc: number, v: ProductVariant) => acc + v.stock, 0);
-        setProducts(prev => [{ ...p, stock: totalStock }, ...prev]);
-        addToast(`"${newName}" created and saved to Firestore!`, 'success');
-
-        // Reset form
-        setNewName('');
-        setNewVendor('');
-        setNewPrice('');
-        setNewComparePrice('');
-        setNewStock('');
-        setShowAddForm(false);
-      } else {
-        addToast(data.message || 'Failed to create product.', 'error');
-      }
-    } catch {
-      addToast('Network error creating product.', 'error');
+      setProducts(prev => [product, ...prev]);
+      addToast(`"${newName}" created and saved to Firestore!`, 'success');
+      setNewName(''); setNewVendor(''); setNewPrice(''); setNewComparePrice(''); setNewStock(''); setNewImageUrl(''); setNewPublishNow(false); setShowAddForm(false);
+    } catch (error) {
+      addToast(error instanceof Error ? error.message : 'Unable to create product.', 'error');
     } finally {
       setIsCreating(false);
     }
@@ -172,18 +119,28 @@ export default function ProductList({ initialProducts }: ProductListProps) {
 
   const handleToggleFlag = async (id: string, flag: 'isFeatured' | 'isNewArrival' | 'isBestSeller', current: boolean) => {
     try {
-      const res = await fetch(`/api/admin/products/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ [flag]: !current })
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setProducts(prev => prev.map(p => p.id === id ? { ...p, [flag]: !current } : p));
-        addToast('Product flags updated.', 'success');
-      }
-    } catch {
-      addToast('Failed to update product flag.', 'error');
+      const product = products.find((entry) => entry.id === id);
+      if (!product) throw new Error('Product not found.');
+      await saveProduct({ ...product, [flag]: !current });
+      setProducts(prev => prev.map(p => p.id === id ? { ...p, [flag]: !current } : p));
+      addToast('Product flags updated.', 'success');
+    } catch (error) {
+      addToast(error instanceof Error ? error.message : 'Failed to update product flag.', 'error');
+    }
+  };
+
+  const handleStatusChange = async (id: string, current: AdminProduct['status']) => {
+    const status = current === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED';
+    try {
+      const product = products.find((entry) => entry.id === id);
+      if (!product) throw new Error('Product not found.');
+      await saveProduct({ ...product, status });
+      setProducts((currentProducts) => currentProducts.map((product) =>
+        product.id === id ? { ...product, status } : product,
+      ));
+      addToast(status === 'PUBLISHED' ? 'Product published.' : 'Product moved to draft.', 'success');
+    } catch (error) {
+      addToast(error instanceof Error ? error.message : 'Failed to change product status.', 'error');
     }
   };
 
@@ -205,6 +162,8 @@ export default function ProductList({ initialProducts }: ProductListProps) {
 
         <button
           onClick={() => setShowAddForm(true)}
+          disabled={categories.length === 0}
+          title={categories.length === 0 ? 'Create a category before adding products.' : 'Add a product'}
           className="bg-brand-black text-brand-white hover:bg-brand-accent hover:text-brand-black text-xs font-extrabold uppercase py-2.5 px-6 flex items-center gap-1.5 transition-colors clip-angled border border-brand-black w-full sm:w-auto justify-center"
         >
           <Plus className="w-4 h-4" /> Add Product
@@ -235,6 +194,15 @@ export default function ProductList({ initialProducts }: ProductListProps) {
                 />
               </div>
 
+              <label className="flex items-center gap-2 text-xs font-bold text-brand-dark-gray">
+                <input
+                  type="checkbox"
+                  checked={newPublishNow}
+                  onChange={(event) => setNewPublishNow(event.target.checked)}
+                />
+                Publish immediately (leave unchecked until catalog review is complete)
+              </label>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-brand-dark-gray block">Vendor / Brand</label>
@@ -253,7 +221,7 @@ export default function ProductList({ initialProducts }: ProductListProps) {
                     onChange={e => setNewCategory(e.target.value)}
                     className="w-full bg-brand-light-gray border border-brand-black/10 p-2 text-xs font-semibold focus:outline-none cursor-pointer"
                   >
-                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
               </div>
@@ -295,6 +263,18 @@ export default function ProductList({ initialProducts }: ProductListProps) {
                 />
               </div>
 
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-brand-dark-gray block">Primary Image URL *</label>
+                <input
+                  type="url"
+                  required
+                  value={newImageUrl}
+                  onChange={e => setNewImageUrl(e.target.value)}
+                  placeholder="https://cdn.example.com/product.jpg"
+                  className="w-full bg-brand-light-gray border border-brand-black/10 p-2 text-xs font-semibold focus:outline-none focus:border-brand-black"
+                />
+              </div>
+
               <button
                 type="submit"
                 disabled={isCreating}
@@ -303,7 +283,7 @@ export default function ProductList({ initialProducts }: ProductListProps) {
                 {isCreating ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Saving to Firestore...</>
                 ) : (
-                  <><Plus className="w-4 h-4" /> Publish Product</>
+                  <><Plus className="w-4 h-4" /> {newPublishNow ? 'Publish Product' : 'Create Draft'}</>
                 )}
               </button>
             </form>
@@ -328,6 +308,7 @@ export default function ProductList({ initialProducts }: ProductListProps) {
                 <th className="p-3">Vendor</th>
                 <th className="p-3">Price</th>
                 <th className="p-3 w-28">Stock</th>
+                <th className="p-3 w-24 text-center">Status</th>
                 <th className="p-3 w-32 text-center">Flags</th>
                 <th className="p-3 w-28 text-center">Actions</th>
               </tr>
@@ -335,7 +316,7 @@ export default function ProductList({ initialProducts }: ProductListProps) {
             <tbody className="divide-y divide-brand-black/5">
               {filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-12 text-center text-brand-dark-gray/50 text-xs font-semibold">
+                  <td colSpan={9} className="p-12 text-center text-brand-dark-gray/50 text-xs font-semibold">
                     No products found.
                   </td>
                 </tr>
@@ -350,7 +331,7 @@ export default function ProductList({ initialProducts }: ProductListProps) {
                     <td className="p-3">
                       <div className="w-10 h-10 bg-brand-light-gray border border-brand-black/5 mx-auto relative overflow-hidden">
                         {p.images[0]?.url && (
-                          <img src={p.images[0].url} alt="thumb" className="w-full h-full object-cover" />
+                          <CatalogImage src={p.images[0].url} alt={p.name} sizes="40px" />
                         )}
                       </div>
                     </td>
@@ -397,6 +378,19 @@ export default function ProductList({ initialProducts }: ProductListProps) {
                           </span>
                         </div>
                       )}
+                    </td>
+
+                    <td className="p-3 text-center">
+                      <button
+                        onClick={() => handleStatusChange(p.id, p.status)}
+                        className={`px-2 py-1 text-[9px] font-black uppercase border clip-angled-sm ${
+                          p.status === 'PUBLISHED'
+                            ? 'bg-success/10 text-success border-success/20'
+                            : 'bg-brand-light-gray text-brand-dark-gray border-brand-black/10'
+                        }`}
+                      >
+                        {p.status === 'PUBLISHED' ? 'Published' : 'Draft'}
+                      </button>
                     </td>
 
                     {/* Flags */}

@@ -7,12 +7,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToastStore } from '@/lib/toast-store';
-import { useStore } from '@/lib/store';
+import { auth } from '@/lib/firebase-client';
+import { sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
 import { LogIn, ShieldAlert } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters')
+  password: z.string().min(8, 'Password must be at least 8 characters').max(72)
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -21,47 +22,57 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const addToast = useToastStore((state) => state.addToast);
-  const syncCartWithServer = useStore((state) => state.syncCartWithServer);
 
   const [loading, setLoading] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const redirectUrl = searchParams.get('redirect') || '/account/profile';
+  const requestedRedirect = searchParams.get('redirect');
+  const redirectUrl = requestedRedirect?.startsWith('/') && !requestedRedirect.startsWith('//')
+    ? requestedRedirect
+    : '/account/profile';
 
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors }
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema)
   });
 
+  const resetPassword = async () => {
+    const email = getValues('email')?.trim();
+    if (!email || !z.string().email().safeParse(email).success) {
+      setErrorMsg('Enter your account email first.');
+      return;
+    }
+    setResetting(true);
+    setErrorMsg('');
+    try {
+      await sendPasswordResetEmail(auth, email);
+      addToast('If that account exists, Firebase has sent password-reset instructions.', 'success');
+    } catch {
+      setErrorMsg('Unable to request a password reset. Please try again.');
+    } finally {
+      setResetting(false);
+    }
+  };
+
   const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
     setErrorMsg('');
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      const resData = await res.json();
-
-      if (res.ok && resData.success) {
-        addToast(resData.message || 'Logged in successfully.', 'success');
-        
-        // Sync guest cart with database
-        if (resData.user?.id) {
-          await syncCartWithServer(resData.user.id);
-        }
-
-        router.push(redirectUrl);
-        router.refresh();
-      } else {
-        setErrorMsg(resData.message || 'Invalid email or password.');
-      }
-    } catch {
-      setErrorMsg('Network error. Failed to log in.');
+      await signInWithEmailAndPassword(auth, data.email.trim().toLowerCase(), data.password);
+      addToast('Logged in successfully.', 'success');
+      router.push(redirectUrl);
+    } catch (error) {
+      const code = typeof error === 'object' && error && 'code' in error ? String(error.code) : '';
+      setErrorMsg(
+        code === 'auth/invalid-credential'
+          ? 'Invalid email or password.'
+          : 'Unable to log in. Please try again.',
+      );
     } finally {
       setLoading(false);
     }
@@ -84,17 +95,6 @@ function LoginContent() {
           <span>{errorMsg}</span>
         </div>
       )}
-
-      {/* Demo Credentials Tip */}
-      <div className="bg-brand-light-gray border border-brand-black/5 p-3.5 text-[10px] font-semibold text-brand-dark-gray leading-normal">
-        <p className="font-bold text-brand-black uppercase">Demo Sandbox Credentials:</p>
-        <p className="mt-1">
-          • Admin: <strong className="text-brand-black">admin@tecticalhub.com</strong> / password: <strong className="text-brand-black">admin_password_123</strong>
-        </p>
-        <p>
-          • Customer: <strong className="text-brand-black">user@tecticalhub.com</strong> / password: <strong className="text-brand-black">user_password_123</strong>
-        </p>
-      </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-1">
@@ -124,6 +124,14 @@ function LoginContent() {
         >
           <LogIn className="w-4 h-4" />
           <span>{loading ? 'Logging In...' : 'Log In'}</span>
+        </button>
+        <button
+          type="button"
+          disabled={resetting}
+          onClick={resetPassword}
+          className="w-full text-[11px] font-bold text-brand-dark-gray hover:text-brand-black disabled:opacity-50"
+        >
+          {resetting ? 'Requesting reset...' : 'Forgot your password?'}
         </button>
       </form>
 

@@ -5,7 +5,7 @@ import ToastContainer from "@/components/ui/toast";
 export const metadata: Metadata = {
   title: "TECTICALHUB | Premium Tactical Gear, Camping Tents & Self-Defense Accessories",
   description: "Pakistan's premium online store for military-grade equipment, camping tents, heavy-duty baton sticks, tasers, and travel accessories. Cash on Delivery across Pakistan.",
-  metadataBase: new URL("http://localhost:3000"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   openGraph: {
     title: "TECTICALHUB | Premium Tactical Gear, Camping Tents & Self-Defense",
     description: "Pakistan's premium online store for military-grade equipment, camping tents, heavy-duty baton sticks, tasers, and travel accessories. Cash on Delivery across Pakistan.",
@@ -22,6 +22,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className="font-sans h-full antialiased"
       suppressHydrationWarning
     >

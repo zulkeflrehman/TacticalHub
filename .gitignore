@@ -12,10 +12,13 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
 
 # next.js
 /.next/
 /out/
+/.firebase/
 
 # production
 /build
@@ -23,15 +26,23 @@
 # misc
 .DS_Store
 *.pem
+firebase-service-account*.json
+gha-creds-*.json
+/.gcloud/
+/.firebase-config/
+/.tools/
 
 # debug
 npm-debug.log*
+firebase-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+firebase-web-config.json
 
 # vercel
 .vercel

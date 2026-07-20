@@ -14,7 +14,7 @@ interface Product {
   vendor: string;
   categoryName: string;
   images: { url: string }[];
-  variants: { sku: string; name: string; price: number; compareAtPrice: number | null; stock: number }[];
+  variants: { inventoryId: string; sku: string; name: string; price: number; compareAtPrice: number | null; stock: number }[];
   isFeatured: boolean;
   isNewArrival: boolean;
   isBestSeller: boolean;

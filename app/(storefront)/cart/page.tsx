@@ -1,58 +1,19 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import CatalogImage from '@/components/ui/CatalogImage';
 import { useStore } from '@/lib/store';
 import { useToastStore } from '@/lib/toast-store';
-import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, ShieldCheck, Ticket } from 'lucide-react';
+import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, ShieldCheck } from 'lucide-react';
 
 export default function CartPage() {
   const { cart, updateQuantity, removeFromCart, clearCart } = useStore();
   const addToast = useToastStore((state) => state.addToast);
 
-  const [couponCode, setCouponCode] = useState('');
-  const [couponDiscount, setCouponDiscount] = useState(0);
-  const [appliedCoupon, setAppliedCoupon] = useState('');
-  const [checkingCoupon, setCheckingCoupon] = useState(false);
-
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
-  const handleApplyCoupon = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!couponCode.trim()) return;
-
-    setCheckingCoupon(true);
-    try {
-      // Hit validate coupon endpoint or simulate service calculation
-      const cleanCode = couponCode.toUpperCase().trim();
-      if (cleanCode === 'WELCOME10') {
-        const discount = Math.floor((subtotal * 10) / 100);
-        setCouponDiscount(discount);
-        setAppliedCoupon('WELCOME10');
-        addToast('Coupon "WELCOME10" applied! (10% discount)', 'success');
-      } else if (cleanCode === 'FREE250') {
-        setCouponDiscount(250);
-        setAppliedCoupon('FREE250');
-        addToast('Coupon "FREE250" applied! (Rs. 250 discount)', 'success');
-      } else {
-        addToast('Invalid coupon code.', 'error');
-      }
-    } catch {
-      addToast('Error validating coupon.', 'error');
-    } finally {
-      setCheckingCoupon(false);
-    }
-  };
-
-  const handleRemoveCoupon = () => {
-    setCouponDiscount(0);
-    setAppliedCoupon('');
-    setCouponCode('');
-    addToast('Coupon code removed.', 'info');
-  };
-
   const shippingCost = subtotal >= 5000 || subtotal === 0 ? 0 : 250;
-  const grandTotal = Math.max(0, subtotal - couponDiscount + shippingCost);
+  const grandTotal = subtotal + shippingCost;
 
   return (
     <div className="space-y-8">
@@ -110,7 +71,7 @@ export default function CartPage() {
                     {/* Thumbnail */}
                     <div className="w-20 h-20 bg-brand-light-gray border border-brand-black/5 flex-shrink-0 relative overflow-hidden">
                       {item.image ? (
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        <CatalogImage src={item.image} alt={item.name} sizes="80px" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-xs text-brand-dark-gray">No Img</div>
                       )}
@@ -118,7 +79,7 @@ export default function CartPage() {
 
                     {/* Meta */}
                     <div>
-                      <Link href={`/products/${item.productId}`} className="text-sm sm:text-base font-extrabold text-brand-black hover:underline line-clamp-1">
+                      <Link href={`/products?slug=${encodeURIComponent(item.productId)}`} className="text-sm sm:text-base font-extrabold text-brand-black hover:underline line-clamp-1">
                         {item.name}
                       </Link>
                       <p className="text-[10px] text-brand-dark-gray/60 font-bold uppercase tracking-widest mt-0.5">
@@ -174,41 +135,6 @@ export default function CartPage() {
           {/* Cart summary side block (4 cols) */}
           <div className="lg:col-span-4 space-y-6">
             
-            {/* Voucher Box */}
-            <div className="bg-brand-white border border-brand-black/5 p-6 clip-angled">
-              <h3 className="text-xs font-black uppercase tracking-wider text-brand-black border-l-2 border-brand-accent pl-2 mb-4">
-                Promo Code
-              </h3>
-              {appliedCoupon ? (
-                <div className="flex items-center justify-between bg-brand-light-gray p-3 border border-brand-accent clip-angled-sm">
-                  <div>
-                    <span className="text-xs font-bold block">{appliedCoupon} Applied</span>
-                    <span className="text-[10px] text-brand-dark-gray font-semibold">Rs. {couponDiscount.toLocaleString()} Saved</span>
-                  </div>
-                  <button onClick={handleRemoveCoupon} className="text-xs font-bold text-red-500 hover:underline">
-                    Remove
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleApplyCoupon} className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="ENTER WELCOME10"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    className="flex-1 bg-brand-light-gray border border-brand-black/10 py-2 px-3 text-xs font-semibold uppercase focus:outline-none"
-                  />
-                  <button
-                    type="submit"
-                    disabled={checkingCoupon}
-                    className="bg-brand-black text-brand-white hover:bg-brand-accent hover:text-brand-black px-4 py-2 text-xs font-bold uppercase transition-colors clip-angled flex items-center justify-center gap-1 shrink-0"
-                  >
-                    <Ticket className="w-3.5 h-3.5" /> Apply
-                  </button>
-                </form>
-              )}
-            </div>
-
             {/* Calculations Box */}
             <div className="bg-brand-white border border-brand-black/5 p-6 clip-angled-lg space-y-4">
               <h3 className="text-xs font-black uppercase tracking-wider text-brand-black border-l-2 border-brand-accent pl-2 mb-2">
@@ -220,12 +146,6 @@ export default function CartPage() {
                   <span>Cart Subtotal</span>
                   <span className="text-brand-black font-extrabold">Rs. {subtotal.toLocaleString()}</span>
                 </div>
-                {couponDiscount > 0 && (
-                  <div className="flex justify-between text-success">
-                    <span>Voucher Discount</span>
-                    <span className="font-extrabold">- Rs. {couponDiscount.toLocaleString()}</span>
-                  </div>
-                )}
                 <div className="flex justify-between">
                   <span>Shipping Cost</span>
                   <span className="text-brand-black font-extrabold">
@@ -246,6 +166,10 @@ export default function CartPage() {
                 <span>Proceed to Checkout</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
+
+              <p className="text-[10px] text-center text-brand-dark-gray font-semibold">
+                Valid promotion codes can be applied and verified on the checkout page.
+              </p>
 
               <div className="flex justify-center items-center gap-2 pt-2 text-[10px] font-bold text-brand-dark-gray uppercase tracking-wide">
                 <ShieldCheck className="w-4.5 h-4.5 text-brand-accent" />

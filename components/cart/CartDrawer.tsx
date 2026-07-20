@@ -1,9 +1,9 @@
 'use client';
 
 import { useStore } from '@/lib/store';
+import CatalogImage from '@/components/ui/CatalogImage';
 import { X, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
 
 export default function CartDrawer() {
   const { cart, isOpen, toggleMiniCart, updateQuantity, removeFromCart } = useStore();
@@ -61,11 +61,7 @@ export default function CartDrawer() {
                   {/* Thumbnail */}
                   <div className="w-20 h-20 bg-brand-light-gray relative flex-shrink-0 border border-brand-black/5 overflow-hidden">
                     {item.image ? (
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                      />
+                      <CatalogImage src={item.image} alt={item.name} sizes="80px" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-xs text-brand-dark-gray">No Img</div>
                     )}

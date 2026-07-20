@@ -7,15 +7,17 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToastStore } from '@/lib/toast-store';
-import { useStore } from '@/lib/store';
 import { UserPlus, ShieldAlert } from 'lucide-react';
+import { auth } from '@/lib/firebase-client';
+import { createCustomerProfile } from '@/lib/client-services';
+import { createUserWithEmailAndPassword, deleteUser, updateProfile } from 'firebase/auth';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name is required'),
   email: z.string().email('Please enter a valid email address'),
   phone: z.string().min(10, 'Phone number must be at least 10 digits'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string()
+  password: z.string().min(8, 'Password must be at least 8 characters').max(72),
+  confirmPassword: z.string().min(8).max(72)
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"]
@@ -26,7 +28,6 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const router = useRouter();
   const addToast = useToastStore((state) => state.addToast);
-  const syncCartWithServer = useStore((state) => state.syncCartWithServer);
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -43,28 +44,19 @@ export default function RegisterPage() {
     setLoading(true);
     setErrorMsg('');
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      const resData = await res.json();
-
-      if (res.ok && resData.success) {
-        addToast(resData.message || 'Account created successfully!', 'success');
-        
-        // Sync guest cart with database
-        if (resData.user?.id) {
-          await syncCartWithServer(resData.user.id);
-        }
-
-        router.push('/account/profile');
-        router.refresh();
-      } else {
-        setErrorMsg(resData.message || 'Failed to create account.');
+      const credential = await createUserWithEmailAndPassword(auth, data.email.trim().toLowerCase(), data.password);
+      try {
+        await updateProfile(credential.user, { displayName: data.name.trim() });
+        await createCustomerProfile(credential.user, data.name, data.phone);
+      } catch (profileError) {
+        await deleteUser(credential.user).catch(() => undefined);
+        throw profileError;
       }
-    } catch {
-      setErrorMsg('Network error. Failed to create account.');
+      addToast('Account created successfully!', 'success');
+      router.push('/account/profile');
+    } catch (error) {
+      const code = typeof error === 'object' && error && 'code' in error ? String(error.code) : '';
+      setErrorMsg(code === 'auth/email-already-in-use' ? 'An account already exists for this email.' : 'Unable to create the account. Please try again.');
     } finally {
       setLoading(false);
     }

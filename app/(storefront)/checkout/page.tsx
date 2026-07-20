@@ -1,16 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import CatalogImage from '@/components/ui/CatalogImage';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useStore } from '@/lib/store';
 import { useToastStore } from '@/lib/toast-store';
+import { auth } from '@/lib/firebase-client';
+import { FREE_SHIPPING_THRESHOLD_PKR, placeCodOrder, quoteCoupon, SHIPPING_COST_PKR } from '@/lib/client-services';
 import { 
-  ShoppingBag, ShieldCheck, CheckCircle2, 
-  ArrowRight, Landmark, Truck, AlertTriangle 
+  ShoppingBag, ShieldCheck, CheckCircle2,
+  ArrowRight, Landmark, Truck
 } from 'lucide-react';
 
 // Validation Schema
@@ -23,37 +26,46 @@ const checkoutSchema = z.object({
   city: z.string().min(2, 'City is required'),
   state: z.string().min(2, 'State/Province is required'),
   postalCode: z.string().min(4, 'Postal code must be at least 4 digits'),
-  paymentMethod: z.enum(['COD', 'BANK_TRANSFER']),
+  paymentMethod: z.literal('COD'),
   notes: z.string().optional()
 });
 
 type CheckoutFormData = z.infer<typeof checkoutSchema>;
+interface CheckoutQuote {
+  subtotal: number;
+  shippingCost: number;
+  discount: number;
+  total: number;
+  couponCode: string | null;
+}
+
+interface PlacedOrder {
+  orderNumber: string;
+  paymentMethod: 'COD';
+  firstName: string;
+  lastName: string;
+  address: string;
+  city: string;
+  state: string;
+  phone: string;
+  total: number;
+}
 
 export default function CheckoutPage() {
-  const router = useRouter();
   const { cart, clearCart } = useStore();
+  const router = useRouter();
   const addToast = useToastStore((state) => state.addToast);
 
-  const [sessionUser, setSessionUser] = useState<any>(null);
   const [couponCode, setCouponCode] = useState('');
-  const [couponDiscount, setCouponDiscount] = useState(0);
   const [appliedCoupon, setAppliedCoupon] = useState('');
+  const [serverQuote, setServerQuote] = useState<CheckoutQuote | null>(null);
   const [checkingCoupon, setCheckingCoupon] = useState(false);
   const [submittingOrder, setSubmittingOrder] = useState(false);
-  const [placedOrder, setPlacedOrder] = useState<any>(null);
+  const [placedOrder, setPlacedOrder] = useState<PlacedOrder | null>(null);
 
-  // Fetch session on load
-  useEffect(() => {
-    fetch('/api/auth/session')
-      .then(res => res.json())
-      .then(data => {
-        if (data.user) {
-          setSessionUser(data.user);
-        }
-      });
-  }, []);
-
-  const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const localSubtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const subtotal = serverQuote?.subtotal ?? localSubtotal;
+  const couponDiscount = serverQuote?.discount ?? 0;
 
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,38 +74,31 @@ export default function CheckoutPage() {
     setCheckingCoupon(true);
     try {
       const cleanCode = couponCode.toUpperCase().trim();
-      if (cleanCode === 'WELCOME10') {
-        const discount = Math.floor((subtotal * 10) / 100);
-        setCouponDiscount(discount);
-        setAppliedCoupon('WELCOME10');
-        addToast('Coupon "WELCOME10" applied! (10% discount)', 'success');
-      } else if (cleanCode === 'FREE250') {
-        setCouponDiscount(250);
-        setAppliedCoupon('FREE250');
-        addToast('Coupon "FREE250" applied! (Rs. 250 discount)', 'success');
-      } else {
-        addToast('Invalid coupon code.', 'error');
-      }
-    } catch {
-      addToast('Error validating coupon.', 'error');
+      const quote = await quoteCoupon(cleanCode, localSubtotal);
+      setServerQuote({ subtotal: localSubtotal, shippingCost: localSubtotal >= FREE_SHIPPING_THRESHOLD_PKR ? 0 : SHIPPING_COST_PKR, discount: quote.discount, total: localSubtotal - quote.discount + (localSubtotal >= FREE_SHIPPING_THRESHOLD_PKR ? 0 : SHIPPING_COST_PKR), couponCode: quote.code });
+      setAppliedCoupon(cleanCode);
+      addToast(`Coupon "${cleanCode}" applied.`, 'success');
+    } catch (error) {
+      addToast(error instanceof Error ? error.message : 'Unable to validate this coupon.', 'error');
     } finally {
       setCheckingCoupon(false);
     }
   };
 
   const handleRemoveCoupon = () => {
-    setCouponDiscount(0);
     setAppliedCoupon('');
+    setServerQuote(null);
     setCouponCode('');
     addToast('Coupon code removed.', 'info');
   };
 
-  const shippingCost = subtotal >= 5000 || subtotal === 0 ? 0 : 250;
-  const grandTotal = Math.max(0, subtotal - couponDiscount + shippingCost);
+  const shippingCost = serverQuote?.shippingCost ?? (subtotal >= FREE_SHIPPING_THRESHOLD_PKR || subtotal === 0 ? 0 : SHIPPING_COST_PKR);
+  const grandTotal = serverQuote?.total ?? Math.max(0, subtotal + shippingCost);
 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors }
   } = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema),
@@ -101,40 +106,28 @@ export default function CheckoutPage() {
       paymentMethod: 'COD'
     }
   });
+  const selectedPaymentMethod = useWatch({ control, name: 'paymentMethod' });
 
   const onSubmit = async (data: CheckoutFormData) => {
     if (cart.length === 0) {
       addToast('Your cart is empty.', 'error');
       return;
     }
+    const user = auth.currentUser;
+    if (!user) {
+      addToast('Log in or create an account before placing your order.', 'info');
+      router.push('/account/login?redirect=/checkout');
+      return;
+    }
 
     setSubmittingOrder(true);
     try {
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          userId: sessionUser?.id || undefined,
-          couponCode: appliedCoupon || undefined,
-          items: cart.map(i => ({
-            productId: i.productId,
-            variantSku: i.variantSku,
-            quantity: i.quantity
-          }))
-        })
-      });
-
-      const responseData = await res.json();
-      if (res.ok && responseData.success) {
-        setPlacedOrder(responseData.order);
-        clearCart();
-        addToast('Order placed successfully!', 'success');
-      } else {
-        addToast(responseData.message || 'Error processing checkout.', 'error');
-      }
-    } catch {
-      addToast('Network error processing checkout.', 'error');
+      const order = await placeCodOrder(user, cart, data, appliedCoupon || undefined);
+      setPlacedOrder(order);
+      clearCart();
+      addToast('Order placed successfully!', 'success');
+    } catch (error) {
+      addToast(error instanceof Error ? error.message : 'Unable to place the order.', 'error');
     } finally {
       setSubmittingOrder(false);
     }
@@ -155,7 +148,7 @@ export default function CheckoutPage() {
             </p>
           </div>
           <p className="text-xs sm:text-sm text-brand-dark-gray max-w-lg mx-auto font-semibold leading-relaxed">
-            Thank you for shopping at TecticalHub. We have received your order details and are preparing it for shipment. A verification call/SMS will be made to your phone shortly.
+            Thank you for shopping at TecticalHub. Your order has been saved and is awaiting confirmation by our fulfillment team.
           </p>
         </div>
 
@@ -168,11 +161,7 @@ export default function CheckoutPage() {
             <span>Payment Instructions</span>
           </h4>
           <p className="text-[11px] font-semibold text-brand-dark-gray leading-normal">
-            {placedOrder.paymentMethod === 'COD' ? (
-              'You selected Cash on Delivery (COD). Please pay the courier officer in cash upon receiving your package at your shipping address.'
-            ) : (
-              'Please transfer the exact order amount to the bank account below and email your receipt to payment@tecticalhub.com.pk referencing your Order Number:\nBank Name: Allied Bank Limited\nAccount Title: TECTICALHUB GEAR PRIVATE\nAccount Number: 0102-3456789-01-1'
-            )}
+            You selected Cash on Delivery (COD). Please pay the courier officer in cash upon receiving your package at your shipping address.
           </p>
         </div>
 
@@ -374,23 +363,6 @@ export default function CheckoutPage() {
                   </div>
                 </label>
 
-                {/* Bank Transfer Option */}
-                <label className="flex items-start gap-3 p-4 bg-brand-light-gray border border-brand-black/10 hover:border-brand-black cursor-pointer clip-angled-sm">
-                  <input
-                    type="radio"
-                    value="BANK_TRANSFER"
-                    {...register('paymentMethod')}
-                    className="accent-brand-black mt-1"
-                  />
-                  <div>
-                    <span className="text-xs font-bold block uppercase flex items-center gap-1">
-                      <Landmark className="w-4 h-4 text-brand-accent" /> Bank Transfer
-                    </span>
-                    <span className="text-[10px] text-brand-dark-gray/80 font-medium leading-relaxed block mt-1">
-                      Transfer to our bank account. Instructions sent on order confirmation.
-                    </span>
-                  </div>
-                </label>
               </div>
             </div>
 
@@ -457,7 +429,7 @@ export default function CheckoutPage() {
                 {cart.map((item) => (
                   <div key={`${item.productId}-${item.variantSku || ''}`} className="flex gap-3 py-3 first:pt-0 last:pb-0 items-center">
                     <div className="w-10 h-10 bg-brand-light-gray border border-brand-black/5 shrink-0 relative overflow-hidden">
-                      {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover" />}
+                      {item.image && <CatalogImage src={item.image} alt={item.name} sizes="40px" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="text-xs font-bold text-brand-black truncate">{item.name}</h4>
@@ -505,7 +477,7 @@ export default function CheckoutPage() {
                   <span>Processing Order...</span>
                 ) : (
                   <>
-                    <span>Place Order (COD)</span>
+                    <span>Place Order ({selectedPaymentMethod})</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
@@ -513,7 +485,7 @@ export default function CheckoutPage() {
 
               <div className="flex justify-center items-center gap-2 pt-2 text-[9px] font-bold text-brand-dark-gray uppercase tracking-wide">
                 <ShieldCheck className="w-4 h-4 text-brand-accent" />
-                <span>Verified secure checkout transaction</span>
+                <span>Inventory verified by Firestore transaction</span>
               </div>
             </div>
 

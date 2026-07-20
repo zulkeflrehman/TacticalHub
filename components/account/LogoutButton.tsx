@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useToastStore } from '@/lib/toast-store';
 import { LogOut } from 'lucide-react';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase-client';
 
 export default function LogoutButton() {
   const router = useRouter();
@@ -10,12 +12,9 @@ export default function LogoutButton() {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch('/api/auth/logout', { method: 'POST' });
-      if (res.ok) {
-        addToast('Logged out successfully.', 'info');
-        router.push('/');
-        router.refresh();
-      }
+      await signOut(auth);
+      addToast('Logged out successfully.', 'info');
+      router.push('/');
     } catch {
       addToast('Error logging out.', 'error');
     }

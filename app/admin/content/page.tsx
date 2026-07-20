@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { FileText, Plus, Pencil, X, Check, Globe } from 'lucide-react';
+import { listContentPages, saveContentPage } from '@/lib/client-services';
 
 interface ContentPage {
   id: string;
@@ -11,67 +12,58 @@ interface ContentPage {
   isPublished: boolean;
 }
 
-const defaultPages = [
-  { id: 'about-us', title: 'About Us', slug: 'about-us', content: '', isPublished: true },
-  { id: 'contact-us', title: 'Contact Us', slug: 'contact-us', content: '', isPublished: true },
-  { id: 'faq', title: 'FAQ', slug: 'faq', content: '', isPublished: true },
-  { id: 'privacy-policy', title: 'Privacy Policy', slug: 'privacy-policy', content: '', isPublished: true },
-  { id: 'terms-and-conditions', title: 'Terms & Conditions', slug: 'terms-and-conditions', content: '', isPublished: true },
-  { id: 'shipping-policy', title: 'Shipping Policy', slug: 'shipping-policy', content: '', isPublished: true },
-  { id: 'return-policy', title: 'Return Policy', slug: 'return-policy', content: '', isPublished: true },
-];
-
 export default function AdminContentPage() {
-  const [pages, setPages] = useState<ContentPage[]>(defaultPages);
+  const [pages, setPages] = useState<ContentPage[]>([]);
   const [editingPage, setEditingPage] = useState<ContentPage | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newPage, setNewPage] = useState({ title: '', slug: '', content: '' });
+  const [newPage, setNewPage] = useState({ title: '', slug: '', content: '', isPublished: false });
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    listContentPages()
+      .then((items) => { if (active) setPages(items); })
+      .catch((loadError: unknown) => {
+        if (active) setError(loadError instanceof Error ? loadError.message : 'Failed to load content pages.');
+      });
+    return () => { active = false; };
+  }, []);
 
   const handleSaveEdit = async () => {
     if (!editingPage) return;
     setSaving(true);
+    setError('');
     try {
-      const res = await fetch(`/api/admin/content/${editingPage.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingPage)
-      });
-      if (res.ok) {
-        setPages(prev => prev.map(p => p.id === editingPage.id ? editingPage : p));
-      }
-    } catch {
-      // Offline mode: apply optimistically
-      setPages(prev => prev.map(p => p.id === editingPage.id ? editingPage : p));
+      const saved = await saveContentPage(editingPage);
+      setPages(prev => prev.map(p => p.id === editingPage.id ? saved : p));
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Failed to save this page.');
+      return;
     } finally {
       setSaving(false);
-      setEditingPage(null);
     }
+    setEditingPage(null);
   };
 
   const handleAddPage = async () => {
-    if (!newPage.title.trim() || !newPage.slug.trim()) return;
+    if (!newPage.title.trim() || !newPage.slug.trim() || !newPage.content.trim()) {
+      setError('Title, slug, and content are required.');
+      return;
+    }
     setSaving(true);
-    const created: ContentPage = { id: `new-${Date.now()}`, ...newPage, isPublished: true };
+    setError('');
     try {
-      const res = await fetch('/api/admin/content', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newPage)
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setPages(prev => [...prev, data.page || created]);
-      } else {
-        setPages(prev => [...prev, created]);
-      }
-    } catch {
-      setPages(prev => [...prev, created]);
+      const saved = await saveContentPage({ ...newPage, id: newPage.slug });
+      setPages(prev => [...prev, saved]);
+    } catch (createError) {
+      setError(createError instanceof Error ? createError.message : 'Failed to create this page.');
+      return;
     } finally {
       setSaving(false);
-      setShowAddForm(false);
-      setNewPage({ title: '', slug: '', content: '' });
     }
+    setShowAddForm(false);
+    setNewPage({ title: '', slug: '', content: '', isPublished: false });
   };
 
   return (
@@ -91,6 +83,12 @@ export default function AdminContentPage() {
           New Page
         </button>
       </div>
+
+      {error && (
+        <div className="border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700">
+          {error}
+        </div>
+      )}
 
       {/* Add Page Form */}
       {showAddForm && (
@@ -113,6 +111,10 @@ export default function AdminContentPage() {
             <label className="text-[10px] font-black uppercase text-brand-dark-gray block">Page Content</label>
             <textarea rows={6} value={newPage.content} onChange={e => setNewPage(p => ({ ...p, content: e.target.value }))} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
           </div>
+          <label className="flex items-center gap-2 text-xs font-bold text-brand-dark-gray">
+            <input type="checkbox" checked={newPage.isPublished} onChange={e => setNewPage(p => ({ ...p, isPublished: e.target.checked }))} />
+            Publish immediately (leave unchecked until content review is complete)
+          </label>
           <button onClick={handleAddPage} disabled={saving} className="flex items-center gap-2 bg-brand-black text-brand-white hover:bg-brand-accent hover:text-brand-black text-xs font-bold uppercase py-2.5 px-5 transition-colors clip-angled disabled:opacity-50">
             <Check className="w-4 h-4" /> {saving ? 'Saving...' : 'Create Page'}
           </button>
@@ -133,13 +135,17 @@ export default function AdminContentPage() {
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-black uppercase text-brand-dark-gray block">Slug</label>
-              <input type="text" value={editingPage.slug} onChange={e => setEditingPage(p => p ? { ...p, slug: e.target.value } : p)} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black font-mono" />
+              <input type="text" value={editingPage.slug} disabled className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold font-mono disabled:opacity-60" />
             </div>
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-black uppercase text-brand-dark-gray block">Page Content</label>
             <textarea rows={12} value={editingPage.content} onChange={e => setEditingPage(p => p ? { ...p, content: e.target.value } : p)} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
           </div>
+          <label className="flex items-center gap-2 text-xs font-bold text-brand-dark-gray">
+            <input type="checkbox" checked={editingPage.isPublished} onChange={e => setEditingPage(p => p ? { ...p, isPublished: e.target.checked } : p)} />
+            Published on storefront
+          </label>
           <div className="flex gap-3">
             <button onClick={handleSaveEdit} disabled={saving} className="flex items-center gap-2 bg-brand-black text-brand-white hover:bg-brand-accent hover:text-brand-black text-xs font-bold uppercase py-2.5 px-5 transition-colors clip-angled disabled:opacity-50">
               <Check className="w-4 h-4" /> {saving ? 'Saving...' : 'Save Changes'}
@@ -167,9 +173,9 @@ export default function AdminContentPage() {
                 <span className="text-xs font-bold text-brand-black">{page.title}</span>
               </div>
               <div className="col-span-4">
-                <a href={`/pages/${page.slug}`} target="_blank" rel="noreferrer" className="text-[10px] font-mono text-brand-dark-gray hover:text-brand-accent transition-colors flex items-center gap-1">
+                <a href={`/pages?slug=${encodeURIComponent(page.slug)}`} target="_blank" rel="noreferrer" className="text-[10px] font-mono text-brand-dark-gray hover:text-brand-accent transition-colors flex items-center gap-1">
                   <Globe className="w-3 h-3" />
-                  /pages/{page.slug}
+                  /pages?slug={page.slug}
                 </a>
               </div>
               <div className="col-span-2">

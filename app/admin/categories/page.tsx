@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Tag, Plus, Pencil, Trash2, X, Check, ImageIcon } from 'lucide-react';
+import CatalogImage from '@/components/ui/CatalogImage';
+import { listCategories, removeCategory, saveCategory } from '@/lib/client-services';
 
 interface Category {
   id: string;
@@ -24,25 +26,18 @@ export default function AdminCategoriesPage() {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/categories');
-      if (res.ok) {
-        const data = await res.json();
-        setCategories(data.categories || []);
-      }
+      setCategories(await listCategories());
     } catch {
-      // Show fallback mock categories if API not yet wired
-      setCategories([
-        { id: '1', name: 'Camping Tents', slug: 'camping-tents', description: 'Premium military-grade camping tents', image: null, _count: { products: 12 } },
-        { id: '2', name: 'Travel & Camping', slug: 'travel-camping', description: 'Travel gear and outdoor accessories', image: null, _count: { products: 18 } },
-        { id: '3', name: 'Knives & Tasers', slug: 'knives-tasers', description: 'Self defense and tactical tools', image: null, _count: { products: 9 } },
-        { id: '4', name: 'Premium Items', slug: 'premium-items', description: 'Top-tier tactical equipment', image: null, _count: { products: 6 } },
-      ]);
+      setError('Network error while loading categories.');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchCategories(); }, []);
+  useEffect(() => {
+    const timer = window.setTimeout(() => void fetchCategories(), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const generateSlug = (name: string) =>
     name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -63,42 +58,23 @@ export default function AdminCategoriesPage() {
     setSaving(true);
     setError('');
     try {
-      const method = editingId ? 'PUT' : 'POST';
-      const url = editingId ? `/api/admin/categories/${editingId}` : '/api/admin/categories';
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      if (res.ok) {
-        await fetchCategories();
-        resetForm();
-      } else {
-        setError('Failed to save category.');
-      }
-    } catch {
-      setError('Network error. Changes will apply when DB is connected.');
-      // Optimistic local update for offline mode
-      if (editingId) {
-        setCategories(prev => prev.map(c => c.id === editingId ? { ...c, ...formData } : c));
-      } else {
-        setCategories(prev => [...prev, { id: `local-${Date.now()}`, ...formData, _count: { products: 0 } }]);
-      }
+      await saveCategory({ id: editingId || formData.slug, name: formData.name, slug: formData.slug, description: formData.description || null, image: formData.image || null });
+      await fetchCategories();
       resetForm();
+    } catch {
+      setError('Network error. No changes were saved.');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this category? All products in it will become uncategorised.')) return;
+    if (!confirm('Delete this category? Products using it must be reassigned separately.')) return;
     try {
-      const res = await fetch(`/api/admin/categories/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setCategories(prev => prev.filter(c => c.id !== id));
-      }
-    } catch {
+      await removeCategory(id);
       setCategories(prev => prev.filter(c => c.id !== id));
+    } catch {
+      setError('Network error. The category was not deleted.');
     }
   };
 
@@ -170,6 +146,7 @@ export default function AdminCategoriesPage() {
                 type="text"
                 value={formData.slug}
                 onChange={e => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                disabled={Boolean(editingId)}
                 placeholder="e.g. camping-tents"
                 className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black font-mono"
               />
@@ -239,7 +216,7 @@ export default function AdminCategoriesPage() {
               {/* Category Image Preview */}
               <div className="w-full h-16 bg-brand-light-gray mb-4 flex items-center justify-center overflow-hidden">
                 {cat.image ? (
-                  <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                  <CatalogImage src={cat.image} alt={cat.name} sizes="320px" />
                 ) : (
                   <ImageIcon className="w-8 h-8 text-brand-dark-gray/20 stroke-[1.5]" />
                 )}

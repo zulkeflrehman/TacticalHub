@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { useToastStore } from '@/lib/toast-store';
-import { Plus, Ticket, ToggleLeft, ToggleRight, X, Loader2, Trash2 } from 'lucide-react';
+import { Plus, ToggleLeft, ToggleRight, X, Loader2, Trash2 } from 'lucide-react';
+import { removeCoupon, saveCoupon } from '@/lib/client-services';
 
-interface Coupon {
+export interface Coupon {
   id: string;
   code: string;
   discountType: 'PERCENTAGE' | 'FIXED';
@@ -37,39 +38,27 @@ export default function CouponManager({ initialCoupons }: CouponManagerProps) {
   const handleToggleActive = async (id: string, code: string, currentStatus: boolean) => {
     setTogglingId(id);
     try {
-      const res = await fetch(`/api/admin/coupons/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: !currentStatus })
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setCoupons(prev => prev.map(c => c.id === id ? { ...c, isActive: !currentStatus } : c));
-        addToast(`Coupon "${code}" ${!currentStatus ? 'activated' : 'deactivated'}.`, 'info');
-      } else {
-        addToast(data.message || 'Failed to update coupon.', 'error');
-      }
-    } catch {
-      addToast('Network error updating coupon.', 'error');
+      const coupon = coupons.find((entry) => entry.id === id);
+      if (!coupon) throw new Error('Coupon not found.');
+      await saveCoupon({ ...coupon, startsAt: new Date(0), expiresAt: new Date(coupon.expiresAt), isActive: !currentStatus });
+      setCoupons(prev => prev.map(c => c.id === id ? { ...c, isActive: !currentStatus } : c));
+      addToast(`Coupon "${code}" ${!currentStatus ? 'activated' : 'deactivated'}.`, 'info');
+    } catch (error) {
+      addToast(error instanceof Error ? error.message : 'Unable to update coupon.', 'error');
     } finally {
       setTogglingId(null);
     }
   };
 
   const handleDeleteCoupon = async (id: string, code: string) => {
-    if (!confirm(`Delete coupon "${code}" permanently?`)) return;
+    if (!confirm(`Archive coupon "${code}"?`)) return;
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/admin/coupons/${id}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setCoupons(prev => prev.filter(c => c.id !== id));
-        addToast(`Coupon "${code}" deleted.`, 'success');
-      } else {
-        addToast(data.message || 'Failed to delete coupon.', 'error');
-      }
-    } catch {
-      addToast('Network error deleting coupon.', 'error');
+      await removeCoupon(id);
+      setCoupons(prev => prev.filter(c => c.id !== id));
+      addToast(`Coupon "${code}" deleted.`, 'success');
+    } catch (error) {
+      addToast(error instanceof Error ? error.message : 'Unable to delete coupon.', 'error');
     } finally {
       setDeletingId(null);
     }
@@ -86,37 +75,15 @@ export default function CouponManager({ initialCoupons }: CouponManagerProps) {
 
     setIsCreating(true);
     try {
-      const res = await fetch('/api/admin/coupons', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code: newCode.toUpperCase().trim(),
-          discountType: newType,
-          discountValue: Number(newValue),
-          minOrderValue: Number(newMinOrder) || 0,
-          maxUsage: 100,
-          isActive: true
-        })
-      });
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        const c = data.coupon;
-        setCoupons(prev => [{
-          ...c,
-          expiresAt: c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : 'N/A'
-        }, ...prev]);
-        addToast(`Coupon "${c.code}" created and saved!`, 'success');
-        // Reset form
-        setNewCode('');
-        setNewValue('');
-        setNewMinOrder('');
-        setShowAddForm(false);
-      } else {
-        addToast(data.message || 'Failed to create coupon.', 'error');
-      }
-    } catch {
-      addToast('Network error creating coupon.', 'error');
+      const code = newCode.toUpperCase().trim();
+      const expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+      await saveCoupon({ id: code, code, discountType: newType, discountValue: Number(newValue), minOrderValue: Number(newMinOrder) || 0, maxUsage: 100, usedCount: 0, isActive: true, startsAt: new Date(), expiresAt: expires });
+      const created: Coupon = { id: code, code, discountType: newType, discountValue: Number(newValue), minOrderValue: Number(newMinOrder) || 0, maxUsage: 100, usedCount: 0, isActive: true, expiresAt: expires.toLocaleDateString() };
+      setCoupons(prev => [created, ...prev]);
+      addToast(`Coupon "${code}" created and saved!`, 'success');
+      setNewCode(''); setNewValue(''); setNewMinOrder(''); setShowAddForm(false);
+    } catch (error) {
+      addToast(error instanceof Error ? error.message : 'Unable to create coupon.', 'error');
     } finally {
       setIsCreating(false);
     }
@@ -165,7 +132,7 @@ export default function CouponManager({ initialCoupons }: CouponManagerProps) {
                   <label className="text-[10px] font-black uppercase text-brand-dark-gray block">Discount Type</label>
                   <select
                     value={newType}
-                    onChange={e => setNewType(e.target.value as any)}
+                    onChange={e => setNewType(e.target.value as 'PERCENTAGE' | 'FIXED')}
                     className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none cursor-pointer"
                   >
                     <option value="PERCENTAGE">Percentage (%)</option>

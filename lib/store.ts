@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 
 export interface CartItemState {
   productId: string;
+  inventoryId: string;
   variantSku?: string;
   name: string;
   price: number;
@@ -18,7 +19,7 @@ interface CartStore {
   
   // Actions
   setCart: (cart: CartItemState[]) => void;
-  addToCart: (item: CartItemState) => void;
+  addToCart: (item: CartItemState) => boolean;
   removeFromCart: (productId: string, variantSku?: string) => void;
   updateQuantity: (productId: string, quantity: number, variantSku?: string) => void;
   clearCart: () => void;
@@ -30,7 +31,7 @@ interface CartStore {
   clearWishlist: () => void;
 
   // Server Integration Sync
-  syncCartWithServer: (userId: string) => Promise<void>;
+  syncCartWithServer: () => Promise<void>;
 }
 
 export const useStore = create<CartStore>()(
@@ -42,19 +43,26 @@ export const useStore = create<CartStore>()(
 
       setCart: (cart) => set({ cart }),
 
-      addToCart: (item) => set((state) => {
+      addToCart: (item) => {
+        const state = get();
         const existingIndex = state.cart.findIndex(
           (i) => i.productId === item.productId && i.variantSku === item.variantSku
         );
 
         if (existingIndex > -1) {
-          const newCart = [...state.cart];
-          newCart[existingIndex].quantity += item.quantity;
-          return { cart: newCart, isOpen: true };
+          set({
+            cart: state.cart.map((entry, index) => index === existingIndex
+              ? { ...entry, quantity: Math.min(20, entry.quantity + item.quantity) }
+              : entry),
+            isOpen: true,
+          });
+          return true;
         }
 
-        return { cart: [...state.cart, item], isOpen: true };
-      }),
+        if (state.cart.length >= 5) return false;
+        set({ cart: [...state.cart, item], isOpen: true });
+        return true;
+      },
 
       removeFromCart: (productId, variantSku) => set((state) => ({
         cart: state.cart.filter(
@@ -74,7 +82,7 @@ export const useStore = create<CartStore>()(
         return {
           cart: state.cart.map((i) =>
             i.productId === productId && i.variantSku === variantSku
-              ? { ...i, quantity }
+              ? { ...i, quantity: Math.min(20, quantity) }
               : i
           )
         };
@@ -100,42 +108,16 @@ export const useStore = create<CartStore>()(
 
       clearWishlist: () => set({ wishlist: [] }),
 
-      syncCartWithServer: async (userId) => {
+      syncCartWithServer: async () => {
         const localItems = get().cart;
         if (localItems.length === 0) return;
 
         try {
-          const res = await fetch('/api/cart/merge', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId,
-              items: localItems.map(i => ({
-                productId: i.productId,
-                variantSku: i.variantSku,
-                quantity: i.quantity
-              }))
-            })
-          });
-
-          if (res.ok) {
-            const data = await res.json();
-            // If the server returns a merged cart, map it back to local state
-            if (data?.cart?.items) {
-              const serverCartMapped: CartItemState[] = data.cart.items.map((item: any) => ({
-                productId: item.productId,
-                variantSku: item.variant?.sku,
-                name: item.product.name,
-                price: item.variant?.price || item.product.price,
-                image: item.product.images[0]?.url || '',
-                quantity: item.quantity,
-                vendor: item.product.vendor || ''
-              }));
-              set({ cart: serverCartMapped });
-            }
-          }
+          // Cart state is intentionally local on the Spark plan. Checkout reads
+          // current inventory and prices inside a Firestore transaction.
+          set({ cart: localItems.filter((item) => Boolean(item.inventoryId)).slice(0, 5) });
         } catch (err) {
-          console.warn("Failed to sync cart with server:", err);
+          console.warn("Failed to normalize the local cart:", err);
         }
       }
     }),

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useToastStore } from '@/lib/toast-store';
 import { Mail, ShieldCheck } from 'lucide-react';
+import { subscribeNewsletter } from '@/lib/client-services';
 
 export default function StoreFooter() {
   const [email, setEmail] = useState('');
@@ -16,18 +17,9 @@ export default function StoreFooter() {
 
     setLoading(true);
     try {
-      const res = await fetch('/api/newsletter', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        addToast('Successfully subscribed to our newsletter!', 'success');
-        setEmail('');
-      } else {
-        addToast(data.message || 'Subscription failed.', 'error');
-      }
+      await subscribeNewsletter(email);
+      addToast('Successfully subscribed to our newsletter!', 'success');
+      setEmail('');
     } catch {
       addToast('Error subscribing to newsletter.', 'error');
     } finally {
@@ -37,21 +29,21 @@ export default function StoreFooter() {
 
   const footerLinks = {
     shop: [
-      { name: 'Camping Tents', href: '/categories/camping-tents' },
-      { name: 'Travel & Camping', href: '/categories/travel-camping' },
-      { name: 'Knives & Tasers', href: '/categories/knives-tasers' },
-      { name: 'Premium Items', href: '/categories/premium-items' },
+      { name: 'Camping Tents', href: '/categories?slug=camping-tents' },
+      { name: 'Travel & Camping', href: '/categories?slug=travel-camping' },
+      { name: 'Knives & Tasers', href: '/categories?slug=knives-tasers' },
+      { name: 'Premium Items', href: '/categories?slug=premium-items' },
     ],
     info: [
-      { name: 'About Us', href: '/pages/about-us' },
-      { name: 'Contact Us', href: '/pages/contact-us' },
-      { name: 'FAQs', href: '/pages/faq' },
+      { name: 'About Us', href: '/pages?slug=about-us' },
+      { name: 'Contact Us', href: '/pages?slug=contact-us' },
+      { name: 'FAQs', href: '/pages?slug=faq' },
     ],
     policies: [
-      { name: 'Privacy Policy', href: '/pages/privacy-policy' },
-      { name: 'Terms of Service', href: '/pages/terms-and-conditions' },
-      { name: 'Shipping Policy', href: '/pages/shipping-policy' },
-      { name: 'Returns & Refund Policy', href: '/pages/return-policy' },
+      { name: 'Privacy Policy', href: '/pages?slug=privacy-policy' },
+      { name: 'Terms of Service', href: '/pages?slug=terms-and-conditions' },
+      { name: 'Shipping Policy', href: '/pages?slug=shipping-policy' },
+      { name: 'Returns & Refund Policy', href: '/pages?slug=return-policy' },
     ]
   };
 
@@ -68,27 +60,8 @@ export default function StoreFooter() {
               TECTICAL<span className="text-brand-accent">HUB</span>
             </Link>
             <p className="text-xs text-brand-white/70 leading-relaxed font-medium">
-              Premium independent outdoor adventure outlet. Supplying Pakistan with military-grade survival tools, tents, defensive baton sticks, and high-performance wear.
+              Independent outdoor and tactical equipment storefront serving customers across Pakistan.
             </p>
-            <div className="flex gap-4 pt-1">
-              <a href="#" aria-label="Facebook" className="text-brand-white/60 hover:text-brand-accent transition-colors">
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                  <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/>
-                </svg>
-              </a>
-              <a href="#" aria-label="Instagram" className="text-brand-white/60 hover:text-brand-accent transition-colors">
-                <svg className="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
-                </svg>
-              </a>
-              <a href="#" aria-label="Twitter" className="text-brand-white/60 hover:text-brand-accent transition-colors">
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                </svg>
-              </a>
-            </div>
           </div>
 
           {/* Policy Links */}
@@ -154,7 +127,7 @@ export default function StoreFooter() {
           <p>© {new Date().getFullYear()} TecticalHub. All rights reserved.</p>
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-brand-accent" />
-            <span>SECURE CHECKOUT | CASH ON DELIVERY ONLY</span>
+            <span>Firestore-verified checkout | Cash on Delivery</span>
           </div>
         </div>
 

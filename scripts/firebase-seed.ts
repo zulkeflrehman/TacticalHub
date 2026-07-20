@@ -1,10 +1,62 @@
 import { loadEnvConfig } from '@next/env';
-// Load environment variables from .env file before importing firebase-admin
+// Load environment variables before initializing the Firebase Web SDK.
 loadEnvConfig(process.cwd());
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { adminDb } from '../lib/firebase-admin';
+type FirestoreValue = Record<string, unknown>;
+
+interface RestDocumentReference {
+  path: string;
+}
+
+function encodeValue(value: unknown): FirestoreValue {
+  if (value === null || value === undefined) return { nullValue: null };
+  if (value instanceof Date) return { timestampValue: value.toISOString() };
+  if (typeof value === 'string') return { stringValue: value };
+  if (typeof value === 'boolean') return { booleanValue: value };
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) throw new Error('Firestore seed values must be finite numbers.');
+    return Number.isInteger(value) ? { integerValue: String(value) } : { doubleValue: value };
+  }
+  if (Array.isArray(value)) return { arrayValue: { values: value.map(encodeValue) } };
+  if (typeof value === 'object') return { mapValue: { fields: encodeFields(value as Record<string, unknown>) } };
+  throw new Error(`Unsupported Firestore seed value: ${typeof value}`);
+}
+
+function encodeFields(data: Record<string, unknown>): Record<string, FirestoreValue> {
+  return Object.fromEntries(Object.entries(data).map(([key, value]) => [key, encodeValue(value)]));
+}
+
+class RestBatch {
+  private writes: Array<Record<string, unknown>> = [];
+
+  set(reference: RestDocumentReference, data: Record<string, unknown>) {
+    this.writes.push({ update: { name: reference.path, fields: encodeFields(data) } });
+  }
+
+  async commit() {
+    if (this.writes.length === 0) return;
+    const token = process.env.GOOGLE_OAUTH_ACCESS_TOKEN;
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'tecticalhub';
+    if (!token) throw new Error('GOOGLE_OAUTH_ACCESS_TOKEN is required for the keyless seed operation.');
+    const response = await fetch(`https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:commit`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'X-Goog-User-Project': projectId },
+      body: JSON.stringify({ writes: this.writes }),
+    });
+    if (!response.ok) throw new Error(`Firestore seed commit failed (${response.status}): ${await response.text()}`);
+  }
+}
+
+const adminDb = {
+  batch: () => new RestBatch(),
+  collection: (collectionName: string) => ({
+    doc: (documentId: string): RestDocumentReference => ({
+      path: `projects/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'tecticalhub'}/databases/(default)/documents/${encodeURIComponent(collectionName)}/${encodeURIComponent(documentId)}`,
+    }),
+  }),
+};
 
 interface RawProduct {
   "Product Name": string;
@@ -22,7 +74,7 @@ function cleanSlug(url: string): string {
     const pathParts = parsed.pathname.split('/');
     const handle = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2];
     return decodeURIComponent(handle).toLowerCase().trim();
-  } catch (err) {
+  } catch {
     return url
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
@@ -40,6 +92,9 @@ function cleanCollectionName(col: string): string {
 }
 
 async function main() {
+  if (process.env.ALLOW_FIREBASE_SEED !== 'true') {
+    throw new Error('Set ALLOW_FIREBASE_SEED=true to confirm that you intend to import the starter catalog.');
+  }
   console.log("Initializing Firebase Seeding process...");
   
   const jsonPath = path.join(process.cwd(), 'Product_details.json');
@@ -79,6 +134,12 @@ async function main() {
   };
 
   const categoriesCreated = new Set<string>();
+
+  const configuredStock = Number(process.env.SEED_INITIAL_STOCK || 0);
+  if (!Number.isInteger(configuredStock) || configuredStock < 0) {
+    throw new Error('SEED_INITIAL_STOCK must be a non-negative integer.');
+  }
+  let productIndex = 0;
 
   for (const [slug, records] of Object.entries(groupedProducts)) {
     let bestRecord = records[0];
@@ -138,50 +199,65 @@ async function main() {
     }
 
     // 2. Generate Options & Variants (Denormalized inside the product document)
-    let variants: any[] = [];
+    const variants: Array<{
+      inventoryId: string;
+      sku: string;
+      name: string;
+      price: number;
+      compareAtPrice: number | null;
+      stock: number;
+    }> = [];
     if (collectionName === 'Camping Tents') {
       const colors = ['Forest Green', 'Tactical Black'];
       const sizes = ['2-4 Persons', '5-6 Persons'];
       colors.forEach(c => {
         sizes.forEach(s => {
+          const sku = `TECT-${slug.substring(0, 10).toUpperCase()}-${c.substring(0, 3).toUpperCase()}-${s.replace(/\s/g, '').substring(0, 3).toUpperCase()}`;
           variants.push({
-            sku: `TECT-${slug.substring(0, 10).toUpperCase()}-${c.substring(0, 3).toUpperCase()}-${s.replace(/\s/g, '').substring(0, 3).toUpperCase()}`,
+            inventoryId: `${slug}--${sku}`.replace(/[^A-Za-z0-9_-]/g, '_'),
+            sku,
             name: `${c} / ${s}`,
             price,
             compareAtPrice: comparePrice > 0 ? comparePrice : null,
-            stock: Math.floor(Math.random() * 25) + 5
+            stock: configuredStock
           });
         });
       });
     } else if (collectionName === 'Travel & Camping') {
       const colors = ['Olive Drab', 'Stealth Black'];
       colors.forEach(c => {
+        const sku = `TECT-${slug.substring(0, 12).toUpperCase()}-${c.substring(0, 3).toUpperCase()}`;
         variants.push({
-          sku: `TECT-${slug.substring(0, 12).toUpperCase()}-${c.substring(0, 3).toUpperCase()}`,
+          inventoryId: `${slug}--${sku}`.replace(/[^A-Za-z0-9_-]/g, '_'),
+          sku,
           name: c,
           price,
           compareAtPrice: comparePrice > 0 ? comparePrice : null,
-          stock: Math.floor(Math.random() * 20) + 10
+          stock: configuredStock
         });
       });
     } else if (collectionName === 'Knives & Tasers') {
       const types = ['Standard', 'Heavy Duty'];
       types.forEach(t => {
+        const sku = `TECT-${slug.substring(0, 12).toUpperCase()}-${t.substring(0, 3).toUpperCase()}`;
         variants.push({
-          sku: `TECT-${slug.substring(0, 12).toUpperCase()}-${t.substring(0, 3).toUpperCase()}`,
+          inventoryId: `${slug}--${sku}`.replace(/[^A-Za-z0-9_-]/g, '_'),
+          sku,
           name: t,
           price,
           compareAtPrice: comparePrice > 0 ? comparePrice : null,
-          stock: Math.floor(Math.random() * 15) + 5
+          stock: configuredStock
         });
       });
     } else {
+      const sku = `TECT-${slug.substring(0, 15).toUpperCase()}-STD`;
       variants.push({
-        sku: `TECT-${slug.substring(0, 15).toUpperCase()}-STD`,
+        inventoryId: `${slug}--${sku}`.replace(/[^A-Za-z0-9_-]/g, '_'),
+        sku,
         name: 'Standard',
         price,
         compareAtPrice: comparePrice > 0 ? comparePrice : null,
-        stock: 20
+        stock: configuredStock
       });
     }
 
@@ -200,13 +276,28 @@ async function main() {
       categoryName: collectionName,
       images: rawImages.map((url, i) => ({ url, isPrimary: i === 0 })),
       variants,
-      isFeatured: Math.random() > 0.7,
-      isNewArrival: Math.random() > 0.7,
-      isBestSeller: Math.random() > 0.7,
+      isFeatured: productIndex % 5 === 0,
+      isNewArrival: productIndex % 4 === 0,
+      isBestSeller: productIndex % 3 === 0,
       createdAt: new Date(),
       updatedAt: new Date()
     });
     operationCount++;
+
+    for (const variant of variants) {
+      const inventoryRef = adminDb.collection('inventory').doc(variant.inventoryId);
+      batch.set(inventoryRef, {
+        productId: slug,
+        sku: variant.sku,
+        name: `${name}${variant.name === 'Standard' ? '' : ` (${variant.name})`}`,
+        price: variant.price,
+        stock: variant.stock,
+        status: 'ACTIVE',
+        updatedAt: new Date(),
+      });
+      operationCount++;
+    }
+    productIndex++;
 
     // Commit batch if it approaches Firestore limits
     if (operationCount >= COMMIT_LIMIT) {
@@ -263,6 +354,7 @@ async function main() {
       slug: 'about-us',
       title: 'About TecticalHub',
       content: 'Welcome to TecticalHub. We supply tactical response gear, camping equipment, and heavy-duty survival accessories across Pakistan. Built for operators, campers, and outdoor adventurers.',
+      isPublished: false,
       createdAt: new Date(),
       updatedAt: new Date()
     },
@@ -270,6 +362,7 @@ async function main() {
       slug: 'privacy-policy',
       title: 'Privacy Policy',
       content: 'We take your privacy seriously. Your user profile, checkout information, and order logs are securely stored and never shared with third-party networks.',
+      isPublished: false,
       createdAt: new Date(),
       updatedAt: new Date()
     }
@@ -284,10 +377,9 @@ async function main() {
   await commitBatch();
 
   console.log("Firestore seeding completed successfully!");
-  process.exit(0);
 }
 
 main().catch(err => {
   console.error("Firestore seeding failed with error:", err);
-  process.exit(1);
+  process.exitCode = 1;
 });

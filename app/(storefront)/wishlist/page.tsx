@@ -5,26 +5,12 @@ import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import ProductCard from '@/components/product/ProductCard';
 import { Heart } from 'lucide-react';
-
-interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  compareAtPrice: number | null;
-  vendor: string;
-  categoryName: string;
-  images: { url: string }[];
-  variants: { sku: string; name: string; price: number; compareAtPrice: number | null; stock: number }[];
-  isFeatured: boolean;
-  isNewArrival: boolean;
-  isBestSeller: boolean;
-  stock: number;
-}
+import { listPublishedProducts } from '@/lib/client-services';
+import type { ProductDto } from '@/lib/catalog-types';
 
 export default function WishlistPage() {
   const { wishlist, clearWishlist } = useStore();
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<ProductDto[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Load all products to filter client-side
@@ -32,12 +18,8 @@ export default function WishlistPage() {
     // Standard mock or service fallback API fetch
     const fetchProducts = async () => {
       try {
-        const res = await fetch('/api/products'); // We will build /api/products route next!
-        if (res.ok) {
-          const data = await res.json();
-          setAllProducts(data.products || []);
-        }
-      } catch (err) {
+        setAllProducts(await listPublishedProducts());
+      } catch {
         console.warn("Failed fetching products for wishlist client-side.");
       } finally {
         setLoading(false);

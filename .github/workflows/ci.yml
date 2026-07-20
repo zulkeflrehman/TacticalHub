@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_APP_URL: https://example.com
+      NEXT_PUBLIC_FIREBASE_API_KEY: ci-placeholder
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: example.firebaseapp.com
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: ci-project
+      NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ci-project.appspot.com
+      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "123456789"
+      NEXT_PUBLIC_FIREBASE_APP_ID: "1:123456789:web:ci"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  browser-smoke:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_FIREBASE_API_KEY: ci-placeholder
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: example.firebaseapp.com
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: ci-project
+      NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ci-project.appspot.com
+      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "123456789"
+      NEXT_PUBLIC_FIREBASE_APP_ID: "1:123456789:web:ci"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [quality, browser-smoke]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      NEXT_PUBLIC_APP_URL: https://tecticalhub.web.app
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Authenticate to Firebase without a service-account key
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: tecticalhub
+          workload_identity_provider: projects/207771096742/locations/global/workloadIdentityPools/github-actions/providers/tacticalhub
+          service_account: tecticalhub-deploy@tecticalhub.iam.gserviceaccount.com
+      - name: Load the public Firebase Web SDK configuration
+        shell: bash
+        run: |
+          WEB_APP_ID="$(npx firebase-tools apps:list WEB --project tecticalhub --json | node scripts/select-firebase-web-app.mjs)"
+          npx firebase-tools apps:sdkconfig WEB "$WEB_APP_ID" --project tecticalhub --out firebase-web-config.json
+          node scripts/export-firebase-web-env.mjs firebase-web-config.json >> "$GITHUB_ENV"
+      - run: npm run build
+      - name: Deploy static Hosting and Firestore policy
+        run: npx firebase-tools deploy --only hosting,firestore --project tecticalhub --non-interactive

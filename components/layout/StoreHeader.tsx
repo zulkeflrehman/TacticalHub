@@ -6,10 +6,15 @@ import { useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import { 
   Search, User, Heart, ShoppingBag, Menu, X, 
-  Phone, Globe, DollarSign, LogOut, LayoutDashboard 
+  Globe, DollarSign, LogOut, LayoutDashboard
 } from 'lucide-react';
 import AnnouncementBar from './AnnouncementBar';
 import CartDrawer from '../cart/CartDrawer';
+import type { StoreUserDto } from '@/lib/catalog-types';
+import { getUserProfile, listPublishedProducts } from '@/lib/client-services';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase-client';
+import CatalogImage from '@/components/ui/CatalogImage';
 
 interface SuggestedProduct {
   id: string;
@@ -24,43 +29,37 @@ export default function StoreHeader() {
   const router = useRouter();
   const { cart, wishlist, toggleMiniCart } = useStore();
   
-  const [sessionUser, setSessionUser] = useState<any>(null);
+  const [sessionUser, setSessionUser] = useState<StoreUserDto | null>(null);
+  const [catalog, setCatalog] = useState<SuggestedProduct[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<SuggestedProduct[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Fetch session on load
   useEffect(() => {
-    fetch('/api/auth/session')
-      .then(res => res.json())
-      .then(data => {
-        if (data.user) {
-          setSessionUser(data.user);
-        }
-      });
+    listPublishedProducts().then(setCatalog).catch(() => setCatalog([]));
+    return onAuthStateChanged(auth, (user) => {
+      if (!user) return setSessionUser(null);
+      getUserProfile(user).then(setSessionUser).catch(() => setSessionUser(null));
+    });
   }, []);
 
   // Debounced Search Suggestions
   useEffect(() => {
     if (searchQuery.trim().length < 2) {
-      setSuggestions([]);
       return;
     }
 
     const delayDebounce = setTimeout(() => {
-      fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            setSuggestions(data.products || []);
-          }
-        });
+      const needle = searchQuery.trim().toLowerCase();
+      setSuggestions(catalog.filter((product) =>
+        product.name.toLowerCase().includes(needle) || product.vendor.toLowerCase().includes(needle),
+      ).slice(0, 6));
     }, 300);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchQuery]);
+  }, [catalog, searchQuery]);
 
   // Click outside search listener
   useEffect(() => {
@@ -84,26 +83,24 @@ export default function StoreHeader() {
   const handleSuggestionClick = (slug: string) => {
     setSearchQuery('');
     setShowSuggestions(false);
-    router.push(`/products/${slug}`);
+    router.push(`/products?slug=${encodeURIComponent(slug)}`);
   };
 
   const handleLogout = async () => {
-    const res = await fetch('/api/auth/logout', { method: 'POST' });
-    if (res.ok) {
-      setSessionUser(null);
-      router.push('/');
-      router.refresh();
-    }
+    await signOut(auth);
+    setSessionUser(null);
+    router.push('/');
   };
 
   const totalCartItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const visibleSuggestions = searchQuery.trim().length >= 2 ? suggestions : [];
 
   const navLinks = [
     { name: 'Home', href: '/' },
-    { name: 'Camping Tents', href: '/categories/camping-tents' },
-    { name: 'Travel & Camping', href: '/categories/travel-camping' },
-    { name: 'Knives & Tasers', href: '/categories/knives-tasers' },
-    { name: 'Premium Items', href: '/categories/premium-items' },
+    { name: 'Camping Tents', href: '/categories?slug=camping-tents' },
+    { name: 'Travel & Camping', href: '/categories?slug=travel-camping' },
+    { name: 'Knives & Tasers', href: '/categories?slug=knives-tasers' },
+    { name: 'Premium Items', href: '/categories?slug=premium-items' },
   ];
 
   return (
@@ -124,12 +121,8 @@ export default function StoreHeader() {
         </div>
         
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-1.5 hover:text-brand-white transition-colors">
-            <Phone className="w-3.5 h-3.5 text-brand-accent" />
-            <span>SUPPORT: +92 300 123 4567</span>
-          </div>
-          <Link href="/pages/faq" className="hover:text-brand-white transition-colors">FAQ</Link>
-          <Link href="/pages/shipping-policy" className="hover:text-brand-white transition-colors">SHIPPING</Link>
+          <Link href="/pages?slug=faq" className="hover:text-brand-white transition-colors">FAQ</Link>
+          <Link href="/pages?slug=shipping-policy" className="hover:text-brand-white transition-colors">SHIPPING</Link>
         </div>
       </div>
 
@@ -176,13 +169,13 @@ export default function StoreHeader() {
           </form>
 
           {/* Suggestions Dropdown */}
-          {showSuggestions && suggestions.length > 0 && (
+          {showSuggestions && visibleSuggestions.length > 0 && (
             <div className="absolute top-full left-0 right-0 mt-2 bg-brand-white border border-brand-black/10 shadow-xl z-50 p-2 clip-angled">
               <div className="text-[10px] uppercase font-bold text-brand-dark-gray px-3 py-1.5 border-b border-brand-black/5">
                 Suggested Products
               </div>
               <div className="divide-y divide-brand-black/5">
-                {suggestions.map((p) => (
+                {visibleSuggestions.map((p) => (
                   <div
                     key={p.id}
                     onClick={() => handleSuggestionClick(p.slug)}
@@ -190,7 +183,7 @@ export default function StoreHeader() {
                   >
                     <div className="w-10 h-10 bg-brand-light-gray relative shrink-0">
                       {p.images[0]?.url ? (
-                        <img src={p.images[0].url} alt={p.name} className="w-full h-full object-cover" />
+                        <CatalogImage src={p.images[0].url} alt={p.name} sizes="40px" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-[8px]">No Img</div>
                       )}
@@ -361,10 +354,9 @@ export default function StoreHeader() {
             </nav>
 
             <div className="p-4 border-t border-brand-black/5 bg-brand-light-gray text-[10px] font-bold text-brand-dark-gray space-y-3">
-              <p>📞 SUPPORT: +92 300 123 4567</p>
               <div className="flex gap-4">
-                <Link href="/pages/faq" onClick={() => setIsMobileMenuOpen(false)}>FAQ</Link>
-                <Link href="/pages/shipping-policy" onClick={() => setIsMobileMenuOpen(false)}>Shipping Policy</Link>
+                <Link href="/pages?slug=faq" onClick={() => setIsMobileMenuOpen(false)}>FAQ</Link>
+                <Link href="/pages?slug=shipping-policy" onClick={() => setIsMobileMenuOpen(false)}>Shipping Policy</Link>
               </div>
             </div>
           </div>

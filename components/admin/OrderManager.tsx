@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useToastStore } from '@/lib/toast-store';
-import { 
-  Search, Eye, X, Loader2,
+import { updateOrder } from '@/lib/client-services';
+import {
+  Search, Eye, X,
   MapPin, FileText 
 } from 'lucide-react';
 
@@ -14,7 +15,7 @@ interface OrderItem {
   quantity: number;
 }
 
-interface Order {
+export interface AdminOrder {
   id: string;
   number: string;
   customer: string;
@@ -31,15 +32,15 @@ interface Order {
 }
 
 interface OrderManagerProps {
-  initialOrders: Order[];
+  initialOrders: AdminOrder[];
 }
 
 export default function OrderManager({ initialOrders }: OrderManagerProps) {
   const addToast = useToastStore((state) => state.addToast);
 
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [orders, setOrders] = useState<AdminOrder[]>(initialOrders);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   // Filtering
@@ -52,21 +53,12 @@ export default function OrderManager({ initialOrders }: OrderManagerProps) {
   const handleStatusChange = async (id: string, newStatus: string) => {
     setUpdatingId(id);
     try {
-      const res = await fetch(`/api/admin/orders/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
-        if (selectedOrder?.id === id) setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
-        addToast(`Order updated to "${newStatus}".`, 'success');
-      } else {
-        addToast(data.message || 'Failed to update status.', 'error');
-      }
-    } catch {
-      addToast('Network error updating order.', 'error');
+      await updateOrder(id, { status: newStatus });
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
+      if (selectedOrder?.id === id) setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
+      addToast(`Order updated to "${newStatus}".`, 'success');
+    } catch (error) {
+      addToast(error instanceof Error ? error.message : 'Unable to update order.', 'error');
     } finally {
       setUpdatingId(null);
     }
@@ -75,21 +67,12 @@ export default function OrderManager({ initialOrders }: OrderManagerProps) {
   const handlePaymentStatusChange = async (id: string, newPayStatus: string) => {
     setUpdatingId(id);
     try {
-      const res = await fetch(`/api/admin/orders/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paymentStatus: newPayStatus })
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setOrders(prev => prev.map(o => o.id === id ? { ...o, paymentStatus: newPayStatus } : o));
-        if (selectedOrder?.id === id) setSelectedOrder(prev => prev ? { ...prev, paymentStatus: newPayStatus } : null);
-        addToast(`Payment updated to "${newPayStatus}".`, 'success');
-      } else {
-        addToast(data.message || 'Failed to update payment status.', 'error');
-      }
-    } catch {
-      addToast('Network error updating order.', 'error');
+      await updateOrder(id, { paymentStatus: newPayStatus });
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, paymentStatus: newPayStatus } : o));
+      if (selectedOrder?.id === id) setSelectedOrder(prev => prev ? { ...prev, paymentStatus: newPayStatus } : null);
+      addToast(`Payment updated to "${newPayStatus}".`, 'success');
+    } catch (error) {
+      addToast(error instanceof Error ? error.message : 'Unable to update payment status.', 'error');
     } finally {
       setUpdatingId(null);
     }

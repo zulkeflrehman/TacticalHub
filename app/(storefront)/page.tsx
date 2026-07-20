@@ -1,18 +1,30 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ProductService } from '@/lib/services/product-service';
+import { listCategories, listPublishedProducts } from '@/lib/client-services';
+import type { CategoryDto, ProductDto } from '@/lib/catalog-types';
 import ProductCard from '@/components/product/ProductCard';
 import { ShieldCheck, Compass, Anchor, Target, ArrowRight } from 'lucide-react';
 
-export const revalidate = 3600; // Cache page for 1 hour
+export default function HomePage() {
+  const [products, setProducts] = useState<ProductDto[]>([]);
+  const [categories, setCategories] = useState<CategoryDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-export default async function HomePage() {
-  // Parallel Server Fetching
-  const [featured, newArrivals, bestSellers, categories] = await Promise.all([
-    ProductService.getFeaturedProducts(),
-    ProductService.getNewArrivals(),
-    ProductService.getBestSellers(),
-    ProductService.getCategories(),
-  ]);
+  useEffect(() => {
+    Promise.all([listPublishedProducts(), listCategories()])
+      .then(([catalog, categoryList]) => {
+        setProducts(catalog);
+        setCategories(categoryList);
+      })
+      .catch(() => setError('The live catalog could not be loaded. Please try again shortly.'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const newArrivals = products.filter((product) => product.isNewArrival);
+  const bestSellers = products.filter((product) => product.isBestSeller);
 
   return (
     <div className="space-y-16">
@@ -36,14 +48,14 @@ export default async function HomePage() {
           </p>
           <div className="pt-4 flex flex-wrap gap-4">
             <Link 
-              href="/categories/camping-tents" 
+              href="/categories?slug=camping-tents"
               className="bg-brand-accent text-brand-black hover:bg-brand-accent-hover text-xs font-extrabold uppercase py-4 px-8 transition-colors clip-angled flex items-center gap-1"
             >
               <span>Explore Tents</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link 
-              href="/categories/knives-tasers" 
+              href="/categories?slug=knives-tasers"
               className="border border-brand-white text-brand-white hover:bg-brand-white hover:text-brand-black text-xs font-extrabold uppercase py-4 px-8 transition-colors clip-angled"
             >
               Self-Defense Shop
@@ -81,7 +93,7 @@ export default async function HomePage() {
           {categories.map((c) => (
             <Link 
               key={c.slug} 
-              href={`/categories/${c.slug}`}
+              href={`/categories?slug=${encodeURIComponent(c.slug)}`}
               className="group bg-brand-black text-brand-white overflow-hidden aspect-[4/3] relative flex flex-col justify-end p-6 clip-angled border border-brand-black hover:border-brand-accent transition-standard"
             >
               <div 
@@ -107,19 +119,22 @@ export default async function HomePage() {
       <section className="bg-brand-accent text-brand-black p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-6 clip-angled-lg">
         <div className="space-y-2 max-w-xl">
           <h3 className="text-xl sm:text-2xl font-black uppercase tracking-wider">
-            GET 10% OFF YOUR FIRST ORDER
+            CHECK CURRENT STORE PROMOTIONS
           </h3>
           <p className="text-xs sm:text-sm font-semibold text-brand-black/80 leading-relaxed">
-            Apply coupon code <span className="bg-brand-black text-brand-accent px-1.5 py-0.5 font-black">WELCOME10</span> at checkout page. Valid on all camping tents, defense baton sticks, and safety tasers.
+            Enter a promotion code at checkout. Every code, validity window, usage limit, minimum order, and discount is verified against the live store rules.
           </p>
         </div>
         <Link 
-          href="/categories/camping-tents" 
+          href="/categories?slug=camping-tents"
           className="bg-brand-black text-brand-white hover:bg-brand-white hover:text-brand-black text-xs font-black uppercase py-4 px-8 transition-colors shrink-0 clip-angled border border-brand-black"
         >
           Gear Up Now
         </Link>
       </section>
+
+      {loading && <p className="text-center text-xs font-bold uppercase text-brand-dark-gray">Loading live inventory...</p>}
+      {error && <p className="border border-red-200 bg-red-50 p-4 text-center text-xs font-bold text-red-700">{error}</p>}
 
       {/* Trending (Best Sellers) */}
       <section className="space-y-6">
