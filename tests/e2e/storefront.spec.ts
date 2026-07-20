@@ -9,9 +9,10 @@ test('static storefront and customer navigation load without a server runtime', 
   await expect(page.getByRole('heading', { name: /access your account/i })).toBeVisible();
 });
 
-test('unknown content renders the not-found experience', async ({ page }) => {
-  await page.goto('/pages?slug=this-page-does-not-exist');
-  await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible({ timeout: 20_000 });
+test('unknown static routes render the not-found experience', async ({ page }) => {
+  const response = await page.goto('/this-route-does-not-exist');
+  expect(response?.status()).toBe(404);
+  await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
 });
 
 test('live catalog data can be opened and added to the local cart', async ({ page }) => {
