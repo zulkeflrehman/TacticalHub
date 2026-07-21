@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import {
-  AccountLinkingError,
+  AccountLinkingRequiredError,
   getGoogleRedirectResult,
   googleSignInErrorMessage,
   PopupBlockedError,
@@ -13,41 +13,41 @@ import {
 interface GoogleSignInButtonProps {
   /** Called after a successful sign-in so the parent can navigate/refresh. */
   onSuccess: () => void;
-  /** Optional – called when an error message should be surfaced to the user. */
+  /** Called when an error message should be surfaced to the user. */
   onError?: (message: string) => void;
-  /** Optional – called specifically when an account-linking collision is detected. */
-  onAccountLinkingConflict?: (email: string) => void;
+  /**
+   * Called when Firebase detects the email belongs to a different provider.
+   * The user must sign in with their existing method and then link Google.
+   */
+  onAccountLinkingRequired?: (email: string, existingProviders: string[]) => void;
   label?: string;
   className?: string;
   disabled?: boolean;
 }
 
 /**
- * A standalone "Continue with Google" button that handles both the popup and
- * redirect flows transparently.  Import and drop it onto any auth page.
+ * "Continue with Google" button.
  *
  * Flow:
  *  1. Click → attempt popup
  *  2. Popup blocked → automatic fallback to full-page redirect
- *  3. On page load this component also checks for a pending redirect result
- *     (via getGoogleRedirectResult) so the redirect flow completes seamlessly.
+ *  3. On page load this component's companion hook (checkGoogleRedirectResult)
+ *     must be called from a useEffect so the redirect flow completes.
+ *
+ * When Firebase reports auth/account-exists-with-different-credential:
+ *  - Calls onAccountLinkingRequired with the email and existing provider list
+ *  - The pending Google credential is stored in sessionStorage
+ *  - After the user signs in with their existing method, call linkPendingGoogleCredential()
  */
 export default function GoogleSignInButton({
   onSuccess,
   onError,
-  onAccountLinkingConflict,
+  onAccountLinkingRequired,
   label = 'Continue with Google — no verification email required',
   className = '',
   disabled = false,
 }: GoogleSignInButtonProps) {
   const [loading, setLoading] = useState(false);
-
-  // Check for a pending redirect result on mount.
-  // We do this in a one-time effect equivalent: a module-level promise
-  // is too fragile; instead we rely on the parent pages to call this
-  // via the useGoogleRedirectResult hook (see below) rather than here,
-  // because React effects inside buttons would fire on every render.
-  // The parent pages import useGoogleRedirectResult for this purpose.
 
   const handleClick = async () => {
     if (loading || disabled) return;
@@ -58,27 +58,24 @@ export default function GoogleSignInButton({
       onSuccess();
     } catch (popupError) {
       if (popupError instanceof PopupBlockedError) {
-        // Popup was blocked — fall back to redirect (page will reload).
         try {
           await signInWithGoogleRedirect();
-          // signInWithGoogleRedirect navigates away; no further action needed here.
+          // Redirect navigates away; no further action needed here.
         } catch (redirectError) {
-          const message = googleSignInErrorMessage(redirectError);
-          onError?.(message);
+          onError?.(googleSignInErrorMessage(redirectError));
           setLoading(false);
         }
         return;
       }
 
-      if (popupError instanceof AccountLinkingError) {
-        onAccountLinkingConflict?.(popupError.email);
+      if (popupError instanceof AccountLinkingRequiredError) {
+        onAccountLinkingRequired?.(popupError.email, popupError.existingProviders);
         onError?.(popupError.message);
         setLoading(false);
         return;
       }
 
-      const message = googleSignInErrorMessage(popupError);
-      onError?.(message);
+      onError?.(googleSignInErrorMessage(popupError));
       setLoading(false);
     }
   };
@@ -100,9 +97,11 @@ export default function GoogleSignInButton({
         .filter(Boolean)
         .join(' ')}
     >
-      {/* Google "G" SVG logo */}
       {loading ? (
-        <span className="w-4 h-4 border-2 border-brand-black/30 border-t-brand-black rounded-full animate-spin shrink-0" aria-hidden="true" />
+        <span
+          className="w-4 h-4 border-2 border-brand-black/30 border-t-brand-black rounded-full animate-spin shrink-0"
+          aria-hidden="true"
+        />
       ) : (
         <GoogleIcon />
       )}
@@ -145,22 +144,19 @@ function GoogleIcon() {
 
 /**
  * Processes any pending Google redirect result exactly once per page load.
- * Call this at the top level of a page component to handle the redirect flow.
+ * Call this inside a useEffect(() => { checkGoogleRedirectResult(...) }, []).
  *
- * This is not a React Hook — it runs synchronously at module evaluation time
- * when called. Use it in a useEffect(() => { checkGoogleRedirectResult(...) }, []).
+ * Uses a window flag to prevent double-execution in React Strict Mode.
  */
 export function checkGoogleRedirectResult({
   onSuccess,
   onError,
-  onAccountLinkingConflict,
+  onAccountLinkingRequired,
 }: {
   onSuccess: () => void;
   onError?: (message: string) => void;
-  onAccountLinkingConflict?: (email: string) => void;
+  onAccountLinkingRequired?: (email: string, existingProviders: string[]) => void;
 }): void {
-  // We use a module-level flag so this runs at most once per page load, even
-  // in React Strict Mode where effects fire twice.
   if (typeof window === 'undefined') return;
 
   const FLAG = '__thGoogleRedirectChecked';
@@ -173,8 +169,8 @@ export function checkGoogleRedirectResult({
       if (result) onSuccess();
     })
     .catch((error) => {
-      if (error instanceof AccountLinkingError) {
-        onAccountLinkingConflict?.(error.email);
+      if (error instanceof AccountLinkingRequiredError) {
+        onAccountLinkingRequired?.(error.email, error.existingProviders);
         onError?.(error.message);
         return;
       }

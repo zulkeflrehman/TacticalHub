@@ -241,11 +241,12 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if signedIn() && (request.auth.uid == userId || admin());
       allow list: if admin();
+      // Profile creation: CUSTOMER only, never overwrites existing documents (race-safe via rules)
       allow create: if signedIn() && request.auth.uid == userId
         && request.resource.data.role == 'CUSTOMER'
         && request.resource.data.email == request.auth.token.email
-        && (!exists(/databases/$(database)/documents/users/$(userId)) 
-            || get(/databases/$(database)/documents/users/$(userId)).data.role == 'CUSTOMER');
+        && !exists(/databases/$(database)/documents/users/$(userId));
+      // Profile updates: immutable role and email, safe field changes only
       allow update: if (admin() && request.auth.uid != userId)
         || (signedIn() && request.auth.uid == userId
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone', 'updatedAt'])

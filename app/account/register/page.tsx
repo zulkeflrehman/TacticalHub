@@ -53,7 +53,9 @@ function RegisterContent() {
         router.push(redirectTo);
       },
       onError: (message) => setErrorMsg(message),
-      onAccountLinkingConflict: (email) => setLinkingEmail(email),
+      onAccountLinkingRequired: (email) => {
+        setLinkingEmail(email);
+      },
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -67,7 +69,7 @@ function RegisterContent() {
     setErrorMsg(message);
   };
 
-  const handleAccountLinkingConflict = (email: string) => {
+  const handleAccountLinkingRequired = (email: string) => {
     setLinkingEmail(email);
   };
 
@@ -124,9 +126,11 @@ function RegisterContent() {
         <div className="bg-amber-50 text-amber-800 border border-amber-200 text-xs font-semibold p-3 clip-angled-sm space-y-1">
           <p className="font-bold">Account already exists for {linkingEmail}</p>
           <p>
-            This email is registered with a different sign-in method. Log in with your
-            email/password to access your existing account. Accounts are not merged
-            automatically to protect your order history.
+            This email is registered with a different sign-in method. Go to the{' '}
+            <Link href={`/account/login?redirect=${encodeURIComponent(redirectTo)}`} className="font-black underline">
+              Log In page
+            </Link>{' '}
+            to sign in with your existing method and link Google to your account.
           </p>
         </div>
       )}
@@ -136,34 +140,41 @@ function RegisterContent() {
         <GoogleSignInButton
           onSuccess={handleGoogleSuccess}
           onError={handleGoogleError}
-          onAccountLinkingConflict={handleAccountLinkingConflict}
+          onAccountLinkingRequired={handleAccountLinkingRequired}
         />
-        <div className="flex items-center gap-3">
-          <div className="flex-1 border-t border-brand-black/10" />
-          <span className="text-[10px] font-bold uppercase text-brand-dark-gray">or register with email</span>
-          <div className="flex-1 border-t border-brand-black/10" />
+        <div
+          role="separator"
+          aria-label="Or register with email"
+          data-testid="email-divider"
+          className="flex items-center gap-3"
+        >
+          <div className="flex-1 border-t border-brand-black/10" aria-hidden="true" />
+          <span className="text-[10px] font-bold uppercase text-brand-dark-gray">
+            or register with email
+          </span>
+          <div className="flex-1 border-t border-brand-black/10" aria-hidden="true" />
         </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-1">
-          <label className="text-[10px] font-black uppercase text-brand-dark-gray block">Full Name</label>
-          <input type="text" autoComplete="name" {...register('name')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
+          <label htmlFor="reg-name" className="text-[10px] font-black uppercase text-brand-dark-gray block">Full Name</label>
+          <input id="reg-name" type="text" autoComplete="name" {...register('name')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
           {errors.name && <p className="text-[10px] font-bold text-red-500">{errors.name.message}</p>}
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] font-black uppercase text-brand-dark-gray block">Email Address</label>
-          <input type="email" autoComplete="email" {...register('email')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
+          <label htmlFor="reg-email" className="text-[10px] font-black uppercase text-brand-dark-gray block">Email Address</label>
+          <input id="reg-email" type="email" autoComplete="email" {...register('email')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
           {errors.email && <p className="text-[10px] font-bold text-red-500">{errors.email.message}</p>}
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] font-black uppercase text-brand-dark-gray block">Password</label>
-          <input type="password" autoComplete="new-password" {...register('password')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
+          <label htmlFor="reg-password" className="text-[10px] font-black uppercase text-brand-dark-gray block">Password</label>
+          <input id="reg-password" type="password" autoComplete="new-password" {...register('password')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
           {errors.password && <p className="text-[10px] font-bold text-red-500">{errors.password.message}</p>}
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] font-black uppercase text-brand-dark-gray block">Confirm Password</label>
-          <input type="password" autoComplete="new-password" {...register('confirmPassword')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
+          <label htmlFor="reg-confirm-password" className="text-[10px] font-black uppercase text-brand-dark-gray block">Confirm Password</label>
+          <input id="reg-confirm-password" type="password" autoComplete="new-password" {...register('confirmPassword')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
           {errors.confirmPassword && <p className="text-[10px] font-bold text-red-500">{errors.confirmPassword.message}</p>}
         </div>
         <button type="submit" disabled={loading} className="w-full bg-brand-black text-brand-white hover:bg-brand-accent hover:text-brand-black text-xs font-extrabold uppercase py-3.5 px-6 flex items-center justify-center gap-1.5 transition-colors clip-angled border border-brand-black disabled:opacity-50">

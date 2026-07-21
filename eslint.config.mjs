@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
     ".gcloud/**",
     ".firebase-config/**",
     ".tools/**",
+    ".cache/**",
     "test-results/**",
     "playwright-report/**",
   ]),

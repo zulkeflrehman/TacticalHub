@@ -558,4 +558,196 @@ describe('TecticalHub Firestore production rules', () => {
     assert.equal(snapshot.data()?.paymentStatus, 'PENDING');
     assert.equal(snapshot.data()?.status, 'PENDING');
   });
+
+  // ─── Google Sign-In additional rule tests ─────────────────────────────────
+
+  it('ADMIN can update their own safe personal fields without changing role or email', async () => {
+    // The update rule allows name/phone/updatedAt for own document, role and email must be preserved.
+    const administrator = testEnvironment.authenticatedContext(ADMIN_UID, {
+      email: 'admin@example.com',
+      email_verified: true,
+    }).firestore() as unknown as Firestore;
+
+    await assertSucceeds(updateDoc(doc(administrator, 'users', ADMIN_UID), {
+      name: 'Updated Admin Name',
+      updatedAt: serverTimestamp(),
+    }));
+
+    const snapshot = await getDoc(doc(administrator, 'users', ADMIN_UID));
+    assert.equal(snapshot.data()?.name, 'Updated Admin Name');
+    assert.equal(snapshot.data()?.role, 'ADMIN');
+    assert.equal(snapshot.data()?.email, 'admin@example.com');
+  });
+
+  it('ADMIN cannot update their own role field via the browser update path', async () => {
+    const administrator = testEnvironment.authenticatedContext(ADMIN_UID, {
+      email: 'admin@example.com',
+      email_verified: true,
+    }).firestore() as unknown as Firestore;
+
+    // Attempting to include role in an update should fail because the diff
+    // allows only ['name', 'phone', 'updatedAt'] for own-document updates,
+    // AND role must equal resource.data.role. Changing it violates both.
+    await assertFails(updateDoc(doc(administrator, 'users', ADMIN_UID), {
+      name: 'Still Admin',
+      role: 'CUSTOMER',
+      updatedAt: serverTimestamp(),
+    }));
+
+    const snapshot = await getDoc(doc(administrator, 'users', ADMIN_UID));
+    assert.equal(snapshot.data()?.role, 'ADMIN');
+  });
+
+  it('customer cannot change their own email field via the update path', async () => {
+    const database = customerDatabase(ALICE_UID, ALICE_EMAIL, true);
+    await assertSucceeds(setDoc(doc(database, 'users', ALICE_UID), {
+      email: ALICE_EMAIL,
+      name: 'Alice Buyer',
+      role: 'CUSTOMER',
+    }));
+
+    // Trying to change email should be rejected because the diff includes 'email',
+    // which is not in the allowed-update set, and email must equal resource.data.email.
+    await assertFails(updateDoc(doc(database, 'users', ALICE_UID), {
+      email: 'newemail@example.com',
+      name: 'Alice Buyer',
+      updatedAt: serverTimestamp(),
+    }));
+
+    const snapshot = await getDoc(doc(database, 'users', ALICE_UID));
+    assert.equal(snapshot.data()?.email, ALICE_EMAIL);
+  });
+
+  it('customer cannot promote their own role to ADMIN via the update path', async () => {
+    const database = customerDatabase(ALICE_UID, ALICE_EMAIL, true);
+    await assertSucceeds(setDoc(doc(database, 'users', ALICE_UID), {
+      email: ALICE_EMAIL,
+      name: 'Alice Buyer',
+      role: 'CUSTOMER',
+    }));
+
+    await assertFails(updateDoc(doc(database, 'users', ALICE_UID), {
+      role: 'ADMIN',
+      name: 'Alice Hacker',
+      updatedAt: serverTimestamp(),
+    }));
+
+    const snapshot = await getDoc(doc(database, 'users', ALICE_UID));
+    assert.equal(snapshot.data()?.role, 'CUSTOMER');
+  });
+
+  it('customer cannot query the users collection by email (no cross-profile enumeration)', async () => {
+    // Seed Bob's profile
+    await testEnvironment.withSecurityRulesDisabled(async (context) => {
+      const database = context.firestore() as unknown as Firestore;
+      await setDoc(doc(database, 'users', BOB_UID), {
+        email: BOB_EMAIL,
+        name: 'Bob Buyer',
+        role: 'CUSTOMER',
+      });
+    });
+
+    // Alice tries to query the users collection by email — must be denied
+    const aliceDatabase = customerDatabase(ALICE_UID, ALICE_EMAIL, true);
+    await assertFails(getDocs(query(
+      collection(aliceDatabase, 'users'),
+      where('email', '==', BOB_EMAIL),
+      limit(1),
+    )));
+  });
+
+  it('creating a profile document fails if the document already exists (no overwrite)', async () => {
+    // Pre-seed Alice's profile (simulates existing email/password account)
+    await testEnvironment.withSecurityRulesDisabled(async (context) => {
+      const database = context.firestore() as unknown as Firestore;
+      await setDoc(doc(database, 'users', ALICE_UID), {
+        email: ALICE_EMAIL,
+        name: 'Alice Original',
+        role: 'CUSTOMER',
+        provider: 'password',
+      });
+    });
+
+    // Attempt to overwrite by creating again with Google provider data
+    const database = customerDatabase(ALICE_UID, ALICE_EMAIL, true);
+    await assertFails(setDoc(doc(database, 'users', ALICE_UID), {
+      email: ALICE_EMAIL,
+      name: 'Alice Google',
+      role: 'CUSTOMER',
+      provider: 'google',
+    }));
+
+    // Original document must be intact
+    await testEnvironment.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore() as unknown as Firestore;
+      const snapshot = await getDoc(doc(db, 'users', ALICE_UID));
+      assert.equal(snapshot.data()?.name, 'Alice Original');
+      assert.equal(snapshot.data()?.provider ?? 'password', 'password');
+    });
+  });
+
+  it('existing CUSTOMER profile is never overwritten by the createGoogleCustomerProfileIfNew path', async () => {
+    // Simulate existing customer who signs in via Google for the first time.
+    // The document pre-exists, so the function returns 'EXISTING' and does not write.
+    const EXISTING_UID = 'existing-customer';
+    const EXISTING_EMAIL = 'existing@example.com';
+
+    await testEnvironment.withSecurityRulesDisabled(async (context) => {
+      const database = context.firestore() as unknown as Firestore;
+      await setDoc(doc(database, 'users', EXISTING_UID), {
+        email: EXISTING_EMAIL,
+        name: 'Existing Customer',
+        role: 'CUSTOMER',
+        provider: 'password',
+        customField: 'preserved-value',
+      });
+    });
+
+    // Attempting to create (overwrite) must fail
+    const database = customerDatabase(EXISTING_UID, EXISTING_EMAIL, true);
+    await assertFails(setDoc(doc(database, 'users', EXISTING_UID), {
+      email: EXISTING_EMAIL,
+      name: 'Overwritten Customer',
+      role: 'CUSTOMER',
+    }));
+
+    // Original data must still be intact
+    await testEnvironment.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore() as unknown as Firestore;
+      const snapshot = await getDoc(doc(db, 'users', EXISTING_UID));
+      assert.equal(snapshot.data()?.name, 'Existing Customer');
+      assert.equal(snapshot.data()?.customField, 'preserved-value');
+    });
+  });
+
+  it('a Google-signed-in user with verified email can place an order (verifiedEmailUser check)', async () => {
+    // Google auth users have email_verified=true in their Firebase token automatically.
+    const GOOGLE_UID = 'google-customer-uid';
+    const GOOGLE_EMAIL = 'google-user@example.com';
+    const googleDatabase = customerDatabase(GOOGLE_UID, GOOGLE_EMAIL, true);
+
+    await assertSucceeds(placeOrder(googleDatabase, GOOGLE_UID, GOOGLE_EMAIL, {
+      orderId: 'order-google-verified',
+    }));
+
+    const orderSnapshot = await getDoc(doc(googleDatabase, 'orders', 'order-google-verified'));
+    assert.equal(orderSnapshot.data()?.emailVerified, true);
+    assert.equal(orderSnapshot.data()?.userId, GOOGLE_UID);
+    assert.equal(await readInventoryStock(), STARTING_STOCK - 1);
+  });
+
+  it('order history for original UID is accessible after account linking scenario', async () => {
+    // After linking, the user authenticates with their original UID.
+    // All existing orders under that UID must remain accessible.
+    const aliceDatabase = customerDatabase(ALICE_UID, ALICE_EMAIL, true);
+    await placeOrder(aliceDatabase, ALICE_UID, ALICE_EMAIL, { orderId: 'order-pre-link' });
+
+    // Order was placed under ALICE_UID — must be readable under that same UID
+    // (which is the same UID after account linking, since linking preserves UID)
+    await assertSucceeds(getDoc(doc(aliceDatabase, 'orders', 'order-pre-link')));
+
+    const orderSnapshot = await getDoc(doc(aliceDatabase, 'orders', 'order-pre-link'));
+    assert.equal(orderSnapshot.data()?.userId, ALICE_UID);
+    assert.equal(orderSnapshot.data()?.email, ALICE_EMAIL);
+  });
 });

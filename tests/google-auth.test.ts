@@ -1,19 +1,19 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-// Import only the error classes and message helper (not the full Firebase-dependent module).
-// We avoid importing signInWithGooglePopup or any function that imports firebase-client.
+// We re-implement the error classes and message helper locally so this test
+// has no dependency on Firebase or any browser API.
 
-class AccountLinkingError extends Error {
+class AccountLinkingRequiredError extends Error {
   constructor(
-    public readonly existingUid: string,
     public readonly email: string,
+    public readonly existingProviders: string[],
   ) {
     super(
-      `An account for ${email} already exists under a different sign-in method. ` +
-        'Log in with your email/password to access that account.',
+      `An account for ${email} exists with ${existingProviders.join(', ')}. ` +
+        'Sign in with your existing method to link Google.'
     );
-    this.name = 'AccountLinkingError';
+    this.name = 'AccountLinkingRequiredError';
   }
 }
 
@@ -25,14 +25,14 @@ class PopupBlockedError extends Error {
 }
 
 function googleSignInErrorMessage(error: unknown): string {
-  if (error instanceof AccountLinkingError) return error.message;
+  if (error instanceof AccountLinkingRequiredError) return error.message;
   const code =
     typeof error === 'object' && error !== null && 'code' in error
       ? String((error as { code: unknown }).code)
       : '';
   switch (code) {
     case 'auth/account-exists-with-different-credential':
-      return 'An account already exists for this email under a different sign-in method. Please log in with email/password instead.';
+      return 'An account already exists for this email. Please sign in with your existing method first.';
     case 'auth/user-disabled':
       return 'This account has been disabled. Please contact support.';
     case 'auth/network-request-failed':
@@ -43,19 +43,21 @@ function googleSignInErrorMessage(error: unknown): string {
     case 'auth/popup-closed-by-user':
     case 'auth/cancelled-popup-request':
       return 'The sign-in popup was closed or blocked. Redirecting to Google…';
+    case 'auth/credential-already-in-use':
+      return 'This Google account is already linked to another Firebase account.';
     default:
       return 'Google sign-in failed. Please try again.';
   }
 }
 
 describe('Google Sign-In error handling', () => {
-  it('surfaces AccountLinkingError with the email and existing UID', () => {
-    const error = new AccountLinkingError('existing-uid-123', 'user@example.com');
-    assert.equal(error.name, 'AccountLinkingError');
-    assert.equal(error.existingUid, 'existing-uid-123');
+  it('AccountLinkingRequiredError carries the email and existing providers', () => {
+    const error = new AccountLinkingRequiredError('user@example.com', ['password']);
+    assert.equal(error.name, 'AccountLinkingRequiredError');
     assert.equal(error.email, 'user@example.com');
-    assert.match(error.message, /already exists/i);
+    assert.deepEqual(error.existingProviders, ['password']);
     assert.match(error.message, /user@example.com/);
+    assert.match(error.message, /Sign in with your existing method/);
   });
 
   it('provides a friendly message for popup-blocked scenarios', () => {
@@ -63,10 +65,9 @@ describe('Google Sign-In error handling', () => {
     assert.match(message, /popup was closed or blocked/i);
   });
 
-  it('provides a specific message for account-exists-with-different-credential', () => {
+  it('provides a linking-specific message for account-exists-with-different-credential', () => {
     const message = googleSignInErrorMessage({ code: 'auth/account-exists-with-different-credential' });
-    assert.match(message, /already exists/i);
-    assert.match(message, /different sign-in method/i);
+    assert.match(message, /sign in with your existing method/i);
   });
 
   it('provides a fallback message for unknown Firebase errors', () => {
@@ -83,5 +84,16 @@ describe('Google Sign-In error handling', () => {
     const error = new PopupBlockedError();
     assert.equal(error.name, 'PopupBlockedError');
     assert.match(error.message, /popup was blocked/i);
+  });
+
+  it('provides a specific message for credential-already-in-use', () => {
+    const message = googleSignInErrorMessage({ code: 'auth/credential-already-in-use' });
+    assert.match(message, /already linked/i);
+  });
+
+  it('AccountLinkingRequiredError message is returned directly by googleSignInErrorMessage', () => {
+    const error = new AccountLinkingRequiredError('a@b.com', ['password', 'google.com']);
+    const message = googleSignInErrorMessage(error);
+    assert.equal(message, error.message);
   });
 });

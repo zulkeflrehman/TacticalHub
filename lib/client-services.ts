@@ -218,9 +218,10 @@ export async function createCustomerProfile(user: User, name: string, phone = ''
  * - If the users/{uid} document already exists, the function is a no-op.
  * - ADMIN role is never set or overwritten — only 'CUSTOMER' is written for new documents.
  * - Preserves all existing fields (does not merge/overwrite existing profiles).
+ * - No read-then-write race: the Firestore rule enforces !exists() atomically on the server.
  *
  * Returns the role that will be active after the call:
- * - 'EXISTING' when the document already existed (no write performed)
+ * - 'EXISTING' when the document already existed (no write attempted)
  * - 'CUSTOMER' when a new document was created
  */
 export async function createGoogleCustomerProfileIfNew(
@@ -233,6 +234,8 @@ export async function createGoogleCustomerProfileIfNew(
     // Document already present — preserve it unchanged (including any ADMIN role).
     return 'EXISTING';
   }
+  // The Firestore rule enforces !exists() on the server, so even if two concurrent
+  // calls reach this point the second write will be rejected by the rules.
   await setDoc(ref, {
     email: String(user.email || '').trim(),
     name: displayName.trim() || String(user.displayName || '').trim() || String(user.email || '').trim(),
@@ -242,30 +245,6 @@ export async function createGoogleCustomerProfileIfNew(
     updatedAt: serverTimestamp(),
   });
   return 'CUSTOMER';
-}
-
-/**
- * Checks whether the given email address belongs to a Firestore user document
- * whose UID is different from the provided uid.  Returns the existing UID when
- * a collision is found, otherwise null.
- *
- * Used to surface an account-linking warning in the Google sign-in flow.
- */
-export async function findConflictingUserByEmail(
-  email: string,
-  uid: string,
-): Promise<string | null> {
-  const snapshot = await getDocs(
-    query(
-      collection(clientDb, 'users'),
-      where('email', '==', email.trim().toLowerCase()),
-      limit(1),
-    ),
-  );
-  if (snapshot.empty) return null;
-  const existingUid = snapshot.docs[0].id;
-  if (existingUid === uid) return null;
-  return existingUid;
 }
 
 function orderFromDocument(id: string, data: DocumentData): OrderDto {
