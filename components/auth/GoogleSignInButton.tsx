@@ -43,7 +43,7 @@ export default function GoogleSignInButton({
   onSuccess,
   onError,
   onAccountLinkingRequired,
-  label = 'Continue with Google — no verification email required',
+  label = 'Continue with Google',
   className = '',
   disabled = false,
 }: GoogleSignInButtonProps) {
@@ -105,7 +105,7 @@ export default function GoogleSignInButton({
       ) : (
         <GoogleIcon />
       )}
-      <span>{loading ? 'Connecting to Google…' : label}</span>
+      <span className="truncate">{loading ? 'Connecting to Google…' : label}</span>
     </button>
   );
 }

@@ -55,7 +55,7 @@ export default function WishlistPage() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="bg-brand-white border border-brand-black/5 aspect-[3/4] animate-pulse clip-angled" />
           ))}
@@ -75,7 +75,7 @@ export default function WishlistPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
           {wishlistedProducts.map(p => (
             <ProductCard key={p.id} product={p} />
           ))}

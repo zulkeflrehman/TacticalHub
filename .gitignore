@@ -43,6 +43,9 @@ yarn-error.log*
 # e2e output artifacts
 e2e-out.txt
 e2e-results.txt
+e2e-full-results.txt
+e2e-mobile-results.txt
+MOBILE_FIXES_REPORT.md
 
 # cache
 .cache/

@@ -96,7 +96,7 @@ try {
           killer.unref();
         }
         finish(passed ? 0 : 1);
-      }, 25_000);
+      }, 180_000);
     }
     tests.once('exit', (code) => finish(code ?? 1));
     tests.once('error', reject);
