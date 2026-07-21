@@ -160,7 +160,7 @@ function LoginContent() {
   const hasPending = pendingLinkEmail !== '';
 
   return (
-    <div className="max-w-md mx-auto bg-brand-white border border-brand-black/5 p-8 clip-angled-lg space-y-6">
+    <div className="max-w-[95%] sm:max-w-md mx-auto bg-brand-white border border-brand-black/5 p-4 sm:p-8 clip-angled-lg space-y-6">
       <div className="text-center space-y-2">
         <h1 className="text-2xl font-black uppercase tracking-tight text-brand-black">
           Access Your Account

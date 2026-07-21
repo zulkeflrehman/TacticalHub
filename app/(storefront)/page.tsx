@@ -141,7 +141,7 @@ export default function HomePage() {
         <h2 className="text-lg md:text-xl font-black uppercase tracking-widest border-l-4 border-brand-accent pl-3 text-brand-black">
           Trending Best Sellers
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
           {bestSellers.slice(0, 4).map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
@@ -153,7 +153,7 @@ export default function HomePage() {
         <h2 className="text-lg md:text-xl font-black uppercase tracking-widest border-l-4 border-brand-accent pl-3 text-brand-black">
           New Tactical Arrivals
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
           {newArrivals.slice(0, 4).map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}

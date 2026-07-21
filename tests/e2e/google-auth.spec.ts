@@ -17,7 +17,7 @@ test('login page renders Google sign-in button with correct label', async ({ pag
 
   const googleButton = page.getByRole('button', { name: /continue with google/i });
   await expect(googleButton).toBeVisible();
-  await expect(googleButton).toContainText('no verification email required');
+  await expect(googleButton).toContainText('Continue with Google');
   await expect(googleButton).toBeEnabled();
 });
 
@@ -43,7 +43,7 @@ test('register page renders Google sign-in button with correct label', async ({ 
 
   const googleButton = page.getByRole('button', { name: /continue with google/i });
   await expect(googleButton).toBeVisible();
-  await expect(googleButton).toContainText('no verification email required');
+  await expect(googleButton).toContainText('Continue with Google');
 });
 
 test('register page has a divider between Google button and email form', async ({ page }) => {

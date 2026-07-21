@@ -20,7 +20,7 @@ function Results() {
 
   return <div className="space-y-8">
     <div><h1 className="text-2xl sm:text-3xl font-black uppercase">Search Results</h1><p className="text-xs text-brand-dark-gray">Results for &ldquo;{search}&rdquo;</p></div>
-    {loading ? <p className="text-xs font-bold uppercase">Searching...</p> : products.length ? <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">{products.map((product) => <ProductCard key={product.id} product={product} />)}</div> : <div className="py-20 text-center"><Search className="w-12 h-12 mx-auto text-brand-dark-gray/30"/><p className="mt-4 text-xs font-bold uppercase">No matching products</p><Link href="/" className="text-xs underline">Return home</Link></div>}
+    {loading ? <p className="text-xs font-bold uppercase">Searching...</p> : products.length ? <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">{products.map((product) => <ProductCard key={product.id} product={product} />)}</div> : <div className="py-20 text-center"><Search className="w-12 h-12 mx-auto text-brand-dark-gray/30"/><p className="mt-4 text-xs font-bold uppercase">No matching products</p><Link href="/" className="text-xs underline">Return home</Link></div>}
   </div>;
 }
 

@@ -111,31 +111,36 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
       {/* Upper Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* Left Column: Image Gallery (5 cols) */}
-        <div className="lg:col-span-6 space-y-4">
-          <div className="bg-brand-white border border-brand-black/5 aspect-square relative overflow-hidden clip-angled-lg">
+        {/* Left Column: Image Gallery (6 cols) */}
+        <div className="lg:col-span-6 space-y-3">
+          {/* Main image — square, stays inside viewport */}
+          <div className="bg-brand-white border border-brand-black/5 relative overflow-hidden clip-angled-lg w-full"
+               style={{ aspectRatio: '1 / 1' }}>
             <CatalogImage
               src={selectedImage}
               alt={product.name}
+              className="object-contain"
               sizes="(max-width: 1024px) 100vw, 50vw"
               priority
             />
           </div>
 
-          {/* Thumbnails Row */}
+          {/* Thumbnails — horizontal scroll, never causes page overflow */}
           {product.images.length > 1 && (
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1"
+                 style={{ scrollbarWidth: 'thin' }}>
               {product.images.map((img) => (
                 <button
                   key={img.url}
                   onClick={() => setSelectedImage(img.url)}
-                  className={`relative w-20 h-20 bg-brand-white border flex-shrink-0 clip-angled-sm overflow-hidden transition-standard ${
+                  aria-label={`View image ${product.images.indexOf(img) + 1}`}
+                  className={`relative w-[72px] h-[72px] flex-shrink-0 bg-brand-white border clip-angled-sm overflow-hidden transition-standard ${
                     selectedImage === img.url
                       ? 'border-brand-accent scale-95 shadow-sm'
                       : 'border-brand-black/5 hover:border-brand-black/25'
                   }`}
                 >
-                  <CatalogImage src={img.url} alt={`${product.name} thumbnail`} sizes="80px" />
+                  <CatalogImage src={img.url} alt={`${product.name} thumbnail`} sizes="72px" />
                 </button>
               ))}
             </div>
@@ -235,14 +240,16 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
           </div>
 
           {/* Quantity and Actions Bar */}
-          <div className="space-y-4 pt-2">
-            <div className="flex items-center gap-3">
+          <div className="space-y-3 pt-2">
+            {/* Row: quantity + Add to Cart + Wishlist — wraps on very narrow screens */}
+            <div className="flex flex-wrap items-center gap-3">
               {/* Quantity Selector */}
-              <div className="flex items-center border border-brand-black/15 bg-brand-white clip-angled">
+              <div className="flex items-center border border-brand-black/15 bg-brand-white clip-angled shrink-0">
                 <button
                   disabled={quantity <= 1 || currentStock <= 0}
                   onClick={() => setQuantity(prev => prev - 1)}
-                  className="px-3 py-3 text-brand-dark-gray hover:text-brand-black disabled:opacity-30 transition-colors"
+                  aria-label="Decrease quantity"
+                  className="flex h-[44px] w-[44px] items-center justify-center text-brand-dark-gray hover:text-brand-black disabled:opacity-30 transition-colors"
                 >
                   <Minus className="w-3.5 h-3.5" />
                 </button>
@@ -250,26 +257,28 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
                 <button
                   disabled={quantity >= Math.min(currentStock, 20) || currentStock <= 0}
                   onClick={() => setQuantity(prev => prev + 1)}
-                  className="px-3 py-3 text-brand-dark-gray hover:text-brand-black disabled:opacity-30 transition-colors"
+                  aria-label="Increase quantity"
+                  className="flex h-[44px] w-[44px] items-center justify-center text-brand-dark-gray hover:text-brand-black disabled:opacity-30 transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              {/* Add to Cart */}
+              {/* Add to Cart — grows to fill remaining space */}
               <button
                 disabled={currentStock <= 0}
                 onClick={handleAddToCart}
-                className="flex-1 bg-brand-black text-brand-white text-xs font-bold uppercase py-3.5 px-6 flex items-center justify-center gap-2 hover:bg-brand-accent hover:text-brand-black transition-colors clip-angled border border-brand-black disabled:opacity-50 disabled:pointer-events-none"
+                className="flex-1 min-w-[140px] bg-brand-black text-brand-white text-xs font-bold uppercase py-3.5 px-4 flex items-center justify-center gap-2 hover:bg-brand-accent hover:text-brand-black transition-colors clip-angled border border-brand-black disabled:opacity-50 disabled:pointer-events-none"
               >
-                <ShoppingCart className="w-4 h-4" />
-                <span>Add to Cart</span>
+                <ShoppingCart className="w-4 h-4 shrink-0" />
+                <span className="truncate">Add to Cart</span>
               </button>
 
-              {/* Wishlist toggle */}
+              {/* Wishlist — 44×44 square */}
               <button
                 onClick={handleWishlistToggle}
-                className={`p-3.5 border transition-all clip-angled focus:outline-none ${
+                aria-label={isLiked ? 'Remove from wishlist' : 'Add to wishlist'}
+                className={`flex h-[44px] w-[44px] shrink-0 items-center justify-center border transition-all clip-angled focus:outline-none ${
                   isLiked
                     ? 'bg-brand-black border-brand-black text-brand-accent'
                     : 'bg-brand-white border-brand-black/10 text-brand-dark-gray hover:border-brand-black hover:text-brand-black'
@@ -279,7 +288,7 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
               </button>
             </div>
 
-            {/* Buy Now (Direct Checkout) */}
+            {/* Buy Now (full width on its own row) */}
             <button
               disabled={currentStock <= 0}
               onClick={handleBuyNow}
@@ -369,7 +378,7 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
           <h2 className="text-lg md:text-xl font-black uppercase tracking-widest border-l-4 border-brand-accent pl-3 text-brand-black">
             You May Also Like
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
             {relatedProducts.slice(0, 4).map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}

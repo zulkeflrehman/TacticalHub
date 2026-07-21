@@ -248,7 +248,7 @@ export default function CategoryListing({ category, initialProducts }: CategoryL
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
               {filteredProducts.map(p => (
                 <ProductCard key={p.id} product={p} />
               ))}

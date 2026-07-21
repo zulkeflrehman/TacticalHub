@@ -94,21 +94,23 @@ export default function CartPage() {
                   </div>
 
                   {/* Quantity & Actions */}
-                  <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
-                    {/* Quantity selectors */}
+                  <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
+                    {/* Quantity selectors - 44px touch targets */}
                     <div className="flex items-center border border-brand-black/10 bg-brand-white clip-angled-sm">
                       <button
                         onClick={() => updateQuantity(item.productId, item.quantity - 1, item.variantSku)}
-                        className="px-2 py-2 text-brand-dark-gray hover:text-brand-black transition-colors"
+                        aria-label="Decrease quantity"
+                        className="flex h-[44px] w-[44px] items-center justify-center text-brand-dark-gray hover:text-brand-black transition-colors"
                       >
-                        <Minus className="w-3 h-3" />
+                        <Minus className="w-3.5 h-3.5" />
                       </button>
-                      <span className="text-xs font-bold w-8 text-center">{item.quantity}</span>
+                      <span className="text-xs font-bold w-8 text-center select-none">{item.quantity}</span>
                       <button
                         onClick={() => updateQuantity(item.productId, item.quantity + 1, item.variantSku)}
-                        className="px-2 py-2 text-brand-dark-gray hover:text-brand-black transition-colors"
+                        aria-label="Increase quantity"
+                        className="flex h-[44px] w-[44px] items-center justify-center text-brand-dark-gray hover:text-brand-black transition-colors"
                       >
-                        <Plus className="w-3 h-3" />
+                        <Plus className="w-3.5 h-3.5" />
                       </button>
                     </div>
 
