@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -16,6 +16,7 @@ import {
   safeAccountRedirect,
   verificationErrorMessage,
 } from '@/lib/email-verification';
+import GoogleSignInButton, { checkGoogleRedirectResult } from '@/components/auth/GoogleSignInButton';
 
 const registerSchema = z.object({
   name: z.string().trim().min(2, 'Name is required').max(160),
@@ -36,12 +37,41 @@ function RegisterContent() {
   const redirectTo = safeAccountRedirect(searchParams.get('redirect'));
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [linkingEmail, setLinkingEmail] = useState('');
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<RegisterFormData>({ resolver: zodResolver(registerSchema) });
+
+  // Pick up any pending Google redirect result on mount.
+  useEffect(() => {
+    checkGoogleRedirectResult({
+      onSuccess: () => {
+        addToast('Account created with Google. No verification needed!', 'success');
+        router.push(redirectTo);
+      },
+      onError: (message) => setErrorMsg(message),
+      onAccountLinkingRequired: (email) => {
+        setLinkingEmail(email);
+      },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleGoogleSuccess = () => {
+    addToast('Account created with Google. No verification needed!', 'success');
+    router.push(redirectTo);
+  };
+
+  const handleGoogleError = (message: string) => {
+    setErrorMsg(message);
+  };
+
+  const handleAccountLinkingRequired = (email: string) => {
+    setLinkingEmail(email);
+  };
 
   const onSubmit = async (data: RegisterFormData) => {
     setLoading(true);
@@ -81,7 +111,7 @@ function RegisterContent() {
       <div className="text-center space-y-2">
         <h1 className="text-2xl font-black uppercase tracking-tight text-brand-black">Create An Account</h1>
         <p className="text-xs text-brand-dark-gray font-semibold leading-relaxed">
-          Create an email/password account, verify its address, then continue to secure COD checkout.
+          Register with Google for instant access, or use email/password (verification required).
         </p>
       </div>
 
@@ -92,25 +122,59 @@ function RegisterContent() {
         </div>
       )}
 
+      {linkingEmail && (
+        <div className="bg-amber-50 text-amber-800 border border-amber-200 text-xs font-semibold p-3 clip-angled-sm space-y-1">
+          <p className="font-bold">Account already exists for {linkingEmail}</p>
+          <p>
+            This email is registered with a different sign-in method. Go to the{' '}
+            <Link href={`/account/login?redirect=${encodeURIComponent(redirectTo)}`} className="font-black underline">
+              Log In page
+            </Link>{' '}
+            to sign in with your existing method and link Google to your account.
+          </p>
+        </div>
+      )}
+
+      {/* Google Sign-In */}
+      <div className="space-y-3">
+        <GoogleSignInButton
+          onSuccess={handleGoogleSuccess}
+          onError={handleGoogleError}
+          onAccountLinkingRequired={handleAccountLinkingRequired}
+        />
+        <div
+          role="separator"
+          aria-label="Or register with email"
+          data-testid="email-divider"
+          className="flex items-center gap-3"
+        >
+          <div className="flex-1 border-t border-brand-black/10" aria-hidden="true" />
+          <span className="text-[10px] font-bold uppercase text-brand-dark-gray">
+            or register with email
+          </span>
+          <div className="flex-1 border-t border-brand-black/10" aria-hidden="true" />
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-1">
-          <label className="text-[10px] font-black uppercase text-brand-dark-gray block">Full Name</label>
-          <input type="text" autoComplete="name" {...register('name')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
+          <label htmlFor="reg-name" className="text-[10px] font-black uppercase text-brand-dark-gray block">Full Name</label>
+          <input id="reg-name" type="text" autoComplete="name" {...register('name')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
           {errors.name && <p className="text-[10px] font-bold text-red-500">{errors.name.message}</p>}
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] font-black uppercase text-brand-dark-gray block">Email Address</label>
-          <input type="email" autoComplete="email" {...register('email')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
+          <label htmlFor="reg-email" className="text-[10px] font-black uppercase text-brand-dark-gray block">Email Address</label>
+          <input id="reg-email" type="email" autoComplete="email" {...register('email')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
           {errors.email && <p className="text-[10px] font-bold text-red-500">{errors.email.message}</p>}
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] font-black uppercase text-brand-dark-gray block">Password</label>
-          <input type="password" autoComplete="new-password" {...register('password')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
+          <label htmlFor="reg-password" className="text-[10px] font-black uppercase text-brand-dark-gray block">Password</label>
+          <input id="reg-password" type="password" autoComplete="new-password" {...register('password')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
           {errors.password && <p className="text-[10px] font-bold text-red-500">{errors.password.message}</p>}
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] font-black uppercase text-brand-dark-gray block">Confirm Password</label>
-          <input type="password" autoComplete="new-password" {...register('confirmPassword')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
+          <label htmlFor="reg-confirm-password" className="text-[10px] font-black uppercase text-brand-dark-gray block">Confirm Password</label>
+          <input id="reg-confirm-password" type="password" autoComplete="new-password" {...register('confirmPassword')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
           {errors.confirmPassword && <p className="text-[10px] font-bold text-red-500">{errors.confirmPassword.message}</p>}
         </div>
         <button type="submit" disabled={loading} className="w-full bg-brand-black text-brand-white hover:bg-brand-accent hover:text-brand-black text-xs font-extrabold uppercase py-3.5 px-6 flex items-center justify-center gap-1.5 transition-colors clip-angled border border-brand-black disabled:opacity-50">

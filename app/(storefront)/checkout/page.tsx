@@ -14,7 +14,8 @@ import { FREE_SHIPPING_THRESHOLD_PKR, placeCodOrder, quoteCoupon, SHIPPING_COST_
 import EmailVerificationPanel from '@/components/auth/EmailVerificationPanel';
 import { getIdToken, onAuthStateChanged, reload, type User } from 'firebase/auth';
 import { isPakistaniMobile } from '@/lib/order-policy';
-import { 
+import GoogleSignInButton, { checkGoogleRedirectResult } from '@/components/auth/GoogleSignInButton';
+import {
   ShoppingBag, ShieldCheck, CheckCircle2,
   ArrowRight, Landmark, Truck
 } from 'lucide-react';
@@ -68,6 +69,7 @@ export default function CheckoutPage() {
   const [checkoutUser, setCheckoutUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
+  const [googleError, setGoogleError] = useState('');
 
   const localSubtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const subtotal = serverQuote?.subtotal ?? localSubtotal;
@@ -121,6 +123,18 @@ export default function CheckoutPage() {
     if (user?.email) setValue('email', user.email, { shouldValidate: true });
     setAuthReady(true);
   }), [setValue]);
+
+  // Pick up any pending Google redirect result on mount.
+  useEffect(() => {
+    checkGoogleRedirectResult({
+      onSuccess: () => {
+        // Auth state listener will update checkoutUser and emailVerified automatically.
+        addToast('Signed in with Google.', 'success');
+      },
+      onError: (message) => setGoogleError(message),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleVerified = useCallback(() => {
     const user = auth.currentUser;
@@ -265,14 +279,47 @@ export default function CheckoutPage() {
       ) : !authReady ? (
         <p className="py-16 text-center text-xs font-bold uppercase">Checking your Firebase account...</p>
       ) : !checkoutUser ? (
-        <div className="mx-auto max-w-xl space-y-5 border border-brand-black/5 bg-brand-white p-8 text-center clip-angled-lg">
-          <h2 className="text-lg font-black uppercase">Account required</h2>
-          <p className="text-xs font-semibold leading-relaxed text-brand-dark-gray">
-            Register with email and password, verify the address, then return here. Your cart stays saved in this browser.
+        <div className="mx-auto max-w-xl space-y-5 border border-brand-black/5 bg-brand-white p-8 clip-angled-lg">
+          <h2 className="text-lg font-black uppercase text-center">Account required</h2>
+          <p className="text-xs font-semibold leading-relaxed text-brand-dark-gray text-center">
+            Sign in with Google for instant access (no email verification), or use email/password.
+            Your cart stays saved in this browser.
           </p>
+
+          {googleError && (
+            <div className="bg-red-50 text-red-600 border border-red-200 text-xs font-semibold p-3 clip-angled-sm">
+              {googleError}
+            </div>
+          )}
+
+          {/* Real Google Sign-In button — not just a link */}
+          <GoogleSignInButton
+            onSuccess={() => {
+              // Auth state listener will update checkoutUser once Firebase reports the user.
+              setGoogleError('');
+            }}
+            onError={(message) => setGoogleError(message)}
+          />
+
+          <div className="flex items-center gap-3">
+            <div className="flex-1 border-t border-brand-black/10" />
+            <span className="text-[10px] font-bold uppercase text-brand-dark-gray">or use email/password</span>
+            <div className="flex-1 border-t border-brand-black/10" />
+          </div>
+
           <div className="flex flex-wrap justify-center gap-3">
-            <Link href="/account/register?redirect=%2Fcheckout" className="bg-brand-black px-5 py-3 text-xs font-black uppercase text-brand-white">Register</Link>
-            <Link href="/account/login?redirect=%2Fcheckout" className="border border-brand-black px-5 py-3 text-xs font-black uppercase">Log in</Link>
+            <Link
+              href="/account/register?redirect=%2Fcheckout"
+              className="bg-brand-black px-5 py-3 text-xs font-black uppercase text-brand-white"
+            >
+              Register
+            </Link>
+            <Link
+              href="/account/login?redirect=%2Fcheckout"
+              className="border border-brand-black px-5 py-3 text-xs font-black uppercase"
+            >
+              Log in
+            </Link>
           </div>
         </div>
       ) : !emailVerified ? (

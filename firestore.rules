@@ -15,6 +15,9 @@ service cloud.firestore {
       return signedIn() && request.auth.token.email_verified == true;
     }
 
+    // Note: Google Sign-In users have email_verified=true automatically in their token claims.
+    // Email/password users must complete Firebase's email verification flow.
+
     function validText(value, minimum, maximum) {
       return value is string && value.size() >= minimum && value.size() <= maximum;
     }
@@ -238,10 +241,14 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if signedIn() && (request.auth.uid == userId || admin());
       allow list: if admin();
+      // Profile creation: CUSTOMER only, never overwrites existing documents (race-safe via rules)
       allow create: if signedIn() && request.auth.uid == userId
         && request.resource.data.role == 'CUSTOMER'
-        && request.resource.data.email == request.auth.token.email;
-      allow update: if admin() || (signedIn() && request.auth.uid == userId
+        && request.resource.data.email == request.auth.token.email
+        && !exists(/databases/$(database)/documents/users/$(userId));
+      // Profile updates: immutable role and email, safe field changes only
+      allow update: if (admin() && request.auth.uid != userId)
+        || (signedIn() && request.auth.uid == userId
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone', 'updatedAt'])
         && request.resource.data.role == resource.data.role
         && request.resource.data.email == resource.data.email);

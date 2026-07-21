@@ -211,6 +211,42 @@ export async function createCustomerProfile(user: User, name: string, phone = ''
   });
 }
 
+/**
+ * Safe profile creation for Google Sign-In users.
+ *
+ * Rules:
+ * - If the users/{uid} document already exists, the function is a no-op.
+ * - ADMIN role is never set or overwritten — only 'CUSTOMER' is written for new documents.
+ * - Preserves all existing fields (does not merge/overwrite existing profiles).
+ * - No read-then-write race: the Firestore rule enforces !exists() atomically on the server.
+ *
+ * Returns the role that will be active after the call:
+ * - 'EXISTING' when the document already existed (no write attempted)
+ * - 'CUSTOMER' when a new document was created
+ */
+export async function createGoogleCustomerProfileIfNew(
+  user: User,
+  displayName: string,
+): Promise<'EXISTING' | 'CUSTOMER'> {
+  const ref = doc(clientDb, 'users', user.uid);
+  const snapshot = await getDoc(ref);
+  if (snapshot.exists()) {
+    // Document already present — preserve it unchanged (including any ADMIN role).
+    return 'EXISTING';
+  }
+  // The Firestore rule enforces !exists() on the server, so even if two concurrent
+  // calls reach this point the second write will be rejected by the rules.
+  await setDoc(ref, {
+    email: String(user.email || '').trim(),
+    name: displayName.trim() || String(user.displayName || '').trim() || String(user.email || '').trim(),
+    role: 'CUSTOMER',
+    provider: 'google',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return 'CUSTOMER';
+}
+
 function orderFromDocument(id: string, data: DocumentData): OrderDto {
   const firstName = String(data.firstName || '');
   const lastName = String(data.lastName || '');

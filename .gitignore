@@ -35,9 +35,17 @@ gha-creds-*.json
 # debug
 npm-debug.log*
 firebase-debug.log*
+firestore-debug.log
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+
+# e2e output artifacts
+e2e-out.txt
+e2e-results.txt
+
+# cache
+.cache/
 
 # env files (can opt-in for committing if needed)
 .env*
