@@ -268,7 +268,7 @@ export default function CheckoutPage() {
         <div className="mx-auto max-w-xl space-y-5 border border-brand-black/5 bg-brand-white p-8 text-center clip-angled-lg">
           <h2 className="text-lg font-black uppercase">Account required</h2>
           <p className="text-xs font-semibold leading-relaxed text-brand-dark-gray">
-            Register with email and password, verify the address, then return here. Your cart stays saved in this browser.
+            Sign in with Google (instant access, no email verification) or use email/password (verification required). Your cart stays saved in this browser.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Link href="/account/register?redirect=%2Fcheckout" className="bg-brand-black px-5 py-3 text-xs font-black uppercase text-brand-white">Register</Link>

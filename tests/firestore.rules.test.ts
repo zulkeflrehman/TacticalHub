@@ -245,6 +245,72 @@ describe('TecticalHub Firestore production rules', () => {
     assert.equal(await readInventoryStock(), STARTING_STOCK);
   });
 
+  it('accepts an order from a Google-authenticated user with a verified token', async () => {
+    const database = customerDatabase(ALICE_UID, ALICE_EMAIL, true);
+
+    await assertSucceeds(placeOrder(database, ALICE_UID, ALICE_EMAIL, {
+      orderId: 'order-google-user',
+    }));
+
+    const orderSnapshot = await assertSucceeds(getDoc(doc(database, 'orders', 'order-google-user')));
+    assert.equal(orderSnapshot.data()?.email, ALICE_EMAIL);
+    assert.equal(orderSnapshot.data()?.emailVerified, true);
+    assert.equal(orderSnapshot.data()?.total, 2_750);
+    assert.equal(await readInventoryStock(), STARTING_STOCK - 1);
+  });
+
+  it('prevents a customer from setting or escalating to ADMIN role', async () => {
+    const database = customerDatabase(ALICE_UID, ALICE_EMAIL, true);
+
+    await assertFails(setDoc(doc(database, 'users', ALICE_UID), {
+      email: ALICE_EMAIL,
+      name: 'Alice Hacker',
+      role: 'ADMIN',
+    }));
+  });
+
+  it('allows a customer to create their own CUSTOMER profile document', async () => {
+    const database = customerDatabase(ALICE_UID, ALICE_EMAIL, true);
+
+    await assertSucceeds(setDoc(doc(database, 'users', ALICE_UID), {
+      email: ALICE_EMAIL,
+      name: 'Alice Buyer',
+      role: 'CUSTOMER',
+    }));
+    const snapshot = await getDoc(doc(database, 'users', ALICE_UID));
+    assert.equal(snapshot.data()?.role, 'CUSTOMER');
+    assert.equal(snapshot.data()?.name, 'Alice Buyer');
+  });
+
+  it('preserves the ADMIN role when a customer attempts to overwrite their profile', async () => {
+    // Pre-seed an ADMIN user document (simulating an existing admin who also has a Google account).
+    const GOOGLE_ADMIN_UID = 'google-admin-user';
+    const GOOGLE_ADMIN_EMAIL = 'google-admin@example.com';
+    await testEnvironment.withSecurityRulesDisabled(async (context) => {
+      const database = context.firestore() as unknown as Firestore;
+      await setDoc(doc(database, 'users', GOOGLE_ADMIN_UID), {
+        email: GOOGLE_ADMIN_EMAIL,
+        name: 'Admin User',
+        role: 'ADMIN',
+      });
+    });
+
+    // Attempt to overwrite the ADMIN profile with a CUSTOMER role (should be rejected).
+    const database = customerDatabase(GOOGLE_ADMIN_UID, GOOGLE_ADMIN_EMAIL, true);
+    await assertFails(setDoc(doc(database, 'users', GOOGLE_ADMIN_UID), {
+      email: GOOGLE_ADMIN_EMAIL,
+      name: 'Demoted Admin',
+      role: 'CUSTOMER',
+    }));
+
+    // Verify the ADMIN role is still intact.
+    await testEnvironment.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore() as unknown as Firestore;
+      const snapshot = await getDoc(doc(db, 'users', GOOGLE_ADMIN_UID));
+      assert.equal(snapshot.data()?.role, 'ADMIN');
+    });
+  });
+
   it('atomically accepts an authoritative order for a verified user and reduces stock', async () => {
     const database = customerDatabase(ALICE_UID, ALICE_EMAIL, true);
 

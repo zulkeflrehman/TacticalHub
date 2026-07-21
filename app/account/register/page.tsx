@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -16,6 +16,7 @@ import {
   safeAccountRedirect,
   verificationErrorMessage,
 } from '@/lib/email-verification';
+import GoogleSignInButton, { checkGoogleRedirectResult } from '@/components/auth/GoogleSignInButton';
 
 const registerSchema = z.object({
   name: z.string().trim().min(2, 'Name is required').max(160),
@@ -36,12 +37,39 @@ function RegisterContent() {
   const redirectTo = safeAccountRedirect(searchParams.get('redirect'));
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [linkingEmail, setLinkingEmail] = useState('');
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<RegisterFormData>({ resolver: zodResolver(registerSchema) });
+
+  // Pick up any pending Google redirect result on mount.
+  useEffect(() => {
+    checkGoogleRedirectResult({
+      onSuccess: () => {
+        addToast('Account created with Google. No verification needed!', 'success');
+        router.push(redirectTo);
+      },
+      onError: (message) => setErrorMsg(message),
+      onAccountLinkingConflict: (email) => setLinkingEmail(email),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleGoogleSuccess = () => {
+    addToast('Account created with Google. No verification needed!', 'success');
+    router.push(redirectTo);
+  };
+
+  const handleGoogleError = (message: string) => {
+    setErrorMsg(message);
+  };
+
+  const handleAccountLinkingConflict = (email: string) => {
+    setLinkingEmail(email);
+  };
 
   const onSubmit = async (data: RegisterFormData) => {
     setLoading(true);
@@ -81,7 +109,7 @@ function RegisterContent() {
       <div className="text-center space-y-2">
         <h1 className="text-2xl font-black uppercase tracking-tight text-brand-black">Create An Account</h1>
         <p className="text-xs text-brand-dark-gray font-semibold leading-relaxed">
-          Create an email/password account, verify its address, then continue to secure COD checkout.
+          Register with Google for instant access, or use email/password (verification required).
         </p>
       </div>
 
@@ -91,6 +119,31 @@ function RegisterContent() {
           <span>{errorMsg}</span>
         </div>
       )}
+
+      {linkingEmail && (
+        <div className="bg-amber-50 text-amber-800 border border-amber-200 text-xs font-semibold p-3 clip-angled-sm space-y-1">
+          <p className="font-bold">Account already exists for {linkingEmail}</p>
+          <p>
+            This email is registered with a different sign-in method. Log in with your
+            email/password to access your existing account. Accounts are not merged
+            automatically to protect your order history.
+          </p>
+        </div>
+      )}
+
+      {/* Google Sign-In */}
+      <div className="space-y-3">
+        <GoogleSignInButton
+          onSuccess={handleGoogleSuccess}
+          onError={handleGoogleError}
+          onAccountLinkingConflict={handleAccountLinkingConflict}
+        />
+        <div className="flex items-center gap-3">
+          <div className="flex-1 border-t border-brand-black/10" />
+          <span className="text-[10px] font-bold uppercase text-brand-dark-gray">or register with email</span>
+          <div className="flex-1 border-t border-brand-black/10" />
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-1">

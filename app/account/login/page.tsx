@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -11,6 +11,7 @@ import { auth } from '@/lib/firebase-client';
 import { sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
 import { LogIn, ShieldAlert } from 'lucide-react';
 import { safeAccountRedirect } from '@/lib/email-verification';
+import GoogleSignInButton, { checkGoogleRedirectResult } from '@/components/auth/GoogleSignInButton';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -27,6 +28,7 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [linkingEmail, setLinkingEmail] = useState('');
 
   const requestedRedirect = searchParams.get('redirect');
   const redirectUrl = safeAccountRedirect(requestedRedirect);
@@ -39,6 +41,32 @@ function LoginContent() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema)
   });
+
+  // Pick up any pending Google redirect result on mount.
+  useEffect(() => {
+    checkGoogleRedirectResult({
+      onSuccess: () => {
+        addToast('Signed in with Google.', 'success');
+        router.push(redirectUrl);
+      },
+      onError: (message) => setErrorMsg(message),
+      onAccountLinkingConflict: (email) => setLinkingEmail(email),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleGoogleSuccess = () => {
+    addToast('Signed in with Google.', 'success');
+    router.push(redirectUrl);
+  };
+
+  const handleGoogleError = (message: string) => {
+    setErrorMsg(message);
+  };
+
+  const handleAccountLinkingConflict = (email: string) => {
+    setLinkingEmail(email);
+  };
 
   const resetPassword = async () => {
     const email = getValues('email')?.trim();
@@ -96,6 +124,31 @@ function LoginContent() {
           <span>{errorMsg}</span>
         </div>
       )}
+
+      {linkingEmail && (
+        <div className="bg-amber-50 text-amber-800 border border-amber-200 text-xs font-semibold p-3 clip-angled-sm space-y-1">
+          <p className="font-bold">Account already exists for {linkingEmail}</p>
+          <p>
+            This email is registered with a different sign-in method. Log in with your
+            email/password below to access your existing account. Accounts are not merged
+            automatically to protect your order history.
+          </p>
+        </div>
+      )}
+
+      {/* Google Sign-In */}
+      <div className="space-y-3">
+        <GoogleSignInButton
+          onSuccess={handleGoogleSuccess}
+          onError={handleGoogleError}
+          onAccountLinkingConflict={handleAccountLinkingConflict}
+        />
+        <div className="flex items-center gap-3">
+          <div className="flex-1 border-t border-brand-black/10" />
+          <span className="text-[10px] font-bold uppercase text-brand-dark-gray">or continue with email</span>
+          <div className="flex-1 border-t border-brand-black/10" />
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-1">
