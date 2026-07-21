@@ -7,7 +7,7 @@ import { Home, Heart, ShoppingBag, User } from 'lucide-react';
 
 export default function MobileBottomNavigation() {
   const pathname = usePathname();
-  const { cart, wishlist, toggleMiniCart } = useStore();
+  const { cart, wishlist, toggleMiniCart, isOpen: isMiniCartOpen } = useStore();
 
   const totalCartItems = cart.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -35,6 +35,11 @@ export default function MobileBottomNavigation() {
       href: '/account/profile'
     }
   ];
+
+  // Hide navigation when CartDrawer is open to prevent overlap
+  if (isMiniCartOpen) {
+    return null;
+  }
 
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-brand-white/95 backdrop-blur-md border-t border-brand-black/10 pb-safe shadow-lg">

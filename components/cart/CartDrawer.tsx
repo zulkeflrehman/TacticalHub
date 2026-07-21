@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import CatalogImage from '@/components/ui/CatalogImage';
 import { X, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
@@ -7,6 +8,20 @@ import Link from 'next/link';
 
 export default function CartDrawer() {
   const { cart, isOpen, toggleMiniCart, updateQuantity, removeFromCart } = useStore();
+
+  // Close drawer on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        toggleMiniCart(false);
+      }
+    };
+    
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, toggleMiniCart]);
 
   if (!isOpen) return null;
 
