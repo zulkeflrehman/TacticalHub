@@ -15,6 +15,14 @@ test('unknown static routes render the not-found experience', async ({ page }) =
   await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
 });
 
+test('admin product controls are unavailable to signed-out customers', async ({ page }) => {
+  await page.goto('/admin/products');
+  await expect(page).toHaveURL(/\/account\/login\/?\?redirect=%2Fadmin%2Fproducts/);
+
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: /^edit /i })).toHaveCount(0);
+});
+
 test('checkout preserves the local cart while directing customers through account verification', async ({ page }) => {
   await page.addInitScript(() => {
     window.localStorage.setItem('tecticalhub-cart-storage', JSON.stringify({
@@ -53,6 +61,10 @@ test('live catalog data can be opened and added to the local cart', async ({ pag
   await expect(firstProduct).toBeVisible({ timeout: 20_000 });
   await firstProduct.click();
   await expect(page.getByRole('button', { name: /add to cart/i })).toBeVisible({ timeout: 20_000 });
+  const productDescription = page.locator('p.whitespace-pre-line');
+  await expect(productDescription).toBeVisible();
+  await expect(productDescription).not.toHaveText('');
+  await expect(productDescription).toHaveCSS('white-space', 'pre-line');
   await page.getByRole('button', { name: /add to cart/i }).click();
   await page.goto('/cart');
   await expect(page.getByRole('heading', { level: 1, name: /shopping cart \(1\)/i })).toBeVisible();

@@ -337,7 +337,7 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
         <div className="bg-brand-white border border-brand-black/5 p-6 md:p-8 clip-angled">
           {activeTab === 'specs' && (
             <div className="space-y-6">
-              <p className="text-xs text-brand-dark-gray leading-relaxed font-semibold">
+              <p className="whitespace-pre-line text-xs text-brand-dark-gray leading-relaxed font-semibold">
                 {product.description}
               </p>
               <div className="max-w-2xl border border-brand-black/5 divide-y divide-brand-black/5 text-xs">

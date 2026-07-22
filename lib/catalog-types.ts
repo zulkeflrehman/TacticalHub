@@ -4,6 +4,8 @@ import type {
   PhoneConfirmationStatus,
 } from './order-policy';
 
+export const MAX_PRODUCT_DESCRIPTION_LENGTH = 3000;
+
 export interface ProductImageDto {
   url: string;
   isPrimary?: boolean;

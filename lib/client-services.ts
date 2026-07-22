@@ -24,6 +24,7 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { clientDb } from './firebase-client';
+import { MAX_PRODUCT_DESCRIPTION_LENGTH } from './catalog-types';
 import type {
   CategoryDto,
   ContactMessageDto,
@@ -628,6 +629,9 @@ export function inventoryIdFor(productId: string, sku: string): string {
 }
 
 export async function saveProduct(product: ProductDto): Promise<ProductDto> {
+  if (product.description.length > MAX_PRODUCT_DESCRIPTION_LENGTH) {
+    throw new Error(`Product description cannot exceed ${MAX_PRODUCT_DESCRIPTION_LENGTH} characters.`);
+  }
   const productId = product.id || product.slug;
   const variants = product.variants.map((variant) => ({
     ...variant,
