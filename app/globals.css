@@ -81,6 +81,19 @@ html, body {
   outline-offset: 2px;
 }
 
+/* Keep native admin product selects readable regardless of OS dark-mode defaults. */
+.admin-product-select {
+  background-color: #FFFFFF;
+  color: #010101;
+  color-scheme: light;
+}
+
+.admin-product-select option,
+.admin-product-select option:checked {
+  background-color: #FFFFFF;
+  color: #010101;
+}
+
 /* Drawer slide animations */
 @keyframes slide-in-right {
   from { transform: translateX(-100%); }

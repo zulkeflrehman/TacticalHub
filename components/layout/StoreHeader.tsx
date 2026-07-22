@@ -170,11 +170,11 @@ export default function StoreHeader() {
         </button>
 
         {/* Brand Logo */}
-        <Link href="/" className="flex flex-col">
-          <span className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tighter text-brand-black leading-none flex items-center gap-1">
+        <Link href="/" className="flex min-w-0 flex-col">
+          <span className="flex items-center gap-1 text-xl font-extrabold uppercase leading-none tracking-tighter text-brand-black min-[360px]:text-2xl sm:text-3xl">
             TECTICAL<span className="text-brand-accent">HUB</span>
           </span>
-          <span className="text-[9px] font-bold tracking-widest text-brand-dark-gray/80 uppercase mt-0.5 select-none">
+          <span className="mt-0.5 hidden select-none text-[9px] font-bold uppercase tracking-widest text-brand-dark-gray/80 min-[360px]:block">
             MILITARY & OUTDOOR GEAR
           </span>
         </Link>

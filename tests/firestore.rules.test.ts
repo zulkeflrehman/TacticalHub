@@ -311,6 +311,28 @@ describe('TecticalHub Firestore production rules', () => {
     });
   });
 
+  it('allows only an administrator to update an existing product document', async () => {
+    const customer = customerDatabase(ALICE_UID, ALICE_EMAIL, true);
+    await assertFails(updateDoc(doc(customer, 'products', PRODUCT_ID), {
+      name: 'Customer Tampered Name',
+      description: 'Customers must not edit products.',
+    }));
+
+    const administrator = adminDatabase();
+    const multilineDescription = 'Updated first line\nUpdated second line';
+    await assertSucceeds(updateDoc(doc(administrator, 'products', PRODUCT_ID), {
+      name: 'Administrator Updated Product',
+      description: multilineDescription,
+    }));
+
+    const refreshedProduct = await assertSucceeds(getDoc(doc(administrator, 'products', PRODUCT_ID)));
+    assert.equal(refreshedProduct.data()?.name, 'Administrator Updated Product');
+    assert.equal(refreshedProduct.data()?.description, multilineDescription);
+
+    const products = await assertSucceeds(getDocs(collection(administrator, 'products')));
+    assert.equal(products.size, 1, 'an edit must not create a duplicate product document');
+  });
+
   it('atomically accepts an authoritative order for a verified user and reduces stock', async () => {
     const database = customerDatabase(ALICE_UID, ALICE_EMAIL, true);
 

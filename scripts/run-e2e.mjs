@@ -1,67 +1,116 @@
 import { spawn } from 'node:child_process';
+import { readFile, stat } from 'node:fs/promises';
+import { createServer } from 'node:http';
 import path from 'node:path';
 import process from 'node:process';
 
 const workspace = process.cwd();
+const outDirectory = path.join(workspace, 'out');
+const nextCli = path.join(workspace, 'node_modules', 'next', 'dist', 'bin', 'next');
+const playwrightCli = path.join(workspace, 'node_modules', '@playwright', 'test', 'cli.js');
 const serverEnvironment = {
   ...process.env,
   ENABLE_DEMO_FALLBACK: 'true',
   SKIP_FIRESTORE_IN_DEMO: 'true',
 };
-const nextCli = path.join(workspace, 'node_modules', 'next', 'dist', 'bin', 'next');
-const playwrightCli = path.join(workspace, 'node_modules', '@playwright', 'test', 'cli.js');
-const server = spawn(process.execPath, [nextCli, 'dev'], {
-  cwd: workspace,
-  env: serverEnvironment,
-  stdio: 'inherit',
-  windowsHide: true,
-});
 
-async function waitForServer() {
-  const deadline = Date.now() + 120_000;
-  while (Date.now() < deadline) {
-    if (server.exitCode !== null) throw new Error(`Next.js exited with code ${server.exitCode}.`);
-    try {
-      const response = await fetch('http://localhost:3000');
-      if (response.ok) return;
-    } catch {
-      // The server is still starting.
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-  throw new Error('Timed out waiting for the local Next.js test server.');
-}
+const contentTypes = new Map([
+  ['.css', 'text/css; charset=utf-8'],
+  ['.html', 'text/html; charset=utf-8'],
+  ['.ico', 'image/x-icon'],
+  ['.jpeg', 'image/jpeg'],
+  ['.jpg', 'image/jpeg'],
+  ['.js', 'text/javascript; charset=utf-8'],
+  ['.json', 'application/json; charset=utf-8'],
+  ['.png', 'image/png'],
+  ['.svg', 'image/svg+xml'],
+  ['.txt', 'text/plain; charset=utf-8'],
+  ['.webp', 'image/webp'],
+  ['.woff2', 'font/woff2'],
+]);
 
-async function stopServer() {
-  if (server.exitCode !== null || !server.pid) return;
-  if (process.platform === 'win32') {
-    const killer = spawn('taskkill.exe', ['/pid', String(server.pid), '/t', '/f'], {
-      stdio: 'ignore',
+function run(command, args, environment = process.env) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd: workspace,
+      env: environment,
+      stdio: 'inherit',
       windowsHide: true,
     });
-    await Promise.race([
-      new Promise((resolve) => killer.once('exit', resolve)),
-      new Promise((resolve) => killer.once('error', resolve)),
-      new Promise((resolve) => setTimeout(resolve, 5_000)),
-    ]);
-    killer.unref();
-    return;
-  }
-  server.kill('SIGTERM');
-  await Promise.race([
-    new Promise((resolve) => server.once('exit', resolve)),
-    new Promise((resolve) => setTimeout(resolve, 5_000)),
-  ]);
-  if (server.exitCode === null) server.kill('SIGKILL');
+    child.once('exit', (code) => resolve(code ?? 1));
+    child.once('error', reject);
+  });
 }
 
-let exitCode = 1;
-try {
-  await waitForServer();
-  exitCode = await new Promise((resolve, reject) => {
-    const tests = spawn(process.execPath, [playwrightCli, 'test'], {
+async function buildStaticExport() {
+  const buildCode = await run(process.execPath, [nextCli, 'build'], serverEnvironment);
+  if (buildCode !== 0) throw new Error(`Next.js production build exited with code ${buildCode}.`);
+}
+
+async function existingFileFor(pathname) {
+  const relativePath = pathname.replace(/^\/+/, '');
+  const resolvedPath = path.resolve(outDirectory, relativePath);
+  if (resolvedPath !== outDirectory && !resolvedPath.startsWith(`${outDirectory}${path.sep}`)) return null;
+
+  const candidates = [resolvedPath];
+  if (!path.extname(resolvedPath)) candidates.push(path.join(resolvedPath, 'index.html'));
+
+  for (const candidate of candidates) {
+    try {
+      const details = await stat(candidate);
+      if (details.isFile()) return candidate;
+      if (details.isDirectory()) {
+        const indexFile = path.join(candidate, 'index.html');
+        if ((await stat(indexFile)).isFile()) return indexFile;
+      }
+    } catch {
+      // Try the next clean-URL candidate.
+    }
+  }
+  return null;
+}
+
+function createStaticServer() {
+  return createServer(async (request, response) => {
+    try {
+      const pathname = decodeURIComponent(new URL(request.url || '/', 'http://127.0.0.1').pathname);
+      const requestedFile = await existingFileFor(pathname);
+      const filePath = requestedFile || path.join(outDirectory, '404.html');
+      const body = await readFile(filePath);
+      response.writeHead(requestedFile ? 200 : 404, {
+        'Cache-Control': 'no-store',
+        'Content-Type': contentTypes.get(path.extname(filePath).toLowerCase()) || 'application/octet-stream',
+      });
+      response.end(body);
+    } catch (error) {
+      response.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+      response.end(error instanceof Error ? error.message : 'Unable to serve the test artifact.');
+    }
+  });
+}
+
+async function listen(server) {
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolve);
+  });
+  const address = server.address();
+  if (!address || typeof address === 'string') throw new Error('Unable to determine the static test server address.');
+  const baseUrl = `http://127.0.0.1:${address.port}`;
+  console.log(`Serving the production static export at ${baseUrl}`);
+  return baseUrl;
+}
+
+async function close(server) {
+  if (!server.listening) return;
+  await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+}
+
+async function runPlaywright(baseUrl) {
+  return new Promise((resolve, reject) => {
+    const tests = spawn(process.execPath, [playwrightCli, 'test', ...process.argv.slice(2)], {
       cwd: workspace,
-      env: process.env,
+      env: { ...process.env, PLAYWRIGHT_BASE_URL: baseUrl },
       stdio: ['inherit', 'pipe', 'pipe'],
       windowsHide: true,
     });
@@ -96,15 +145,23 @@ try {
           killer.unref();
         }
         finish(passed ? 0 : 1);
-      }, 180_000);
+      }, 240_000);
     }
     tests.once('exit', (code) => finish(code ?? 1));
     tests.once('error', reject);
   });
+}
+
+const server = createStaticServer();
+let exitCode = 1;
+try {
+  await buildStaticExport();
+  const baseUrl = await listen(server);
+  exitCode = await runPlaywright(baseUrl);
 } catch (error) {
   console.error(error);
 } finally {
-  await stopServer();
+  await close(server);
 }
 
 process.exit(exitCode);
