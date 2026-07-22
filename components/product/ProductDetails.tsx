@@ -208,7 +208,7 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
                     onClick={() => setSelectedVariant(v)}
                     className={`px-4 py-2.5 text-xs font-bold uppercase transition-all clip-angled border ${
                       selectedVariant.sku === v.sku
-                        ? 'bg-brand-black text-brand-accent border-brand-black shadow-sm'
+                        ? 'bg-brand-black text-brand-white border-brand-black shadow-sm'
                         : 'bg-brand-white text-brand-black border-brand-black/10 hover:border-brand-black'
                     }`}
                   >
@@ -280,7 +280,7 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
                 aria-label={isLiked ? 'Remove from wishlist' : 'Add to wishlist'}
                 className={`flex h-[44px] w-[44px] shrink-0 items-center justify-center border transition-all clip-angled focus:outline-none ${
                   isLiked
-                    ? 'bg-brand-black border-brand-black text-brand-accent'
+                    ? 'bg-brand-black border-brand-black text-brand-white'
                     : 'bg-brand-white border-brand-black/10 text-brand-dark-gray hover:border-brand-black hover:text-brand-black'
                 }`}
               >

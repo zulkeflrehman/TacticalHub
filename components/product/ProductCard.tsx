@@ -129,7 +129,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         aria-label={isLiked ? 'Remove from wishlist' : 'Add to wishlist'}
         className={`absolute top-2 right-2 z-10 flex h-[36px] w-[36px] items-center justify-center rounded-full border shadow-sm transition-all focus:outline-none ${
           isLiked
-            ? 'bg-brand-black border-brand-black text-brand-accent'
+            ? 'bg-brand-black border-brand-black text-brand-white'
             : 'bg-brand-white border-brand-black/10 text-brand-dark-gray hover:text-brand-black'
         }`}
       >
