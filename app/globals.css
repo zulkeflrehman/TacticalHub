@@ -98,7 +98,7 @@ html, body {
 
 /* Keep black primary actions readable in every pointer/keyboard state. */
 .bg-brand-black.text-brand-white:is(:hover, :active, :focus-visible) {
-  background-color: var(--color-dark-gray);
+  background-color: var(--color-black);
   color: #FFFFFF;
 }
 
