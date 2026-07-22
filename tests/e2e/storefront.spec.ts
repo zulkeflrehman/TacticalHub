@@ -23,6 +23,20 @@ test('admin product controls are unavailable to signed-out customers', async ({ 
   await expect(page.getByRole('button', { name: /^edit /i })).toHaveCount(0);
 });
 
+test('black primary actions retain white labels on hover and click', async ({ page }) => {
+  await page.goto('/account/login');
+  const primaryAction = page.getByRole('button', { name: 'Log In', exact: true });
+  await expect(primaryAction).toBeVisible();
+  await expect(primaryAction).toHaveCSS('color', 'rgb(255, 255, 255)');
+
+  await primaryAction.hover();
+  await expect(primaryAction).toHaveCSS('background-color', 'rgb(67, 67, 67)');
+  await expect(primaryAction).toHaveCSS('color', 'rgb(255, 255, 255)');
+
+  await primaryAction.click();
+  await expect(primaryAction).toHaveCSS('color', 'rgb(255, 255, 255)');
+});
+
 test('checkout preserves the local cart while directing customers through account verification', async ({ page }) => {
   await page.addInitScript(() => {
     window.localStorage.setItem('tecticalhub-cart-storage', JSON.stringify({
@@ -60,12 +74,17 @@ test('live catalog data can be opened and added to the local cart', async ({ pag
   const firstProduct = page.locator('a[href^="/products/?slug="]').first();
   await expect(firstProduct).toBeVisible({ timeout: 20_000 });
   await firstProduct.click();
-  await expect(page.getByRole('button', { name: /add to cart/i })).toBeVisible({ timeout: 20_000 });
+  const addToCart = page.getByRole('button', { name: /add to cart/i });
+  await expect(addToCart).toBeVisible({ timeout: 20_000 });
+  await expect(addToCart).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await addToCart.hover();
+  await expect(addToCart).toHaveCSS('background-color', 'rgb(67, 67, 67)');
+  await expect(addToCart).toHaveCSS('color', 'rgb(255, 255, 255)');
   const productDescription = page.locator('p.whitespace-pre-line');
   await expect(productDescription).toBeVisible();
   await expect(productDescription).not.toHaveText('');
   await expect(productDescription).toHaveCSS('white-space', 'pre-line');
-  await page.getByRole('button', { name: /add to cart/i }).click();
+  await addToCart.click();
   await page.goto('/cart');
   await expect(page.getByRole('heading', { level: 1, name: /shopping cart \(1\)/i })).toBeVisible();
 });

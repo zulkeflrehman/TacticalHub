@@ -22,6 +22,8 @@
   --font-sans: "Plus Jakarta Sans", sans-serif;
   --color-accent: #B8EC44;
   --color-accent-hover: #9ad42c;
+  --color-brand-accent: #B8EC44;
+  --color-brand-accent-hover: #9ad42c;
   --color-brand-black: #010101;
   --color-brand-dark-gray: #434343;
   --color-brand-light-gray: #F6F6F6;
@@ -92,6 +94,12 @@ html, body {
 .admin-product-select option:checked {
   background-color: #FFFFFF;
   color: #010101;
+}
+
+/* Keep black primary actions readable in every pointer/keyboard state. */
+.bg-brand-black.text-brand-white:is(:hover, :active, :focus-visible) {
+  background-color: var(--color-dark-gray);
+  color: #FFFFFF;
 }
 
 /* Drawer slide animations */
