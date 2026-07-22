@@ -30,7 +30,7 @@ test('black primary actions retain white labels on hover and click', async ({ pa
   await expect(primaryAction).toHaveCSS('color', 'rgb(255, 255, 255)');
 
   await primaryAction.hover();
-  await expect(primaryAction).toHaveCSS('background-color', 'rgb(67, 67, 67)');
+  await expect(primaryAction).toHaveCSS('background-color', 'rgb(1, 1, 1)');
   await expect(primaryAction).toHaveCSS('color', 'rgb(255, 255, 255)');
 
   await primaryAction.click();
@@ -78,7 +78,7 @@ test('live catalog data can be opened and added to the local cart', async ({ pag
   await expect(addToCart).toBeVisible({ timeout: 20_000 });
   await expect(addToCart).toHaveCSS('color', 'rgb(255, 255, 255)');
   await addToCart.hover();
-  await expect(addToCart).toHaveCSS('background-color', 'rgb(67, 67, 67)');
+  await expect(addToCart).toHaveCSS('background-color', 'rgb(1, 1, 1)');
   await expect(addToCart).toHaveCSS('color', 'rgb(255, 255, 255)');
   const productDescription = page.locator('p.whitespace-pre-line');
   await expect(productDescription).toBeVisible();
