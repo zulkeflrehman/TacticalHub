@@ -156,16 +156,6 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
             <h1 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tight text-brand-black leading-tight">
               {product.name}
             </h1>
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-brand-dark-gray">
-              <div className="flex text-amber-500">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-3.5 h-3.5 fill-current" />
-                ))}
-              </div>
-              <span className="text-brand-black font-extrabold">5.0</span>
-              <span>•</span>
-              <span className="hover:underline cursor-pointer">12 Customer Reviews</span>
-            </div>
           </div>
 
           <hr className="border-brand-black/5" />

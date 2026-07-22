@@ -76,6 +76,7 @@ test('live catalog data can be opened and added to the local cart', async ({ pag
   await firstProduct.click();
   const addToCart = page.getByRole('button', { name: /add to cart/i });
   await expect(addToCart).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText('12 Customer Reviews', { exact: true })).toHaveCount(0);
   await expect(addToCart).toHaveCSS('color', 'rgb(255, 255, 255)');
   await addToCart.hover();
   await expect(addToCart).toHaveCSS('background-color', 'rgb(1, 1, 1)');
