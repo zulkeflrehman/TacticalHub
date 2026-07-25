@@ -97,7 +97,7 @@ async function main() {
   }
   console.log("Initializing Firebase Seeding process...");
   
-  const jsonPath = path.join(process.cwd(), 'Product_details.json');
+  const jsonPath = path.join(process.cwd(), 'scripts/data/Product_details.json');
   if (!fs.existsSync(jsonPath)) {
     console.error(`Error: Product JSON not found at ${jsonPath}`);
     process.exit(1);
