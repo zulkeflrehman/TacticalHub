@@ -1,67 +1,120 @@
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { useStore } from '@/lib/store';
-import { Home, Heart, ShoppingBag, User } from 'lucide-react';
+import { useSpatialMotion } from '@/components/motion/SpatialMotionProvider';
+import { Home, Compass, ShoppingBag, User } from 'lucide-react';
 
 export default function MobileBottomNavigation() {
   const pathname = usePathname();
-  const { cart, wishlist, toggleMiniCart, isOpen: isMiniCartOpen } = useStore();
+  const { cart, toggleMiniCart, isOpen: isMiniCartOpen } = useStore();
+  const { setOmnisearchOpen } = useSpatialMotion();
+  const [mounted, setMounted] = useState(false);
 
-  const totalCartItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const totalCartItems = mounted ? cart.reduce((acc, item) => acc + item.quantity, 0) : 0;
+
+  const triggerHaptic = () => {
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate?.([12, 24]);
+    }
+  };
 
   const navItems = [
     {
       name: 'Home',
       icon: Home,
-      href: '/'
+      href: '/',
     },
     {
-      name: 'Wishlist',
-      icon: Heart,
-      href: '/wishlist',
-      badgeCount: wishlist.length
+      name: 'Explore',
+      icon: Compass,
+      onClick: () => {
+        triggerHaptic();
+        setOmnisearchOpen(true);
+      },
     },
     {
-      name: 'Cart',
+      name: 'My Gear',
       icon: ShoppingBag,
-      onClick: () => toggleMiniCart(true),
-      badgeCount: totalCartItems
+      onClick: () => {
+        triggerHaptic();
+        toggleMiniCart(true);
+      },
+      badgeCount: totalCartItems,
     },
     {
-      name: 'Account',
+      name: 'Profile',
       icon: User,
-      href: '/account/profile'
-    }
+      href: '/account/profile',
+    },
   ];
 
-  // Hide navigation when CartDrawer is open to prevent overlap
+  // Hide navigation when full cart overlay is open to avoid cluttering touch space
   if (isMiniCartOpen) {
     return null;
   }
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-brand-white/95 backdrop-blur-md border-t border-brand-black/10 pb-safe shadow-lg">
-      <div className="flex h-16 items-center justify-around">
+    <nav 
+      aria-label="Mobile Navigation Bar"
+      suppressHydrationWarning
+      className="fixed bottom-0 left-0 right-0 z-50 bg-[#0A0A0A]/90 backdrop-blur-xl border-t border-[#FF6600]/20 pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.8)]"
+    >
+      <div suppressHydrationWarning className="flex h-16 items-center justify-around max-w-md mx-auto px-2">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = item.href ? pathname === item.href : false;
 
           const buttonContent = (
-            <div className="flex flex-col items-center gap-1 relative py-1 px-3">
-              <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-brand-black stroke-[2.5]' : 'text-brand-dark-gray'}`} />
-              <span className={`text-[9px] font-bold uppercase tracking-wider transition-colors ${isActive ? 'text-brand-black font-extrabold' : 'text-brand-dark-gray/80'}`}>
+            <motion.div 
+              whileTap={{ scale: 0.9, y: 1 }}
+              onClick={triggerHaptic}
+              className="flex flex-col items-center justify-center gap-1 relative py-1 px-3 w-full"
+            >
+              <div className="relative">
+                <Icon 
+                  className={`w-5 h-5 transition-colors duration-200 ${
+                    isActive ? 'text-[#FF6600] stroke-[2.5]' : 'text-neutral-400 group-hover:text-white'
+                  }`} 
+                />
+                
+                {/* Active Indicator Glow */}
+                {isActive && (
+                  <motion.div 
+                    layoutId="activeTabIndicator"
+                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-[#FF6600] shadow-[0_0_8px_#FF6600]"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+
+                {/* Bouncy Cart Badge */}
+                {item.badgeCount && item.badgeCount > 0 ? (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: [0, 1.3, 1] }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute -top-1.5 -right-2.5 min-w-4 h-4 px-1 text-[9px] font-black font-mono rounded-full flex items-center justify-center bg-[#FF6600] text-black border border-black shadow-[0_0_10px_rgba(255,102,0,0.6)]"
+                  >
+                    {item.badgeCount}
+                  </motion.span>
+                ) : null}
+              </div>
+
+              <span 
+                className={`text-[9px] font-extrabold uppercase tracking-widest font-mono transition-colors duration-200 ${
+                  isActive ? 'text-[#FF6600]' : 'text-neutral-400'
+                }`}
+              >
                 {item.name}
               </span>
-              {item.badgeCount && item.badgeCount > 0 ? (
-                <span className={`absolute top-0 right-2 w-4.5 h-4.5 text-[8px] font-black rounded-full flex items-center justify-center border border-brand-white ${
-                  item.name === 'Cart' ? 'bg-brand-accent text-brand-black' : 'bg-brand-black text-brand-white'
-                }`}>
-                  {item.badgeCount}
-                </span>
-              ) : null}
-            </div>
+            </motion.div>
           );
 
           if (item.onClick) {
@@ -69,7 +122,7 @@ export default function MobileBottomNavigation() {
               <button
                 key={item.name}
                 onClick={item.onClick}
-                className="flex-1 flex justify-center focus:outline-none"
+                className="flex-1 flex justify-center focus:outline-none group"
               >
                 {buttonContent}
               </button>
@@ -80,13 +133,13 @@ export default function MobileBottomNavigation() {
             <Link
               key={item.name}
               href={item.href || '#'}
-              className="flex-1 flex justify-center"
+              className="flex-1 flex justify-center group"
             >
               {buttonContent}
             </Link>
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 }
