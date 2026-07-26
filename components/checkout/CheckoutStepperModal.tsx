@@ -11,7 +11,7 @@ import KineticSuccessModal from './KineticSuccessModal';
 import { useToastStore } from '@/lib/toast-store';
 import {
   X, Check, ArrowRight, ArrowLeft, ShieldCheck,
-  CreditCard, Truck, ShoppingBag, Sparkles
+  Truck
 } from 'lucide-react';
 
 interface CheckoutStepperModalProps {
@@ -34,9 +34,9 @@ export default function CheckoutStepperModal({ isOpen, onClose }: CheckoutSteppe
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [city, setCity] = useState('Lahore');
-  const [stateName, setStateName] = useState('Punjab');
-  const [postalCode, setPostalCode] = useState('54000');
+  const [city] = useState('Lahore');
+  const [stateName] = useState('Punjab');
+  const [postalCode] = useState('54000');
   const [couponCode, setCouponCode] = useState('');
   const [discountAmount, setDiscountAmount] = useState(0);
 

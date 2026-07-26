@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import * as THREE from 'three';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import CatalogImage from '@/components/ui/CatalogImage';
-import { Rotate3d, Layers, Eye, ShieldCheck, Sparkles } from 'lucide-react';
+import { Rotate3d, Layers, Eye } from 'lucide-react';
 import {
   createTelescopicBatonGroup,
   createCampingTentGroup,
@@ -20,11 +20,22 @@ export default function Product3DGallery({ productName, images }: Product3DGalle
   const [activeTab, setActiveTab] = useState<'3D' | 'PHOTOS'>('3D');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [explodedStep, setExplodedStep] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [modelTypeLabel, setModelTypeLabel] = useState('3D TELESCOPIC BATON');
+  const [, setIsDragging] = useState(false);
 
   const mountRef = useRef<HTMLDivElement>(null);
   const explosionRef = useRef(0);
+
+  const primaryImg = images && images[0]?.url ? images[0].url : '';
+
+  const modelTypeLabel = useMemo(() => {
+    const nameLower = (productName || '').toLowerCase();
+    if (nameLower.includes('stick') || nameLower.includes('baton') || nameLower.includes('telescopic')) {
+      return '3D TELESCOPIC BATON (EXTENDABLE)';
+    } else if (nameLower.includes('tent') || nameLower.includes('camping')) {
+      return '3D AUTOMATIC DEPLOY TENT';
+    }
+    return '3D HOLOGRAPHIC DISPLAY';
+  }, [productName]);
 
   useEffect(() => {
     explosionRef.current = explodedStep / 100;
@@ -78,23 +89,19 @@ export default function Product3DGallery({ productName, images }: Product3DGalle
     let activeHologramAnim: ((time: number) => void) | null = null;
 
     const nameLower = (productName || '').toLowerCase();
-    const primaryImg = images && images[0]?.url ? images[0].url : '';
 
     if (nameLower.includes('stick') || nameLower.includes('baton') || nameLower.includes('telescopic')) {
       const baton = createTelescopicBatonGroup();
       modelGroup.add(baton.group);
       activeBatonAnim = baton.updateAnimation;
-      setModelTypeLabel('3D TELESCOPIC BATON (EXTENDABLE)');
     } else if (nameLower.includes('tent') || nameLower.includes('camping')) {
       const tent = createCampingTentGroup();
       modelGroup.add(tent.group);
       activeTentAnim = tent.updateAnimation;
-      setModelTypeLabel('3D AUTOMATIC DEPLOY TENT');
     } else {
       const holo = createHologramProductDisplay(primaryImg);
       modelGroup.add(holo.group);
       activeHologramAnim = holo.updateAnimation;
-      setModelTypeLabel('3D HOLOGRAPHIC DISPLAY');
     }
 
     // Pointer Interaction
@@ -111,10 +118,10 @@ export default function Product3DGallery({ productName, images }: Product3DGalle
 
     const onMouseMove = (e: MouseEvent) => {
       if (!isMouseDown) return;
-      const dx = e.clientX - prevX;
-      const dy = e.clientY - prevY;
-      modelGroup.rotation.y += dx * 0.01;
-      modelGroup.rotation.x += dy * 0.01;
+      const deltaX = e.clientX - prevX;
+      const deltaY = e.clientY - prevY;
+      modelGroup.rotation.y += deltaX * 0.01;
+      modelGroup.rotation.x += deltaY * 0.01;
       prevX = e.clientX;
       prevY = e.clientY;
     };
@@ -124,57 +131,57 @@ export default function Product3DGallery({ productName, images }: Product3DGalle
       setIsDragging(false);
     };
 
-    const dom = renderer.domElement;
-    dom.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
-
-    // Touch Support
     const onTouchStart = (e: TouchEvent) => {
-      if (e.touches.length === 1) {
+      if (e.touches.length > 0) {
         isMouseDown = true;
         setIsDragging(true);
         prevX = e.touches[0].clientX;
         prevY = e.touches[0].clientY;
       }
     };
+
     const onTouchMove = (e: TouchEvent) => {
-      if (!isMouseDown || e.touches.length !== 1) return;
-      const dx = e.touches[0].clientX - prevX;
-      const dy = e.touches[0].clientY - prevY;
-      modelGroup.rotation.y += dx * 0.012;
-      modelGroup.rotation.x += dy * 0.012;
+      if (!isMouseDown || e.touches.length === 0) return;
+      const deltaX = e.touches[0].clientX - prevX;
+      const deltaY = e.touches[0].clientY - prevY;
+      modelGroup.rotation.y += deltaX * 0.01;
+      modelGroup.rotation.x += deltaY * 0.01;
       prevX = e.touches[0].clientX;
       prevY = e.touches[0].clientY;
     };
+
     const onTouchEnd = () => {
       isMouseDown = false;
       setIsDragging(false);
     };
 
+    const dom = renderer.domElement;
+    dom.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
     dom.addEventListener('touchstart', onTouchStart, { passive: true });
     window.addEventListener('touchmove', onTouchMove, { passive: true });
     window.addEventListener('touchend', onTouchEnd);
 
-    // Render loop
+    // Animation Loop
     let animId: number;
-    const startTime = Date.now();
+    const clock = new THREE.Clock();
 
-    const renderLoop = () => {
-      animId = requestAnimationFrame(renderLoop);
-      const elapsed = (Date.now() - startTime) * 0.001;
+    const animate = () => {
+      animId = requestAnimationFrame(animate);
+      const elapsed = clock.getElapsedTime();
 
       if (!isMouseDown) {
-        modelGroup.rotation.y += 0.004;
+        modelGroup.rotation.y += 0.005;
       }
 
-      if (activeBatonAnim) activeBatonAnim(elapsed, isMouseDown || isDragging || explosionRef.current > 0.1);
+      if (activeBatonAnim) activeBatonAnim(elapsed, explosionRef.current > 0.1);
       if (activeTentAnim) activeTentAnim(elapsed);
       if (activeHologramAnim) activeHologramAnim(elapsed);
 
       renderer.render(scene, camera);
     };
-    renderLoop();
+    animate();
 
     const handleResize = () => {
       if (!container) return;
@@ -200,7 +207,7 @@ export default function Product3DGallery({ productName, images }: Product3DGalle
       }
       renderer.dispose();
     };
-  }, [activeTab, productName]);
+  }, [activeTab, productName, primaryImg]);
 
   const displayImages = images.length > 0 ? images : [{ url: '' }];
 

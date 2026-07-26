@@ -7,10 +7,11 @@ import type { CategoryDto } from '@/lib/catalog-types';
 import { ArrowRight, Compass, Shield, Zap, Flame } from 'lucide-react';
 
 interface BentoGridCategoriesProps {
-  categories: CategoryDto[];
+  categories?: CategoryDto[];
 }
 
-export default function BentoGridCategories({ categories }: BentoGridCategoriesProps) {
+export default function BentoGridCategories({ categories = [] }: BentoGridCategoriesProps) {
+  const categoryCountLabel = categories.length > 0 ? `${categories.length} CATEGORY PANELS` : '4 CATEGORY PANELS';
   // Preset editorial macro shots for high-fidelity tactical aesthetics
   const macroShots: { [key: string]: string } = {
     'camping-tents': 'https://tacticalhub.com.pk/cdn/shop/files/Untitled_design_3.jpg',
@@ -30,7 +31,7 @@ export default function BentoGridCategories({ categories }: BentoGridCategoriesP
           </h2>
         </div>
         <span className="text-xs font-mono text-[#B8EC44] font-bold uppercase tracking-wider">
-          4 CATEGORY PANELS
+          {categoryCountLabel}
         </span>
       </div>
 

@@ -1,23 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { useSpatialMotion } from '@/components/motion/SpatialMotionProvider';
-import { Search, Heart, ShoppingBag, LayoutDashboard } from 'lucide-react';
+import { Search, Heart, ShoppingBag, LayoutDashboard, Menu, X } from 'lucide-react';
 import type { StoreUserDto } from '@/lib/catalog-types';
 import { getUserProfile } from '@/lib/client-services';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase-client';
 
+const emptySubscribe = () => () => {};
+const useIsMounted = () => useSyncExternalStore(emptySubscribe, () => true, () => false);
+
 export default function StoreHeader() {
   const { cart, wishlist, toggleMiniCart } = useStore();
   const { setOmnisearchOpen } = useSpatialMotion();
   const [sessionUser, setSessionUser] = useState<StoreUserDto | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const mounted = useIsMounted();
 
   useEffect(() => {
-    setMounted(true);
     return onAuthStateChanged(auth, (user) => {
       if (!user) return setSessionUser(null);
       getUserProfile(user).then(setSessionUser).catch(() => setSessionUser(null));
@@ -52,20 +55,31 @@ export default function StoreHeader() {
         suppressHydrationWarning
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4"
       >
-        {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 bg-[#FF6600] flex items-center justify-center clip-angled text-black font-black text-lg">
-            T
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xl sm:text-2xl font-black uppercase tracking-tighter text-white group-hover:text-[#FF6600] transition-colors">
-              TACTICAL<span className="text-[#FF6600]">HUB</span>
-            </span>
-            <span className="text-[8px] font-mono uppercase tracking-widest text-[#4A7C4A] font-extrabold -mt-1">
-              MILITARY & DEFENSE GEAR
-            </span>
-          </div>
-        </Link>
+        <div className="flex items-center gap-2">
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="lg:hidden p-2 text-neutral-300 hover:text-white transition-colors"
+            aria-label="Open navigation menu"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+
+          {/* Brand Logo */}
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="w-8 h-8 bg-[#FF6600] flex items-center justify-center clip-angled text-black font-black text-lg">
+              T
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl sm:text-2xl font-black uppercase tracking-tighter text-white group-hover:text-[#FF6600] transition-colors">
+                TACTICAL<span className="text-[#FF6600]">HUB</span>
+              </span>
+              <span className="text-[8px] font-mono uppercase tracking-widest text-[#4A7C4A] font-extrabold -mt-1">
+                MILITARY & DEFENSE GEAR
+              </span>
+            </div>
+          </Link>
+        </div>
 
         {/* Omnisearch Trigger Bar */}
         <button
@@ -137,6 +151,75 @@ export default function StoreHeader() {
           </button>
         </div>
       </div>
+
+      {/* Mobile Drawer Navigation Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          id="mobile-nav-drawer"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation menu"
+          className="fixed inset-0 z-50 lg:hidden"
+        >
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => setIsMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+          {/* Drawer Panel */}
+          <div className="fixed inset-y-0 left-0 w-[min(320px,85vw)] bg-[#121212] border-r border-[#2A2A2A] shadow-2xl flex flex-col z-50 animate-slide-right">
+            {/* Drawer Header */}
+            <div className="px-4 py-3 border-b border-[#2A2A2A] flex items-center justify-between bg-black text-white shrink-0">
+              <span className="font-extrabold tracking-tight text-sm uppercase">TECTICALHUB</span>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                aria-label="Close navigation menu"
+                className="text-white hover:text-[#FF6600] p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Mobile Search */}
+            <div className="px-4 py-3 border-b border-[#2A2A2A] shrink-0">
+              <button
+                onClick={() => { setIsMobileMenuOpen(false); setOmnisearchOpen(true); }}
+                className="w-full flex items-center justify-between bg-[#1A1A1A] border border-[#2A2A2A] py-2.5 px-3 text-xs text-neutral-400 clip-angled transition-all"
+              >
+                <div className="flex items-center gap-2">
+                  <Search className="w-4 h-4 text-[#FF6600]" />
+                  <span>Search products...</span>
+                </div>
+              </button>
+            </div>
+
+            {/* Scrollable Nav Links */}
+            <nav aria-label="Mobile navigation" className="flex-1 overflow-y-auto">
+              <div className="px-2 py-2 space-y-0.5">
+                <p className="px-3 pt-3 pb-1 text-[10px] font-mono font-black uppercase tracking-widest text-neutral-500">
+                  Shop
+                </p>
+                {[
+                  { name: 'Tents', href: '/categories?slug=camping-tents' },
+                  { name: 'Self-Defense', href: '/categories?slug=self-defense' },
+                  { name: 'Outdoor Tools', href: '/categories?slug=outdoor-tools' },
+                  { name: 'Tasers & Baton Sticks', href: '/categories?slug=tasers-baton-sticks' }
+                ].map((link) => (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center px-3 py-3 text-sm font-bold uppercase tracking-wide hover:bg-neutral-800 text-white transition-colors min-h-[44px]"
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+              </div>
+            </nav>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

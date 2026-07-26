@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, ShieldCheck } from 'lucide-react';
+import { ShoppingBag } from 'lucide-react';
 
 interface PDPStickyHeaderProps {
   productName: string;

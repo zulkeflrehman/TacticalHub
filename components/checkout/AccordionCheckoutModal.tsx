@@ -10,8 +10,8 @@ import AddressAutocompleteInput from './AddressAutocompleteInput';
 import KineticSuccessModal from './KineticSuccessModal';
 import { useToastStore } from '@/lib/toast-store';
 import {
-  X, Check, ArrowRight, ArrowLeft, ShieldCheck, Lock,
-  CreditCard, Truck, ShoppingBag, Sparkles, ChevronDown, ChevronUp
+  X, ArrowRight, ShieldCheck, Lock,
+  Truck, ChevronDown, ChevronUp
 } from 'lucide-react';
 
 interface AccordionCheckoutModalProps {
@@ -34,9 +34,9 @@ export default function AccordionCheckoutModal({ isOpen, onClose }: AccordionChe
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [city, setCity] = useState('Lahore');
-  const [stateName, setStateName] = useState('Punjab');
-  const [postalCode, setPostalCode] = useState('54000');
+  const [city] = useState('Lahore');
+  const [stateName] = useState('Punjab');
+  const [postalCode] = useState('54000');
   const [couponCode, setCouponCode] = useState('');
   const [discountAmount, setDiscountAmount] = useState(0);
 

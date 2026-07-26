@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CatalogImage from '@/components/ui/CatalogImage';
-import { ZoomIn, X, Play, Image as ImageIcon } from 'lucide-react';
+import { ZoomIn, X, Image as ImageIcon } from 'lucide-react';
 
 interface MultimediaGalleryProps {
   productName: string;

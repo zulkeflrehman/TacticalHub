@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import { useToastStore } from '@/lib/toast-store';
 import MultimediaGallery from './MultimediaGallery';
@@ -11,7 +10,7 @@ import StickyAddToCartSheet from './StickyAddToCartSheet';
 import ProductAccordions from './ProductAccordions';
 import FluidCarousel from '@/components/home/FluidCarousel';
 import type { ProductDto, ProductVariantDto } from '@/lib/catalog-types';
-import { ShieldCheck, Truck, Heart, Share2 } from 'lucide-react';
+import { Heart, Share2 } from 'lucide-react';
 
 interface ProductDetailsProps {
   product: ProductDto;
@@ -19,7 +18,6 @@ interface ProductDetailsProps {
 }
 
 export default function ProductDetails({ product, relatedProducts }: ProductDetailsProps) {
-  const router = useRouter();
   const { toggleWishlist, isInWishlist, addToCart } = useStore();
   const addToast = useToastStore((state) => state.addToast);
 

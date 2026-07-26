@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useStore, CartItemState } from '@/lib/store';
 import { useToastStore } from '@/lib/toast-store';
 import { ShoppingBag, Plus, Minus, Loader2, Check } from 'lucide-react';

@@ -16,6 +16,46 @@ interface Hero3DShowcaseProps {
   featuredProducts: ProductDto[];
 }
 
+// Fallback demo items if products list is empty
+const FALLBACK_ITEMS: ProductDto[] = [
+  {
+    id: 'demo-1',
+    name: 'Automatic Telescopic Selfdefence Stick',
+    slug: 'automatic-telescopic-selfdefence-stick',
+    description: 'High-strength steel automatic spring telescopic self-defense baton with haptic rubber grip.',
+    shortDescription: 'High-strength steel automatic spring telescopic self-defense baton with haptic rubber grip.',
+    price: 2500,
+    compareAtPrice: 5000,
+    vendor: 'Tacticalhub',
+    categoryName: 'KNIVES & TASERS',
+    images: [{ url: 'https://tacticalhub.com.pk/cdn/shop/files/1_7162411a-422c-4acf-aec0-342732a1b5e3.webp?v=1780473836&width=360' }],
+    variants: [{ inventoryId: 'inv-1', sku: 'STICK-01', name: 'Standard', price: 2500, compareAtPrice: 5000, stock: 10 }],
+    isFeatured: true,
+    isNewArrival: true,
+    isBestSeller: true,
+    stock: 10,
+    status: 'PUBLISHED',
+  },
+  {
+    id: 'demo-2',
+    name: 'Imported Automatic Camping Tent For 2-4 Persons',
+    slug: 'imported-automatic-camping-tent-for-3-5-persons',
+    description: 'Double-layer waterproof automatic instant opening family outdoor tent.',
+    shortDescription: 'Double-layer waterproof automatic instant opening family outdoor tent.',
+    price: 11999,
+    compareAtPrice: 24999,
+    vendor: 'Tacticalhub',
+    categoryName: 'CAMPING TENTS',
+    images: [{ url: 'https://tacticalhub.com.pk/cdn/shop/files/Untitled_design_3.jpg?v=1780491594&width=360' }],
+    variants: [{ inventoryId: 'inv-2', sku: 'TENT-01', name: 'Standard', price: 11999, compareAtPrice: 24999, stock: 5 }],
+    isFeatured: true,
+    isNewArrival: false,
+    isBestSeller: true,
+    stock: 5,
+    status: 'PUBLISHED',
+  },
+];
+
 export default function Hero3DShowcase({ featuredProducts }: Hero3DShowcaseProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -27,50 +67,20 @@ export default function Hero3DShowcase({ featuredProducts }: Hero3DShowcaseProps
   const previousPointerRef = useRef({ x: 0, y: 0 });
   const currentItemRef = useRef<ProductDto | null>(null);
 
-  // Fallback demo items if products list is empty
-  const fallbackItems: ProductDto[] = [
-    {
-      id: 'demo-1',
-      name: 'Automatic Telescopic Selfdefence Stick',
-      slug: 'automatic-telescopic-selfdefence-stick',
-      description: 'High-strength steel automatic spring telescopic self-defense baton with haptic rubber grip.',
-      shortDescription: 'High-strength steel automatic spring telescopic self-defense baton with haptic rubber grip.',
-      price: 2500,
-      compareAtPrice: 5000,
-      vendor: 'Tacticalhub',
-      categoryName: 'KNIVES & TASERS',
-      images: [{ url: 'https://tacticalhub.com.pk/cdn/shop/files/1_7162411a-422c-4acf-aec0-342732a1b5e3.webp?v=1780473836&width=360' }],
-      variants: [{ inventoryId: 'inv-1', sku: 'STICK-01', name: 'Standard', price: 2500, compareAtPrice: 5000, stock: 10 }],
-      isFeatured: true,
-      isNewArrival: true,
-      isBestSeller: true,
-      stock: 10,
-      status: 'PUBLISHED',
-    },
-    {
-      id: 'demo-2',
-      name: 'Imported Automatic Camping Tent For 2-4 Persons',
-      slug: 'imported-automatic-camping-tent-for-3-5-persons',
-      description: 'Double-layer waterproof automatic instant opening family outdoor tent.',
-      shortDescription: 'Double-layer waterproof automatic instant opening family outdoor tent.',
-      price: 11999,
-      compareAtPrice: 24999,
-      vendor: 'Tacticalhub',
-      categoryName: 'CAMPING TENTS',
-      images: [{ url: 'https://tacticalhub.com.pk/cdn/shop/files/Untitled_design_3.jpg?v=1780491594&width=360' }],
-      variants: [{ inventoryId: 'inv-2', sku: 'TENT-01', name: 'Standard', price: 11999, compareAtPrice: 24999, stock: 5 }],
-      isFeatured: true,
-      isNewArrival: false,
-      isBestSeller: true,
-      stock: 5,
-      status: 'PUBLISHED',
-    },
-  ];
-
-  const items = featuredProducts.length > 0 ? featuredProducts : fallbackItems;
+  const items = featuredProducts.length > 0 ? featuredProducts : FALLBACK_ITEMS;
 
   const currentItem = items[activeIndex % items.length];
-  currentItemRef.current = currentItem;
+
+  // Ref synchronization effect to avoid render-time ref assignment
+  useEffect(() => {
+    currentItemRef.current = currentItem;
+  }, [currentItem]);
+
+  // Keep a ref of isInteracting to avoid re-triggering main Three.js useEffect
+  const isInteractingRef = useRef(isInteracting);
+  useEffect(() => {
+    isInteractingRef.current = isInteracting;
+  }, [isInteracting]);
 
   useEffect(() => {
     const container = mountRef.current;
@@ -106,6 +116,7 @@ export default function Hero3DShowcase({ featuredProducts }: Hero3DShowcaseProps
 
     const spotGreen = new THREE.SpotLight(0x2f4f2f, 4);
     spotGreen.position.set(-4, -2, -2);
+    spotGreen.angle = Math.PI / 4;
     scene.add(spotGreen);
 
     // 5. Reactive Tactical Perspective Grid
@@ -166,7 +177,8 @@ export default function Hero3DShowcase({ featuredProducts }: Hero3DShowcaseProps
     };
 
     // Initial build
-    rebuildActiveModel(currentItem);
+    const initialItem = currentItemRef.current || FALLBACK_ITEMS[0];
+    rebuildActiveModel(initialItem);
 
     // Pointer Drag Handlers
     const handlePointerDown = (e: PointerEvent) => {
@@ -202,8 +214,8 @@ export default function Hero3DShowcase({ featuredProducts }: Hero3DShowcaseProps
 
     // Smooth Animation Render Loop
     let animFrameId: number;
-    let startTime = Date.now();
-    let currentId = currentItem.id;
+    const startTime = Date.now();
+    let currentId = initialItem.id;
 
     const animate = () => {
       animFrameId = requestAnimationFrame(animate);
@@ -228,7 +240,7 @@ export default function Hero3DShowcase({ featuredProducts }: Hero3DShowcaseProps
       modelContainer.position.y = Math.sin(elapsed * 1.8) * 0.06;
 
       // Run sub-assembly animations
-      if (activeBatonAnim) activeBatonAnim(elapsed, isDraggingRef.current || isInteracting);
+      if (activeBatonAnim) activeBatonAnim(elapsed, isDraggingRef.current || isInteractingRef.current);
       if (activeTentAnim) activeTentAnim(elapsed);
       if (activeHologramAnim) activeHologramAnim(elapsed);
 
@@ -261,7 +273,7 @@ export default function Hero3DShowcase({ featuredProducts }: Hero3DShowcaseProps
       }
       renderer.dispose();
     };
-  }, [activeIndex]);
+  }, []);
 
   const handlePrev = () => {
     setActiveIndex((prev) => (prev - 1 + items.length) % items.length);

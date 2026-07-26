@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSpatialMotion } from '@/components/motion/SpatialMotionProvider';
@@ -14,8 +14,6 @@ export default function OmnisearchOverlay() {
   const { isOmnisearchOpen, setOmnisearchOpen } = useSpatialMotion();
   const [query, setQuery] = useState('');
   const [products, setProducts] = useState<ProductDto[]>([]);
-  const [filteredResults, setFilteredResults] = useState<ProductDto[]>([]);
-  const [searchConfidence, setSearchConfidence] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -24,20 +22,15 @@ export default function OmnisearchOverlay() {
 
   useEffect(() => {
     if (isOmnisearchOpen) {
-      setTimeout(() => inputRef.current?.focus(), 100);
-    } else {
-      setQuery('');
-      setFilteredResults([]);
-      setSearchConfidence(0);
+      const timer = setTimeout(() => inputRef.current?.focus(), 100);
+      return () => clearTimeout(timer);
     }
   }, [isOmnisearchOpen]);
 
-  useEffect(() => {
+  const { filteredResults, searchConfidence } = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (q.length === 0) {
-      setFilteredResults([]);
-      setSearchConfidence(0);
-      return;
+      return { filteredResults: [], searchConfidence: 0 };
     }
 
     const matches = products.filter(
@@ -48,28 +41,32 @@ export default function OmnisearchOverlay() {
         p.shortDescription?.toLowerCase().includes(q)
     );
 
-    setFilteredResults(matches.slice(0, 6));
-
-    // Calculate search confidence score based on query match quality
+    const topMatches = matches.slice(0, 6);
+    let confidence = 20;
     if (matches.length > 0) {
       const topMatch = matches[0].name.toLowerCase();
-      const score = topMatch.startsWith(q) ? 98 : topMatch.includes(q) ? 85 : 70;
-      setSearchConfidence(score);
-    } else {
-      setSearchConfidence(20);
+      confidence = topMatch.startsWith(q) ? 98 : topMatch.includes(q) ? 85 : 70;
     }
+
+    return { filteredResults: topMatches, searchConfidence: confidence };
   }, [query, products]);
 
-  const handleProductSelect = (slug: string) => {
+  const handleClose = () => {
     setOmnisearchOpen(false);
+    setQuery('');
+  };
+
+  const handleProductSelect = (slug: string) => {
+    handleClose();
     router.push(`/products?slug=${encodeURIComponent(slug)}`);
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
-      setOmnisearchOpen(false);
-      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+      const q = query.trim();
+      handleClose();
+      router.push(`/search?q=${encodeURIComponent(q)}`);
     }
   };
 
@@ -103,7 +100,7 @@ export default function OmnisearchOverlay() {
             </span>
           </div>
           <button
-            onClick={() => setOmnisearchOpen(false)}
+            onClick={handleClose}
             className="p-2 text-neutral-400 hover:text-white bg-[#1A1A1A] border border-[#2A2A2A] clip-angled transition-colors"
             aria-label="Close search"
           >
@@ -219,7 +216,7 @@ export default function OmnisearchOverlay() {
           ) : (
             <div className="text-center py-16 space-y-2">
               <p className="text-sm font-mono font-bold text-neutral-400 uppercase">NO TACTICAL ASSETS FOUND</p>
-              <p className="text-xs text-neutral-500">Try searching for "tents", "batons", "tasers", or "knives"</p>
+              <p className="text-xs text-neutral-500">Try searching for &quot;tents&quot;, &quot;batons&quot;, &quot;tasers&quot;, or &quot;knives&quot;</p>
             </div>
           )}
         </div>

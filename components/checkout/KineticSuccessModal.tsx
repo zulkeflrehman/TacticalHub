@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { motion } from 'framer-motion';
-import { Check, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Check, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
 interface KineticSuccessModalProps {

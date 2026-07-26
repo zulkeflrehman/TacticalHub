@@ -1,24 +1,22 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useStore } from '@/lib/store';
-import { useSpatialMotion } from '@/components/motion/SpatialMotionProvider';
-import { Home, Compass, ShoppingBag, User } from 'lucide-react';
+import { Home, Heart, ShoppingBag, User } from 'lucide-react';
+
+const emptySubscribe = () => () => {};
+const useIsMounted = () => useSyncExternalStore(emptySubscribe, () => true, () => false);
 
 export default function MobileBottomNavigation() {
   const pathname = usePathname();
-  const { cart, toggleMiniCart, isOpen: isMiniCartOpen } = useStore();
-  const { setOmnisearchOpen } = useSpatialMotion();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const { cart, wishlist, toggleMiniCart, isOpen: isMiniCartOpen } = useStore();
+  const mounted = useIsMounted();
 
   const totalCartItems = mounted ? cart.reduce((acc, item) => acc + item.quantity, 0) : 0;
+  const wishlistCount = mounted ? wishlist.length : 0;
 
   const triggerHaptic = () => {
     if (typeof window !== 'undefined' && 'vibrate' in navigator) {
@@ -33,15 +31,13 @@ export default function MobileBottomNavigation() {
       href: '/',
     },
     {
-      name: 'Explore',
-      icon: Compass,
-      onClick: () => {
-        triggerHaptic();
-        setOmnisearchOpen(true);
-      },
+      name: 'Wishlist',
+      icon: Heart,
+      href: '/wishlist',
+      badgeCount: wishlistCount,
     },
     {
-      name: 'My Gear',
+      name: 'Cart',
       icon: ShoppingBag,
       onClick: () => {
         triggerHaptic();
@@ -50,7 +46,7 @@ export default function MobileBottomNavigation() {
       badgeCount: totalCartItems,
     },
     {
-      name: 'Profile',
+      name: 'Account',
       icon: User,
       href: '/account/profile',
     },
@@ -65,7 +61,7 @@ export default function MobileBottomNavigation() {
     <nav 
       aria-label="Mobile Navigation Bar"
       suppressHydrationWarning
-      className="fixed bottom-0 left-0 right-0 z-50 bg-[#0A0A0A]/90 backdrop-blur-xl border-t border-[#FF6600]/20 pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.8)]"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0A0A0A]/90 backdrop-blur-xl border-t border-[#FF6600]/20 pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.8)]"
     >
       <div suppressHydrationWarning className="flex h-16 items-center justify-around max-w-md mx-auto px-2">
         {navItems.map((item) => {

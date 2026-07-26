@@ -8,7 +8,7 @@ import HeroCinematic from '@/components/home/HeroCinematic';
 import BentoGridCategories from '@/components/home/BentoGridCategories';
 import FluidCarousel from '@/components/home/FluidCarousel';
 import { HeroShowcaseSkeleton, ProductCardSkeleton } from '@/components/ui/SkeletonLoader';
-import { ShieldCheck, Compass, Anchor, Target, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Compass, Anchor, Target } from 'lucide-react';
 
 export default function HomePage() {
   const [products, setProducts] = useState<ProductDto[]>([]);

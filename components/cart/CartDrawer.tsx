@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '@/lib/store';
 import CatalogImage from '@/components/ui/CatalogImage';
 import AccordionCheckoutModal from '@/components/checkout/AccordionCheckoutModal';
-import { X, Plus, Minus, ShoppingBag, ArrowRight, Trash2, ShieldCheck, Lock } from 'lucide-react';
+import { X, Plus, Minus, ShoppingBag, ArrowRight, Trash2, Lock } from 'lucide-react';
 
 export default function CartDrawer() {
   const { cart, isOpen, toggleMiniCart, updateQuantity, removeFromCart } = useStore();
