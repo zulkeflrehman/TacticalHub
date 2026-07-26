@@ -114,7 +114,10 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
           <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black uppercase text-white tracking-tight leading-none">
             {product.name}
           </h1>
-          <p className="text-xs sm:text-sm text-neutral-300 font-medium leading-relaxed">
+          <p
+            data-testid="product-description"
+            className="text-xs sm:text-sm text-neutral-300 font-medium leading-relaxed"
+          >
             {product.shortDescription || product.description}
           </p>
         </div>

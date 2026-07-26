@@ -155,7 +155,7 @@ test.describe('Mobile Product Grids & Images', () => {
 });
 
 test.describe('Mobile ProductDetails Page', () => {
-  test.skip('Product details page is responsive at 320px', async ({ page }) => {
+  test('Product details page is responsive at 320px', async ({ page }) => {
     test.skip(process.env.PLAYWRIGHT_REQUIRE_CATALOG !== 'true', 'Requires live catalog data');
     
     await page.setViewportSize({ width: 320, height: 568 });
@@ -176,11 +176,11 @@ test.describe('Mobile ProductDetails Page', () => {
     await expect(increaseButton).toBeVisible();
     
     // Add to cart button should be visible
-    const addToCartButton = page.getByRole('button', { name: /add to cart/i });
-    await expect(addToCartButton).toBeVisible();
+    const addToGearButton = page.getByRole('button', { name: 'ADD TO GEAR', exact: true });
+    await expect(addToGearButton).toBeVisible();
   });
 
-  test.skip('Product image thumbnails scroll horizontally', async ({ page }) => {
+  test('Product image thumbnails scroll horizontally', async ({ page }) => {
     test.skip(process.env.PLAYWRIGHT_REQUIRE_CATALOG !== 'true', 'Requires live catalog data');
     
     await page.setViewportSize({ width: 375, height: 667 });
