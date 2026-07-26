@@ -1,15 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '@/lib/store';
 import CatalogImage from '@/components/ui/CatalogImage';
-import AccordionCheckoutModal from '@/components/checkout/AccordionCheckoutModal';
-import { X, Plus, Minus, ShoppingBag, ArrowRight, Trash2, Lock } from 'lucide-react';
+import { X, Plus, Minus, ShoppingBag, Trash2, Lock } from 'lucide-react';
 
 export default function CartDrawer() {
   const { cart, isOpen, toggleMiniCart, updateQuantity, removeFromCart } = useStore();
-  const [isCheckoutOpen, setCheckoutOpen] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -40,7 +38,7 @@ export default function CartDrawer() {
       >
         {/* Backdrop */}
         <div
-          className="absolute inset-0 bg-[#070707]/85 backdrop-blur-md"
+          className="absolute inset-0 bg-brand-black/60 backdrop-blur-md"
           onClick={() => toggleMiniCart(false)}
           aria-hidden="true"
         />
@@ -81,7 +79,7 @@ export default function CartDrawer() {
                   onClick={() => toggleMiniCart(false)}
                   className="mt-2 bg-[#FF6600] text-black px-6 py-2.5 text-xs font-mono font-black uppercase rounded-xl shadow-[0_0_15px_rgba(255,102,0,0.4)] tactile-press"
                 >
-                  EXPLORE GEAR
+                  Continue Shopping
                 </button>
               </div>
             ) : (
@@ -185,27 +183,28 @@ export default function CartDrawer() {
                 </span>
               </div>
 
-              <button
-                onClick={() => {
-                  triggerHaptic();
-                  setCheckoutOpen(true);
-                }}
-                className="w-full bg-[#FF6600] text-black hover:bg-[#E05800] py-3.5 px-4 font-mono text-xs font-black uppercase rounded-xl flex items-center justify-center gap-2 tactile-press shadow-[0_0_20px_rgba(255,102,0,0.5)]"
-              >
-                <Lock className="w-4 h-4" />
-                <span>PROCEED TO SECURE CHECKOUT</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <a
+                  href="/cart"
+                  onClick={() => toggleMiniCart(false)}
+                  className="flex items-center justify-center gap-1 border border-white/20 text-white hover:bg-white/10 py-3 px-3 font-mono text-xs font-black uppercase rounded-xl transition-colors"
+                >
+                  View Cart
+                </a>
+                <a
+                  href="/checkout"
+                  onClick={() => toggleMiniCart(false)}
+                  className="flex items-center justify-center gap-1 bg-[#FF6600] text-black hover:bg-[#E05800] py-3 px-3 font-mono text-xs font-black uppercase rounded-xl tactile-press shadow-[0_0_20px_rgba(255,102,0,0.5)]"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Checkout</span>
+                </a>
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Accordion Checkout Modal */}
-      <AccordionCheckoutModal
-        isOpen={isCheckoutOpen}
-        onClose={() => setCheckoutOpen(false)}
-      />
     </>
   );
 }

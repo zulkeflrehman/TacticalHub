@@ -256,7 +256,7 @@ function LoginContent() {
         <button
           type="submit"
           disabled={loading || linking}
-          className="w-full bg-brand-black text-brand-white hover:bg-brand-accent hover:text-brand-black text-xs font-extrabold uppercase py-3.5 px-6 flex items-center justify-center gap-1.5 transition-colors clip-angled border border-brand-black disabled:opacity-50"
+          className="w-full bg-brand-black text-brand-white hover:opacity-80 text-xs font-extrabold uppercase py-3.5 px-6 flex items-center justify-center gap-1.5 transition-opacity clip-angled border border-brand-black disabled:opacity-50"
         >
           <LogIn className="w-4 h-4" />
           <span>

@@ -33,7 +33,7 @@ export default function StoreHeader() {
   return (
     <header 
       suppressHydrationWarning
-      className="w-full bg-[#0A0A0A]/95 backdrop-blur-md border-b border-[#2A2A2A] z-40 sticky top-0"
+      className="w-full bg-[#0A0A0A]/95 backdrop-blur-md border-b border-[#2A2A2A] z-40 sticky top-0 overflow-x-hidden"
     >
       {/* Tactical Status Ribbon */}
       <div 
@@ -53,7 +53,7 @@ export default function StoreHeader() {
       {/* Main Header Row */}
       <div 
         suppressHydrationWarning
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4"
+        className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-2 sm:gap-4"
       >
         <div className="flex items-center gap-2">
           {/* Mobile Menu Button */}
@@ -71,11 +71,11 @@ export default function StoreHeader() {
               T
             </div>
             <div className="flex flex-col">
-              <span className="text-xl sm:text-2xl font-black uppercase tracking-tighter text-white group-hover:text-[#FF6600] transition-colors">
+              <span className="text-base sm:text-2xl font-black uppercase tracking-tighter text-white group-hover:text-[#FF6600] transition-colors">
                 TACTICAL<span className="text-[#FF6600]">HUB</span>
               </span>
-              <span className="text-[8px] font-mono uppercase tracking-widest text-[#4A7C4A] font-extrabold -mt-1">
-                MILITARY & DEFENSE GEAR
+              <span className="hidden sm:block text-[8px] font-mono uppercase tracking-widest text-[#4A7C4A] font-extrabold -mt-1">
+                MILITARY &amp; DEFENSE GEAR
               </span>
             </div>
           </Link>
