@@ -116,7 +116,7 @@ function RegisterContent() {
       </div>
 
       {errorMsg && (
-        <div className="bg-red-50 text-red-600 border border-red-200 text-xs font-semibold p-3 clip-angled-sm flex gap-2 items-center">
+        <div className="bg-red-50 text-red-700 border border-red-200 text-xs font-semibold p-3 clip-angled-sm flex gap-2 items-center">
           <ShieldAlert className="w-4.5 h-4.5 shrink-0" />
           <span>{errorMsg}</span>
         </div>
@@ -160,22 +160,22 @@ function RegisterContent() {
         <div className="space-y-1">
           <label htmlFor="reg-name" className="text-[10px] font-black uppercase text-brand-dark-gray block">Full Name</label>
           <input id="reg-name" type="text" autoComplete="name" {...register('name')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
-          {errors.name && <p className="text-[10px] font-bold text-red-500">{errors.name.message}</p>}
+          {errors.name && <p className="text-[10px] font-bold text-red-700">{errors.name.message}</p>}
         </div>
         <div className="space-y-1">
           <label htmlFor="reg-email" className="text-[10px] font-black uppercase text-brand-dark-gray block">Email Address</label>
           <input id="reg-email" type="email" autoComplete="email" {...register('email')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
-          {errors.email && <p className="text-[10px] font-bold text-red-500">{errors.email.message}</p>}
+          {errors.email && <p className="text-[10px] font-bold text-red-700">{errors.email.message}</p>}
         </div>
         <div className="space-y-1">
           <label htmlFor="reg-password" className="text-[10px] font-black uppercase text-brand-dark-gray block">Password</label>
           <input id="reg-password" type="password" autoComplete="new-password" {...register('password')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
-          {errors.password && <p className="text-[10px] font-bold text-red-500">{errors.password.message}</p>}
+          {errors.password && <p className="text-[10px] font-bold text-red-700">{errors.password.message}</p>}
         </div>
         <div className="space-y-1">
           <label htmlFor="reg-confirm-password" className="text-[10px] font-black uppercase text-brand-dark-gray block">Confirm Password</label>
           <input id="reg-confirm-password" type="password" autoComplete="new-password" {...register('confirmPassword')} className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black" />
-          {errors.confirmPassword && <p className="text-[10px] font-bold text-red-500">{errors.confirmPassword.message}</p>}
+          {errors.confirmPassword && <p className="text-[10px] font-bold text-red-700">{errors.confirmPassword.message}</p>}
         </div>
         <button type="submit" disabled={loading} className="w-full bg-brand-black text-brand-white hover:bg-brand-accent hover:text-brand-black text-xs font-extrabold uppercase py-3.5 px-6 flex items-center justify-center gap-1.5 transition-colors clip-angled border border-brand-black disabled:opacity-50">
           <UserPlus className="w-4 h-4" />

@@ -124,7 +124,7 @@ export default function AdminCategoriesPage() {
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-[10px] font-bold p-2.5 clip-angled-sm">
+            <div className="bg-red-50 border border-red-200 text-red-700 text-[10px] font-bold p-2.5 clip-angled-sm">
               {error}
             </div>
           )}

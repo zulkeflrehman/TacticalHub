@@ -23,7 +23,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <nav className="flex-1 p-4 space-y-1">{sidebarLinks.map((link) => <Link key={link.name} href={link.href} className="flex items-center justify-between p-3 text-xs font-bold uppercase text-brand-white/80 hover:bg-brand-dark-gray/20"><span className="flex items-center gap-3"><link.icon className="w-4 h-4 text-brand-accent"/>{link.name}</span><ChevronRight className="w-3 h-3"/></Link>)}</nav>
         <div className="p-4 border-t border-brand-dark-gray/20 space-y-3"><div className="flex gap-2"><UserCircle className="w-5 h-5 text-brand-accent"/><span className="text-[10px] font-bold truncate">{profile.name}</span></div><Link href="/" className="flex justify-center gap-2 p-2 border border-brand-accent/20 text-xs font-bold uppercase text-brand-accent"><Home className="w-3.5 h-3.5"/> Return Store</Link></div>
       </aside>
-      <div className="flex-1 min-w-0 overflow-y-auto">
+      <div className="light-surface flex-1 min-w-0 overflow-y-auto">
         <header className="bg-brand-white border-b border-brand-black/5 p-4 md:px-8 flex items-center justify-between"><div className="flex md:hidden gap-2 overflow-x-auto">{sidebarLinks.map((link) => <Link key={link.href} href={link.href} title={link.name}><link.icon className="w-5 h-5"/></Link>)}</div><span className="hidden sm:inline text-xs font-bold">Authorized: {profile.email}</span><LogoutButton/></header>
         <main className="p-6 md:p-8 max-w-7xl mx-auto">{children}</main>
       </div>

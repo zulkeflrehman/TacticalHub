@@ -127,13 +127,13 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
                 Rs. {currentPrice.toLocaleString()}
               </span>
               {hasDiscount && (
-                <span className="text-xs sm:text-sm font-bold text-neutral-500 line-through">
+                <span className="text-xs sm:text-sm font-bold text-neutral-400 line-through">
                   Rs. {currentComparePrice.toLocaleString()}
                 </span>
               )}
             </div>
             {hasDiscount && (
-              <span className="inline-block bg-[#EF4444] text-white text-[9px] font-mono font-black uppercase px-2.5 py-0.5 rounded-full">
+                <span className="inline-block bg-[#DC2626] text-white text-[9px] font-mono font-black uppercase px-2.5 py-0.5 rounded-full">
                 SAVE {discountPercent}%
               </span>
             )}

@@ -243,7 +243,7 @@ export default function Product3DGallery({ productName, images }: Product3DGalle
           </button>
         </div>
 
-        <span className="hidden sm:inline-block text-[10px] font-mono text-[#4A7C4A] border border-[#2F4F2F] px-2.5 py-1 bg-[#2F4F2F]/20 clip-angled-sm">
+        <span className="hidden sm:inline-block text-[10px] font-mono text-[#9BCB77] border border-[#2F4F2F] px-2.5 py-1 bg-[#2F4F2F]/20 clip-angled-sm">
           {modelTypeLabel}
         </span>
       </div>
@@ -281,7 +281,7 @@ export default function Product3DGallery({ productName, images }: Product3DGalle
                   sizes="100vw"
                 />
               ) : (
-                <div className="text-neutral-500 font-mono text-xs">NO ASSET IMAGE AVAILABLE</div>
+                <div className="text-neutral-400 font-mono text-xs">NO ASSET IMAGE AVAILABLE</div>
               )}
             </motion.div>
           </motion.div>

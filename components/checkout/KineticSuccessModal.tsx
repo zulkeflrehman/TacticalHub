@@ -123,7 +123,7 @@ export default function KineticSuccessModal({ orderNumber, onClose }: KineticSuc
 
         {/* Text Details */}
         <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#4A7C4A] uppercase tracking-widest bg-[#2F4F2F]/20 border border-[#2F4F2F] px-3 py-1 clip-angled-sm">
+          <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#9BCB77] uppercase tracking-widest bg-[#2F4F2F]/20 border border-[#2F4F2F] px-3 py-1 clip-angled-sm">
             <ShieldCheck className="w-4 h-4 text-[#FF6600]" />
             <span>MISSION DISPATCH CONFIRMED</span>
           </div>

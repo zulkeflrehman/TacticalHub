@@ -179,7 +179,7 @@ export default function AdminContentPage() {
                 </a>
               </div>
               <div className="col-span-2">
-                <span className={`text-[9px] font-black uppercase px-2 py-0.5 ${page.isPublished ? 'bg-brand-accent/20 text-brand-black' : 'bg-red-100 text-red-600'}`}>
+                <span className={`text-[9px] font-black uppercase px-2 py-0.5 ${page.isPublished ? 'bg-brand-accent/20 text-brand-black' : 'bg-red-100 text-red-700'}`}>
                   {page.isPublished ? 'Published' : 'Draft'}
                 </span>
               </div>

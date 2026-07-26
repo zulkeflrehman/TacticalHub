@@ -246,7 +246,7 @@ export default function CheckoutStepperModal({ isOpen, onClose }: CheckoutSteppe
                   <div
                     key={s.id}
                     className={`py-2.5 transition-colors border-r last:border-r-0 border-[#2A2A2A] ${
-                      isActive ? 'bg-[#FF6600] text-black font-black' : 'bg-[#0A0A0A] text-neutral-500'
+                      isActive ? 'bg-[#FF6600] text-black font-black' : 'bg-[#0A0A0A] text-neutral-400'
                     }`}
                   >
                     {s.label}
@@ -388,14 +388,14 @@ export default function CheckoutStepperModal({ isOpen, onClose }: CheckoutSteppe
                     className="space-y-4 font-mono text-xs"
                   >
                     <div className="bg-[#161616] border border-[#2A2A2A] p-3 clip-angled space-y-1">
-                      <span className="text-[9px] text-[#4A7C4A] font-bold uppercase">RECIPIENT & DESTINATION</span>
+                      <span className="text-[9px] text-[#9BCB77] font-bold uppercase">RECIPIENT & DESTINATION</span>
                       <p className="text-white font-bold uppercase">{firstName} {lastName} ({phone})</p>
                       <p className="text-neutral-400">{address}, {city}, {stateName}</p>
                     </div>
 
                     {/* Itemized Breakdown */}
                     <div className="space-y-2">
-                      <span className="text-[9px] text-neutral-500 uppercase font-bold">ITEMIZED GEAR ORDER</span>
+                      <span className="text-[9px] text-neutral-400 uppercase font-bold">ITEMIZED GEAR ORDER</span>
                       {cart.map((item) => (
                         <div key={`${item.productId}-${item.variantSku}`} className="flex justify-between items-center text-neutral-300">
                           <span className="truncate max-w-[200px]">{item.quantity}× {item.name}</span>

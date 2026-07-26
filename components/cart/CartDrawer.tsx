@@ -106,7 +106,7 @@ export default function CartDrawer() {
                       {item.image ? (
                         <CatalogImage src={item.image} alt={item.name} sizes="64px" />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center text-[8px] text-neutral-500">
+                        <div className="flex h-full w-full items-center justify-center text-[8px] text-neutral-400">
                           NO IMG
                         </div>
                       )}
@@ -159,7 +159,7 @@ export default function CartDrawer() {
                               triggerHaptic();
                               removeFromCart(item.productId, item.variantSku);
                             }}
-                            className="text-neutral-500 hover:text-[#EF4444] transition-colors p-1"
+                            className="text-neutral-400 hover:text-[#EF4444] transition-colors p-1"
                             title="Remove item"
                           >
                             <Trash2 className="w-3.5 h-3.5" />

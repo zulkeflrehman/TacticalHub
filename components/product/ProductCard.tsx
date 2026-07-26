@@ -107,7 +107,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* Editorial Badge Overlay */}
       <div className="absolute top-3 left-3 z-10 flex flex-col gap-1 pointer-events-none">
         {hasDiscount && (
-          <span className="bg-[#EF4444] text-white font-mono text-[9px] font-black uppercase px-2 py-0.5 rounded-md shadow-md">
+          <span className="bg-[#DC2626] text-white font-mono text-[9px] font-black uppercase px-2 py-0.5 rounded-md shadow-md">
             -{discountPercent}%
           </span>
         )}
@@ -170,7 +170,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               Rs. {displayPrice.toLocaleString()}
             </span>
             {hasDiscount && (
-              <span className="text-[10px] font-bold text-neutral-500 line-through">
+              <span className="text-[10px] font-bold text-neutral-400 line-through">
                 Rs. {originalPrice.toLocaleString()}
               </span>
             )}

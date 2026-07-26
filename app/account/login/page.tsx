@@ -171,7 +171,7 @@ function LoginContent() {
       </div>
 
       {errorMsg && (
-        <div className="bg-red-50 text-red-600 border border-red-200 text-xs font-semibold p-3 clip-angled-sm flex gap-2 items-center">
+        <div className="bg-red-50 text-red-700 border border-red-200 text-xs font-semibold p-3 clip-angled-sm flex gap-2 items-center">
           <ShieldAlert className="w-4.5 h-4.5 shrink-0" />
           <span>{errorMsg}</span>
         </div>
@@ -233,7 +233,7 @@ function LoginContent() {
             className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black"
           />
           {errors.email && (
-            <p className="text-[10px] font-bold text-red-500">{errors.email.message}</p>
+            <p className="text-[10px] font-bold text-red-700">{errors.email.message}</p>
           )}
         </div>
 
@@ -249,7 +249,7 @@ function LoginContent() {
             className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black"
           />
           {errors.password && (
-            <p className="text-[10px] font-bold text-red-500">{errors.password.message}</p>
+            <p className="text-[10px] font-bold text-red-700">{errors.password.message}</p>
           )}
         </div>
 

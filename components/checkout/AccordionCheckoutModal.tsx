@@ -385,7 +385,7 @@ export default function AccordionCheckoutModal({ isOpen, onClose }: AccordionChe
 
                       {/* Items */}
                       <div className="space-y-2 pt-2 border-t border-white/10">
-                        <span className="text-[9px] text-neutral-500 uppercase font-bold">ITEMIZED ORDER</span>
+                        <span className="text-[9px] text-neutral-400 uppercase font-bold">ITEMIZED ORDER</span>
                         {cart.map((item) => (
                           <div key={`${item.productId}-${item.variantSku}`} className="flex justify-between items-center text-neutral-300">
                             <span className="truncate max-w-[200px]">{item.quantity}× {item.name}</span>

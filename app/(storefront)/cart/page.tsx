@@ -34,7 +34,7 @@ export default function CartPage() {
               clearCart();
               addToast('Cleared all items from your cart.', 'info');
             }}
-            className="text-xs font-bold uppercase tracking-wider text-red-500 hover:underline flex items-center gap-1"
+            className="text-xs font-bold uppercase tracking-wider text-red-700 hover:underline flex items-center gap-1"
           >
             <Trash2 className="w-4 h-4" />
             <span>Clear Cart</span>
@@ -123,7 +123,7 @@ export default function CartPage() {
                           removeFromCart(item.productId, item.variantSku);
                           addToast(`Removed "${item.name}" from cart.`, 'info');
                         }}
-                        className="text-[10px] uppercase font-bold text-red-500 hover:underline mt-0.5"
+                        className="text-[10px] uppercase font-bold text-red-700 hover:underline mt-0.5"
                       >
                         Remove
                       </button>

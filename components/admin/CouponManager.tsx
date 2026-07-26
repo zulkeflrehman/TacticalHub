@@ -194,7 +194,7 @@ export default function CouponManager({ initialCoupons }: CouponManagerProps) {
             </thead>
             <tbody className="divide-y divide-brand-black/5">
               {coupons.length === 0 ? (
-                <tr><td colSpan={7} className="p-12 text-center text-brand-dark-gray/50 text-xs font-semibold">No coupons found.</td></tr>
+                <tr><td colSpan={7} className="p-12 text-center text-brand-dark-gray/70 text-xs font-semibold">No coupons found.</td></tr>
               ) : coupons.map(c => (
                 <tr key={c.id} className={`hover:bg-brand-light-gray/40 ${deletingId === c.id ? 'opacity-40 pointer-events-none' : ''}`}>
                   <td className="p-3 font-bold text-brand-black">
@@ -233,7 +233,7 @@ export default function CouponManager({ initialCoupons }: CouponManagerProps) {
                     <button
                       onClick={() => handleDeleteCoupon(c.id, c.code)}
                       disabled={deletingId === c.id}
-                      className="p-1.5 bg-red-50 text-red-500 border border-red-100 hover:bg-red-500 hover:text-brand-white clip-angled-sm disabled:opacity-60"
+                      className="p-1.5 bg-red-50 text-red-700 border border-red-100 hover:bg-red-600 hover:text-brand-white clip-angled-sm disabled:opacity-60"
                       title="Delete coupon"
                     >
                       {deletingId === c.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}

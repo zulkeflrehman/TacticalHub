@@ -68,7 +68,7 @@ export default function MultimediaGallery({ productName, images }: MultimediaGal
                 priority
               />
             ) : (
-              <div className="text-neutral-500 font-mono text-xs">NO HIGH-RES MEDIA AVAILABLE</div>
+              <div className="text-neutral-400 font-mono text-xs">NO HIGH-RES MEDIA AVAILABLE</div>
             )}
           </motion.div>
         </AnimatePresence>

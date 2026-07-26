@@ -168,14 +168,14 @@ export default function OmnisearchOverlay() {
                     <span className="text-xs font-bold text-white group-hover:text-[#FF6600] transition-colors block">
                       {cat}
                     </span>
-                    <span className="text-[9px] font-mono text-neutral-500 uppercase block mt-1">QUICK FILTER</span>
+                    <span className="text-[9px] font-mono text-neutral-400 uppercase block mt-1">QUICK FILTER</span>
                   </button>
                 ))}
               </div>
             </div>
           ) : filteredResults.length > 0 ? (
             <div className="space-y-2">
-              <span className="text-xs font-mono font-bold text-[#4A7C4A] uppercase tracking-wider block">
+              <span className="text-xs font-mono font-bold text-[#9BCB77] uppercase tracking-wider block">
                 MATCHED ASSETS ({filteredResults.length})
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -192,7 +192,7 @@ export default function OmnisearchOverlay() {
                       {product.images[0]?.url ? (
                         <CatalogImage src={product.images[0].url} alt={product.name} sizes="56px" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[8px] text-neutral-500">
+                        <div className="w-full h-full flex items-center justify-center text-[8px] text-neutral-400">
                           NO IMAGE
                         </div>
                       )}
@@ -208,7 +208,7 @@ export default function OmnisearchOverlay() {
                         Rs. {product.price.toLocaleString()}
                       </p>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-neutral-500 group-hover:text-[#FF6600] group-hover:translate-x-1 transition-all shrink-0" />
+                    <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:text-[#FF6600] group-hover:translate-x-1 transition-all shrink-0" />
                   </motion.div>
                 ))}
               </div>
@@ -216,7 +216,7 @@ export default function OmnisearchOverlay() {
           ) : (
             <div className="text-center py-16 space-y-2">
               <p className="text-sm font-mono font-bold text-neutral-400 uppercase">NO TACTICAL ASSETS FOUND</p>
-              <p className="text-xs text-neutral-500">Try searching for &quot;tents&quot;, &quot;batons&quot;, &quot;tasers&quot;, or &quot;knives&quot;</p>
+              <p className="text-xs text-neutral-400">Try searching for &quot;tents&quot;, &quot;batons&quot;, &quot;tasers&quot;, or &quot;knives&quot;</p>
             </div>
           )}
         </div>

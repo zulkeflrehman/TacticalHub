@@ -19,7 +19,7 @@ export default function ReviewRatingDistribution() {
         <div>
           <span className="text-2xl font-black font-mono text-white">4.9</span>
           <span className="text-xs text-neutral-400 font-mono"> / 5.0</span>
-          <p className="text-[10px] font-mono text-[#4A7C4A] uppercase font-bold">169 VERIFIED FIELD REVIEWS</p>
+          <p className="text-[10px] font-mono text-[#9BCB77] uppercase font-bold">169 VERIFIED FIELD REVIEWS</p>
         </div>
         <div className="flex items-center text-[#FF6600]">
           {[...Array(5)].map((_, i) => (

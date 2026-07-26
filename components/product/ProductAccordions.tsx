@@ -30,19 +30,19 @@ export default function ProductAccordions({ product }: ProductAccordionsProps) {
           <p className="leading-relaxed font-sans">{product.description || 'Military-grade high endurance tactical equipment.'}</p>
           <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#2A2A2A]">
             <div className="bg-[#1A1A1A] p-2 clip-angled-sm">
-              <span className="text-[9px] text-neutral-500 block">CATEGORY</span>
+              <span className="text-[9px] text-neutral-400 block">CATEGORY</span>
               <span className="font-bold text-white uppercase">{product.categoryName}</span>
             </div>
             <div className="bg-[#1A1A1A] p-2 clip-angled-sm">
-              <span className="text-[9px] text-neutral-500 block">VENDOR SPEC</span>
+              <span className="text-[9px] text-neutral-400 block">VENDOR SPEC</span>
               <span className="font-bold text-[#FF6600] uppercase">{product.vendor || 'TECTICALHUB'}</span>
             </div>
             <div className="bg-[#1A1A1A] p-2 clip-angled-sm">
-              <span className="text-[9px] text-neutral-500 block">WATER RESISTANCE</span>
+              <span className="text-[9px] text-neutral-400 block">WATER RESISTANCE</span>
               <span className="font-bold text-white uppercase">IP68 WATERPROOF</span>
             </div>
             <div className="bg-[#1A1A1A] p-2 clip-angled-sm">
-              <span className="text-[9px] text-neutral-500 block">WARRANTY</span>
+              <span className="text-[9px] text-neutral-400 block">WARRANTY</span>
               <span className="font-bold text-white uppercase">1 YEAR LIMITED</span>
             </div>
           </div>
@@ -68,12 +68,12 @@ export default function ProductAccordions({ product }: ProductAccordionsProps) {
               <tr>
                 <td className="p-2 border border-[#2A2A2A]">DIMENSIONS</td>
                 <td className="p-2 border border-[#2A2A2A]">450 × 280 × 120 mm</td>
-                <td className="p-2 border border-[#2A2A2A] text-[#4A7C4A]">COMPACT</td>
+                <td className="p-2 border border-[#2A2A2A] text-[#9BCB77]">COMPACT</td>
               </tr>
               <tr>
                 <td className="p-2 border border-[#2A2A2A]">NET WEIGHT</td>
                 <td className="p-2 border border-[#2A2A2A]">1.25 KG</td>
-                <td className="p-2 border border-[#2A2A2A] text-[#4A7C4A]">LIGHTWEIGHT</td>
+                <td className="p-2 border border-[#2A2A2A] text-[#9BCB77]">LIGHTWEIGHT</td>
               </tr>
               <tr>
                 <td className="p-2 border border-[#2A2A2A]">MATERIAL</td>
@@ -102,7 +102,7 @@ export default function ProductAccordions({ product }: ProductAccordionsProps) {
                   <span className="font-bold text-white flex items-center gap-1">
                     <CheckCircle className="w-3.5 h-3.5 text-[#10B981]" /> {rev.author}
                   </span>
-                  <span className="text-[9px] text-neutral-500">{rev.date}</span>
+                  <span className="text-[9px] text-neutral-400">{rev.date}</span>
                 </div>
                 <p className="text-xs text-neutral-300 font-sans">{rev.text}</p>
               </div>

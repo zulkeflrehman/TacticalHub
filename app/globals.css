@@ -17,7 +17,7 @@
   --color-accent-hover: #E05800;
   --color-black: #070707;
   --color-dark-gray: #141414;
-  --color-light-gray: #1F1F1F;
+  --color-light-gray: #F3F4F6;
   --color-white: #FFFFFF;
   
   --color-success: #10B981;
@@ -31,11 +31,17 @@
   --font-mono: "JetBrains Mono", monospace;
   --color-accent: #FF6600;
   --color-accent-hover: #E05800;
+  --color-brand-accent: #FF6600;
+  --color-brand-accent-hover: #E05800;
   --color-[#B8EC44]: #B8EC44;
   --color-brand-black: #010101;
   --color-brand-dark-gray: #141414;
-  --color-brand-light-gray: #1F1F1F;
+  --color-brand-light-gray: #F3F4F6;
   --color-brand-white: #FFFFFF;
+  --color-success: #047857;
+  --color-error: #DC2626;
+  --color-warning: #B45309;
+  --color-info: #1D4ED8;
 }
 
 html, body {
@@ -44,6 +50,66 @@ html, body {
   scroll-behavior: smooth;
   font-family: "Plus Jakarta Sans", sans-serif;
   overflow-x: hidden;
+}
+
+/*
+ * Readability guardrails
+ *
+ * The dark editorial storefront and the light account/admin surfaces share
+ * these semantic colors. Keep light surfaces dark-on-light and dark surfaces
+ * light-on-dark even when a component relies on inherited text color.
+ */
+:where(.bg-brand-white, .bg-brand-light-gray, .bg-white) {
+  color: var(--color-brand-black);
+}
+
+:where(.bg-brand-black) {
+  color: var(--color-brand-white);
+}
+
+.light-surface {
+  color: var(--color-brand-black);
+}
+
+.light-surface :where(.text-brand-accent),
+.light-surface:where(.text-brand-accent),
+.light-surface :where(.hover\:text-brand-accent):hover {
+  color: #C2410C;
+}
+
+.light-surface :where(.border-brand-accent),
+.light-surface:where(.border-brand-accent) {
+  border-color: #C2410C;
+}
+
+.light-surface :where(.accent-brand-accent) {
+  accent-color: #C2410C;
+}
+
+:where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]), textarea, select) {
+  color: inherit;
+  opacity: 1;
+}
+
+:where(input, textarea)::placeholder {
+  color: color-mix(in srgb, currentColor 65%, transparent);
+  opacity: 1;
+}
+
+:where(option, optgroup) {
+  background-color: #FFFFFF;
+  color: #070707;
+}
+
+:where(button, input, select, textarea):disabled {
+  opacity: 0.7 !important;
+}
+
+@media (max-width: 640px) {
+  :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]), textarea, select) {
+    min-height: 44px;
+    font-size: 16px;
+  }
 }
 
 /* Editorial Bento Card Utilities */

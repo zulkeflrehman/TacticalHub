@@ -320,7 +320,7 @@ export default function Hero3DShowcase({ featuredProducts }: Hero3DShowcaseProps
       {/* Content Details Overlay */}
       <div className="relative z-20 h-full flex flex-col justify-between p-6 sm:p-10 pointer-events-none">
         {/* Top Tag */}
-        <div className="inline-flex items-center gap-2 border border-[#4A7C4A] bg-[#2F4F2F]/30 py-1.5 px-3.5 text-[#4A7C4A] text-xs font-mono font-black uppercase tracking-widest clip-angled-sm w-fit pointer-events-auto">
+        <div className="inline-flex items-center gap-2 border border-[#4A7C4A] bg-[#2F4F2F]/30 py-1.5 px-3.5 text-[#9BCB77] text-xs font-mono font-black uppercase tracking-widest clip-angled-sm w-fit pointer-events-auto">
           <ShieldCheck className="w-4 h-4 text-[#FF6600]" />
           <span>TACTICAL HUB // REAL 3D MODEL</span>
         </div>

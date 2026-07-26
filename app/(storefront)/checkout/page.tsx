@@ -287,7 +287,7 @@ export default function CheckoutPage() {
           </p>
 
           {googleError && (
-            <div className="bg-red-50 text-red-600 border border-red-200 text-xs font-semibold p-3 clip-angled-sm">
+            <div className="bg-red-50 text-red-700 border border-red-200 text-xs font-semibold p-3 clip-angled-sm">
               {googleError}
             </div>
           )}
@@ -346,7 +346,7 @@ export default function CheckoutPage() {
                     className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold text-brand-dark-gray"
                   />
                   <p id="verified-email-help" className="text-[9px] font-bold text-green-700">Verified by Firebase Authentication</p>
-                  {errors.email && <p className="text-[10px] font-bold text-red-500">{errors.email.message}</p>}
+                  {errors.email && <p className="text-[10px] font-bold text-red-700">{errors.email.message}</p>}
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-brand-dark-gray block">Mobile Phone Number</label>
@@ -358,7 +358,7 @@ export default function CheckoutPage() {
                     {...register('phone')}
                     className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black"
                   />
-                  {errors.phone && <p className="text-[10px] font-bold text-red-500">{errors.phone.message}</p>}
+                  {errors.phone && <p className="text-[10px] font-bold text-red-700">{errors.phone.message}</p>}
                 </div>
               </div>
             </div>
@@ -377,7 +377,7 @@ export default function CheckoutPage() {
                     {...register('firstName')}
                     className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black"
                   />
-                  {errors.firstName && <p className="text-[10px] font-bold text-red-500">{errors.firstName.message}</p>}
+                  {errors.firstName && <p className="text-[10px] font-bold text-red-700">{errors.firstName.message}</p>}
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-brand-dark-gray block">Last Name</label>
@@ -386,7 +386,7 @@ export default function CheckoutPage() {
                     {...register('lastName')}
                     className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black"
                   />
-                  {errors.lastName && <p className="text-[10px] font-bold text-red-500">{errors.lastName.message}</p>}
+                  {errors.lastName && <p className="text-[10px] font-bold text-red-700">{errors.lastName.message}</p>}
                 </div>
               </div>
 
@@ -398,7 +398,7 @@ export default function CheckoutPage() {
                   {...register('address')}
                   className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black"
                 />
-                {errors.address && <p className="text-[10px] font-bold text-red-500">{errors.address.message}</p>}
+                {errors.address && <p className="text-[10px] font-bold text-red-700">{errors.address.message}</p>}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -410,7 +410,7 @@ export default function CheckoutPage() {
                     {...register('city')}
                     className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black"
                   />
-                  {errors.city && <p className="text-[10px] font-bold text-red-500">{errors.city.message}</p>}
+                  {errors.city && <p className="text-[10px] font-bold text-red-700">{errors.city.message}</p>}
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-brand-dark-gray block">State / Province</label>
@@ -420,7 +420,7 @@ export default function CheckoutPage() {
                     {...register('state')}
                     className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black"
                   />
-                  {errors.state && <p className="text-[10px] font-bold text-red-500">{errors.state.message}</p>}
+                  {errors.state && <p className="text-[10px] font-bold text-red-700">{errors.state.message}</p>}
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-brand-dark-gray block">Postal Code</label>
@@ -429,7 +429,7 @@ export default function CheckoutPage() {
                     {...register('postalCode')}
                     className="w-full bg-brand-light-gray border border-brand-black/10 p-2.5 text-xs font-semibold focus:outline-none focus:border-brand-black"
                   />
-                  {errors.postalCode && <p className="text-[10px] font-bold text-red-500">{errors.postalCode.message}</p>}
+                  {errors.postalCode && <p className="text-[10px] font-bold text-red-700">{errors.postalCode.message}</p>}
                 </div>
               </div>
             </div>
@@ -488,7 +488,7 @@ export default function CheckoutPage() {
                     <span className="text-xs font-bold block">{appliedCoupon} Applied</span>
                     <span className="text-[10px] text-brand-dark-gray font-semibold">Rs. {couponDiscount.toLocaleString()} Saved</span>
                   </div>
-                  <button type="button" onClick={handleRemoveCoupon} className="text-xs font-bold text-red-500 hover:underline">
+                  <button type="button" onClick={handleRemoveCoupon} className="text-xs font-bold text-red-700 hover:underline">
                     Remove
                   </button>
                 </div>

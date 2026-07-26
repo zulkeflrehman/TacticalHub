@@ -415,7 +415,7 @@ export default function ProductList({ initialProducts, categories }: ProductList
             <tbody className="divide-y divide-brand-black/5">
               {filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="p-12 text-center text-xs font-semibold text-brand-dark-gray/50">No products found.</td>
+                  <td colSpan={9} className="p-12 text-center text-xs font-semibold text-brand-dark-gray/70">No products found.</td>
                 </tr>
               ) : filteredProducts.map((product) => {
                 const isDeleting = deletingId === product.id;
@@ -433,7 +433,7 @@ export default function ProductList({ initialProducts, categories }: ProductList
                     <td className="p-3">
                       <div className="flex items-center gap-1.5 font-bold">
                         <Package className="h-3.5 w-3.5 text-brand-dark-gray" />
-                        <span className={product.stock < 10 ? 'font-extrabold text-red-500' : 'text-brand-black'}>{product.stock}</span>
+                        <span className={product.stock < 10 ? 'font-extrabold text-red-700' : 'text-brand-black'}>{product.stock}</span>
                       </div>
                     </td>
                     <td className="p-3 text-center">
@@ -459,7 +459,7 @@ export default function ProductList({ initialProducts, categories }: ProductList
                         <button type="button" onClick={() => openEditForm(product)} className="clip-angled-sm flex items-center gap-1 border border-brand-black/5 bg-brand-light-gray p-1.5 text-brand-dark-gray hover:border-brand-black hover:text-brand-black" title={`Edit ${product.name}`} aria-label={`Edit ${product.name}`}>
                           <Edit className="h-3.5 w-3.5" />
                         </button>
-                        <button type="button" onClick={() => handleDelete(product.id, product.name)} disabled={isDeleting} className="clip-angled-sm border border-red-100 bg-red-50 p-1.5 text-red-500 hover:border-red-500 hover:bg-red-500 hover:text-brand-white disabled:opacity-60" title={`Archive ${product.name}`} aria-label={`Archive ${product.name}`}>
+                        <button type="button" onClick={() => handleDelete(product.id, product.name)} disabled={isDeleting} className="clip-angled-sm border border-red-100 bg-red-50 p-1.5 text-red-700 hover:border-red-600 hover:bg-red-600 hover:text-brand-white disabled:opacity-60" title={`Archive ${product.name}`} aria-label={`Archive ${product.name}`}>
                           {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                         </button>
                       </div>
