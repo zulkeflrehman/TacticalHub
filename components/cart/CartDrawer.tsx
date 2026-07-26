@@ -1,24 +1,21 @@
 'use client';
 
-import { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '@/lib/store';
 import CatalogImage from '@/components/ui/CatalogImage';
-import { X, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
+import AccordionCheckoutModal from '@/components/checkout/AccordionCheckoutModal';
+import { X, Plus, Minus, ShoppingBag, ArrowRight, Trash2, Lock } from 'lucide-react';
 
 export default function CartDrawer() {
   const { cart, isOpen, toggleMiniCart, updateQuantity, removeFromCart } = useStore();
+  const [isCheckoutOpen, setCheckoutOpen] = useState(false);
 
-  // Close drawer on Escape key
   useEffect(() => {
     if (!isOpen) return;
-    
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        toggleMiniCart(false);
-      }
+      if (e.key === 'Escape') toggleMiniCart(false);
     };
-    
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, toggleMiniCart]);
@@ -27,173 +24,188 @@ export default function CartDrawer() {
 
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
+  const triggerHaptic = () => {
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate?.([15, 30]);
+    }
+  };
+
   return (
-    /* Full-screen overlay — no left padding offset so drawer reaches the edge on every phone */
-    <div
-      className="fixed inset-0 z-50 overflow-hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Shopping cart"
-    >
-      {/* Backdrop */}
+    <>
       <div
-        className="absolute inset-0 bg-brand-black/60 backdrop-blur-sm"
-        onClick={() => toggleMiniCart(false)}
-        aria-hidden="true"
-      />
+        className="fixed inset-0 z-50 overflow-hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Shopping cart"
+      >
+        {/* Backdrop */}
+        <div
+          className="absolute inset-0 bg-[#070707]/85 backdrop-blur-md"
+          onClick={() => toggleMiniCart(false)}
+          aria-hidden="true"
+        />
 
-      {/* Drawer panel — slides in from right, full height, max width preserved for wider screens */}
-      <div className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-brand-white shadow-2xl animate-slide-left">
-
-        {/* ── Header ── */}
-        <div className="flex shrink-0 items-center justify-between bg-brand-black px-4 py-4 text-brand-white">
-          <div className="flex items-center gap-2">
-            <ShoppingBag className="h-5 w-5 text-brand-accent" />
-            <h2 className="text-base font-bold uppercase tracking-tight">
-              Cart ({cart.length})
-            </h2>
+        {/* Drawer Panel */}
+        <div className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-[#0B0B0B] border-l border-white/10 shadow-2xl animate-slide-left">
+          {/* Header */}
+          <div className="flex shrink-0 items-center justify-between bg-[#121212] px-5 py-4 border-b border-white/10">
+            <div className="flex items-center gap-2">
+              <ShoppingBag className="h-5 w-5 text-[#FF6600]" />
+              <h2 className="text-sm font-mono font-black uppercase text-white tracking-widest">
+                GEAR BAG ({cart.length})
+              </h2>
+            </div>
+            <button
+              onClick={() => toggleMiniCart(false)}
+              aria-label="Close cart"
+              className="p-2 text-neutral-400 hover:text-white bg-[#1A1A1A] border border-white/10 rounded-full transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
-          <button
-            onClick={() => toggleMiniCart(false)}
-            aria-label="Close cart"
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center text-brand-white/80 hover:text-brand-white transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
 
-        {/* ── Scrollable item list ── */}
-        <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-4">
-          {cart.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center gap-4 py-16 text-center">
-              <ShoppingBag className="h-12 w-12 stroke-[1.5] text-brand-dark-gray/30" />
-              <div>
-                <p className="text-sm font-bold uppercase tracking-wider">Your cart is empty</p>
-                <p className="mt-1 text-xs text-brand-dark-gray">
-                  Add items to get started on your adventure.
-                </p>
+
+
+          {/* Scrollable Item List */}
+          <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-3">
+            {cart.length === 0 ? (
+              <div className="flex h-full flex-col items-center justify-center gap-3 py-16 text-center">
+                <ShoppingBag className="h-12 w-12 text-neutral-600" />
+                <div>
+                  <p className="text-xs font-mono font-bold uppercase text-white">YOUR GEAR BAG IS EMPTY</p>
+                  <p className="mt-1 text-[11px] text-neutral-400">
+                    Add tactical equipment to gear up.
+                  </p>
+                </div>
+                <button
+                  onClick={() => toggleMiniCart(false)}
+                  className="mt-2 bg-[#FF6600] text-black px-6 py-2.5 text-xs font-mono font-black uppercase rounded-xl shadow-[0_0_15px_rgba(255,102,0,0.4)] tactile-press"
+                >
+                  EXPLORE GEAR
+                </button>
               </div>
+            ) : (
+              <AnimatePresence>
+                {cart.map((item) => (
+                  <motion.div
+                    key={`${item.productId}-${item.variantSku ?? ''}`}
+                    layout
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -100 }}
+                    drag="x"
+                    dragConstraints={{ left: -100, right: 0 }}
+                    onDragEnd={(_, info) => {
+                      if (info.offset.x < -60) {
+                        triggerHaptic();
+                        removeFromCart(item.productId, item.variantSku);
+                      }
+                    }}
+                    className="bento-card p-3 flex gap-3 relative cursor-grab active:cursor-grabbing"
+                  >
+                    {/* Thumbnail */}
+                    <div className="relative h-16 w-16 shrink-0 overflow-hidden border border-white/10 bg-[#070707] rounded-xl">
+                      {item.image ? (
+                        <CatalogImage src={item.image} alt={item.name} sizes="64px" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-[8px] text-neutral-500">
+                          NO IMG
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Details */}
+                    <div className="flex flex-1 flex-col justify-between min-w-0">
+                      <div>
+                        <h4 className="line-clamp-1 text-xs font-black uppercase text-white">
+                          {item.name}
+                        </h4>
+                        <span className="text-[9px] font-mono text-neutral-400 block truncate">
+                          {item.vendor} {item.variantSku ? `// SKU: ${item.variantSku}` : ''}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2">
+                        {/* Stepper */}
+                        <div className="flex items-center bg-[#141414] border border-white/10 rounded-xl">
+                          <button
+                            onClick={() => {
+                              triggerHaptic();
+                              updateQuantity(item.productId, item.quantity - 1, item.variantSku);
+                            }}
+                            className="p-1.5 text-neutral-400 hover:text-white"
+                          >
+                            <Minus className="h-3 w-3" />
+                          </button>
+                          <span className="w-6 text-center font-mono text-xs font-bold text-white">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => {
+                              triggerHaptic();
+                              updateQuantity(item.productId, item.quantity + 1, item.variantSku);
+                            }}
+                            className="p-1.5 text-neutral-400 hover:text-white"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </button>
+                        </div>
+
+                        {/* Price & Trash Trigger */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono font-black text-white">
+                            Rs. {(item.price * item.quantity).toLocaleString()}
+                          </span>
+                          <button
+                            onClick={() => {
+                              triggerHaptic();
+                              removeFromCart(item.productId, item.variantSku);
+                            }}
+                            className="text-neutral-500 hover:text-[#EF4444] transition-colors p-1"
+                            title="Remove item"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            )}
+          </div>
+
+          {/* Footer Actions */}
+          {cart.length > 0 && (
+            <div className="shrink-0 border-t border-white/10 bg-[#121212] p-4 space-y-3">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-neutral-400 uppercase font-bold">SUBTOTAL</span>
+                <span className="text-xl font-black text-white">
+                  Rs. {subtotal.toLocaleString()}
+                </span>
+              </div>
+
               <button
-                onClick={() => toggleMiniCart(false)}
-                className="mt-2 bg-brand-black px-6 py-3 text-xs font-bold uppercase text-brand-white hover:bg-brand-accent hover:text-brand-black transition-colors clip-angled"
+                onClick={() => {
+                  triggerHaptic();
+                  setCheckoutOpen(true);
+                }}
+                className="w-full bg-[#FF6600] text-black hover:bg-[#E05800] py-3.5 px-4 font-mono text-xs font-black uppercase rounded-xl flex items-center justify-center gap-2 tactile-press shadow-[0_0_20px_rgba(255,102,0,0.5)]"
               >
-                Continue Shopping
+                <Lock className="w-4 h-4" />
+                <span>PROCEED TO SECURE CHECKOUT</span>
+                <ArrowRight className="w-4 h-4" />
               </button>
             </div>
-          ) : (
-            cart.map((item) => (
-              <div
-                key={`${item.productId}-${item.variantSku ?? ''}`}
-                className="flex gap-3 border-b border-brand-black/5 pb-4 last:border-0 last:pb-0"
-              >
-                {/* Thumbnail — fixed square, never overflows */}
-                <div className="relative h-[72px] w-[72px] shrink-0 overflow-hidden border border-brand-black/5 bg-brand-light-gray">
-                  {item.image ? (
-                    <CatalogImage src={item.image} alt={item.name} sizes="72px" />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-[9px] text-brand-dark-gray">
-                      No image
-                    </div>
-                  )}
-                </div>
-
-                {/* Details */}
-                <div className="flex min-w-0 flex-1 flex-col justify-between">
-                  <div className="min-w-0">
-                    <p className="line-clamp-2 text-xs font-bold leading-snug text-brand-black">
-                      {item.name}
-                    </p>
-                    {item.variantSku && (
-                      <p className="mt-0.5 text-[10px] text-brand-dark-gray">
-                        SKU: {item.variantSku}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                    {/* Quantity control */}
-                    <div className="flex items-center border border-brand-black/10">
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.productId, item.quantity - 1, item.variantSku)
-                        }
-                        aria-label="Decrease quantity"
-                        className="flex h-[36px] w-[36px] items-center justify-center text-brand-dark-gray hover:text-brand-black transition-colors"
-                      >
-                        <Minus className="h-3 w-3" />
-                      </button>
-                      <span className="w-7 select-none text-center text-xs font-bold">
-                        {item.quantity}
-                      </span>
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.productId, item.quantity + 1, item.variantSku)
-                        }
-                        aria-label="Increase quantity"
-                        className="flex h-[36px] w-[36px] items-center justify-center text-brand-dark-gray hover:text-brand-black transition-colors"
-                      >
-                        <Plus className="h-3 w-3" />
-                      </button>
-                    </div>
-
-                    {/* Price + Remove */}
-                    <div className="text-right">
-                      <span className="block text-sm font-extrabold">
-                        Rs.&nbsp;{(item.price * item.quantity).toLocaleString()}
-                      </span>
-                      <button
-                        onClick={() => removeFromCart(item.productId, item.variantSku)}
-                        className="mt-0.5 text-[10px] font-bold uppercase text-red-500 hover:underline"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
           )}
         </div>
-
-        {/* ── Sticky footer summary + actions ── */}
-        {cart.length > 0 && (
-          <div
-            className="shrink-0 border-t border-brand-black/5 bg-brand-light-gray px-4 pt-4 pb-4"
-            style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
-          >
-            {/* Subtotal row */}
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-dark-gray">
-                Subtotal
-              </span>
-              <span className="text-xl font-extrabold text-brand-black">
-                Rs.&nbsp;{subtotal.toLocaleString()}
-              </span>
-            </div>
-            <p className="mb-4 text-[10px] text-brand-dark-gray">
-              Shipping calculated at checkout. Free above Rs.&nbsp;5,000.
-            </p>
-
-            {/* Action buttons — stack on narrow screens */}
-            <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
-              <Link
-                href="/cart"
-                onClick={() => toggleMiniCart(false)}
-                className="flex items-center justify-center border border-brand-black py-3.5 text-xs font-bold uppercase text-brand-black hover:bg-brand-black hover:text-brand-white transition-colors clip-angled"
-              >
-                View Cart
-              </Link>
-              <Link
-                href="/checkout"
-                onClick={() => toggleMiniCart(false)}
-                className="flex items-center justify-center gap-1.5 bg-brand-accent py-3.5 text-xs font-extrabold uppercase text-brand-black hover:bg-brand-accent-hover transition-colors clip-angled"
-              >
-                Checkout <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-          </div>
-        )}
       </div>
-    </div>
+
+      {/* Accordion Checkout Modal */}
+      <AccordionCheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setCheckoutOpen(false)}
+      />
+    </>
   );
 }

@@ -1,307 +1,134 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
-import {
-  Search, User, Heart, ShoppingBag, Menu, X,
-  Globe, DollarSign, LogOut, LayoutDashboard
-} from 'lucide-react';
-import AnnouncementBar from './AnnouncementBar';
-import CartDrawer from '../cart/CartDrawer';
+import { useSpatialMotion } from '@/components/motion/SpatialMotionProvider';
+import { Search, Heart, ShoppingBag, LayoutDashboard, Menu, X } from 'lucide-react';
 import type { StoreUserDto } from '@/lib/catalog-types';
-import { getUserProfile, listPublishedProducts } from '@/lib/client-services';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { getUserProfile } from '@/lib/client-services';
+import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase-client';
-import CatalogImage from '@/components/ui/CatalogImage';
 
-interface SuggestedProduct {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  images: { url: string }[];
-  vendor: string;
-}
+const emptySubscribe = () => () => {};
+const useIsMounted = () => useSyncExternalStore(emptySubscribe, () => true, () => false);
 
 export default function StoreHeader() {
-  const router = useRouter();
   const { cart, wishlist, toggleMiniCart } = useStore();
-  
+  const { setOmnisearchOpen } = useSpatialMotion();
   const [sessionUser, setSessionUser] = useState<StoreUserDto | null>(null);
-  const [catalog, setCatalog] = useState<SuggestedProduct[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<SuggestedProduct[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
-  // ref for the hamburger button so focus can be restored when drawer closes
-  const menuBtnRef = useRef<HTMLButtonElement>(null);
-  // ref for the first focusable element inside the drawer
-  const drawerCloseRef = useRef<HTMLButtonElement>(null);
+  const mounted = useIsMounted();
 
   useEffect(() => {
-    listPublishedProducts().then(setCatalog).catch(() => setCatalog([]));
     return onAuthStateChanged(auth, (user) => {
       if (!user) return setSessionUser(null);
       getUserProfile(user).then(setSessionUser).catch(() => setSessionUser(null));
     });
   }, []);
 
-  // Debounced Search Suggestions
-  useEffect(() => {
-    if (searchQuery.trim().length < 2) {
-      return;
-    }
-
-    const delayDebounce = setTimeout(() => {
-      const needle = searchQuery.trim().toLowerCase();
-      setSuggestions(catalog.filter((product) =>
-        product.name.toLowerCase().includes(needle) || product.vendor.toLowerCase().includes(needle),
-      ).slice(0, 6));
-    }, 300);
-
-    return () => clearTimeout(delayDebounce);
-  }, [catalog, searchQuery]);
-
-  // Click outside search listener
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setShowSuggestions(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // closeDrawer is stable (only calls stable state setters and refs); define before the effect.
-  const closeDrawer = useCallback(() => {
-    setIsMobileMenuOpen(false);
-    requestAnimationFrame(() => menuBtnRef.current?.focus());
-  }, []);
-
-  // Body-scroll lock + Escape key for mobile drawer
-  useEffect(() => {
-    if (!isMobileMenuOpen) return;
-
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    drawerCloseRef.current?.focus();
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeDrawer();
-    };
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = prev;
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isMobileMenuOpen, closeDrawer]);
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      setShowSuggestions(false);
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  };
-
-  const handleSuggestionClick = (slug: string) => {
-    setSearchQuery('');
-    setShowSuggestions(false);
-    router.push(`/products?slug=${encodeURIComponent(slug)}`);
-  };
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    setSessionUser(null);
-    router.push('/');
-  };
-
-  const totalCartItems = cart.reduce((acc, item) => acc + item.quantity, 0);
-  const visibleSuggestions = searchQuery.trim().length >= 2 ? suggestions : [];
-
-  const navLinks = [
-    { name: 'Home', href: '/' },
-    { name: 'Camping Tents', href: '/categories?slug=camping-tents' },
-    { name: 'Travel & Camping', href: '/categories?slug=travel-camping' },
-    { name: 'Knives & Tasers', href: '/categories?slug=knives-tasers' },
-    { name: 'Premium Items', href: '/categories?slug=premium-items' },
-  ];
+  const totalCartItems = mounted ? cart.reduce((acc, item) => acc + item.quantity, 0) : 0;
+  const wishlistCount = mounted ? wishlist.length : 0;
 
   return (
-    <header className="w-full bg-brand-white shadow-sm border-b border-brand-black/5 z-40 sticky top-0">
-      <AnnouncementBar />
-
-      {/* Top Utility Bar (Desktop Only) */}
-      <div className="hidden lg:flex items-center justify-between px-8 py-2.5 bg-brand-black text-brand-white/80 text-[11px] font-semibold border-b border-brand-white/10">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1 hover:text-brand-accent transition-colors cursor-pointer">
-            <Globe className="w-3.5 h-3.5" />
-            <span>ENGLISH</span>
-          </div>
-          <div className="flex items-center gap-1 hover:text-brand-accent transition-colors cursor-pointer">
-            <DollarSign className="w-3.5 h-3.5" />
-            <span>PKR</span>
-          </div>
+    <header 
+      suppressHydrationWarning
+      className="w-full bg-[#0A0A0A]/95 backdrop-blur-md border-b border-[#2A2A2A] z-40 sticky top-0"
+    >
+      {/* Tactical Status Ribbon */}
+      <div 
+        suppressHydrationWarning
+        className="bg-[#121212] border-b border-[#2A2A2A] px-4 py-1 flex items-center justify-between text-[10px] font-mono text-neutral-400"
+      >
+        <div suppressHydrationWarning className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+          <span className="text-white font-bold tracking-wider">TACTICAL HUB SYSTEM // ONLINE</span>
         </div>
-        
-        <div className="flex items-center gap-6">
-          <Link href="/pages?slug=faq" className="hover:text-brand-white transition-colors">FAQ</Link>
-          <Link href="/pages?slug=shipping-policy" className="hover:text-brand-white transition-colors">SHIPPING</Link>
+        <div suppressHydrationWarning className="hidden sm:flex items-center gap-4 text-neutral-400">
+          <span className="text-[#FF6600]">NATIONWIDE COD AVAILABLE</span>
+          <span>PKR (₨)</span>
         </div>
       </div>
 
       {/* Main Header Row */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between gap-2 sm:gap-4">
-        {/* Mobile Hamburger Menu Icon */}
-        <button
-          ref={menuBtnRef}
-          onClick={() => setIsMobileMenuOpen(true)}
-          aria-label="Open navigation menu"
-          aria-expanded={isMobileMenuOpen}
-          aria-controls="mobile-nav-drawer"
-          className="lg:hidden p-3 -ml-1 text-brand-black hover:bg-brand-light-gray rounded-none min-w-[44px] min-h-[44px] flex items-center justify-center"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
+      <div 
+        suppressHydrationWarning
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4"
+      >
+        <div className="flex items-center gap-2">
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="lg:hidden p-2 text-neutral-300 hover:text-white transition-colors"
+            aria-label="Open navigation menu"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
 
-        {/* Brand Logo */}
-        <Link href="/" className="flex min-w-0 flex-col">
-          <span className="flex items-center gap-1 text-xl font-extrabold uppercase leading-none tracking-tighter text-brand-black min-[360px]:text-2xl sm:text-3xl">
-            TECTICAL<span className="text-brand-accent">HUB</span>
-          </span>
-          <span className="mt-0.5 hidden select-none text-[9px] font-bold uppercase tracking-widest text-brand-dark-gray/80 min-[360px]:block">
-            MILITARY & OUTDOOR GEAR
-          </span>
-        </Link>
-
-        {/* Autocomplete Search Bar (Desktop Only) */}
-        <div ref={searchRef} className="hidden lg:block flex-1 max-w-lg relative">
-          <form onSubmit={handleSearchSubmit} className="relative">
-            <input
-              type="text"
-              placeholder="Search tactical equipment, tents, batons..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setShowSuggestions(true);
-              }}
-              onFocus={() => setShowSuggestions(true)}
-              className="w-full bg-brand-light-gray border border-brand-black/10 focus:border-brand-black py-2.5 pl-4 pr-12 text-sm font-semibold clip-angled focus:outline-none transition-standard"
-            />
-            <button 
-              type="submit" 
-              className="absolute right-0.5 top-0.5 bottom-0.5 px-4 bg-brand-black text-brand-white hover:bg-brand-accent hover:text-brand-black transition-colors clip-angled flex items-center justify-center"
-            >
-              <Search className="w-4 h-4" />
-            </button>
-          </form>
-
-          {/* Suggestions Dropdown */}
-          {showSuggestions && visibleSuggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-brand-white border border-brand-black/10 shadow-xl z-50 p-2 clip-angled">
-              <div className="text-[10px] uppercase font-bold text-brand-dark-gray px-3 py-1.5 border-b border-brand-black/5">
-                Suggested Products
-              </div>
-              <div className="divide-y divide-brand-black/5">
-                {visibleSuggestions.map((p) => (
-                  <div
-                    key={p.id}
-                    onClick={() => handleSuggestionClick(p.slug)}
-                    className="flex gap-3 p-3 hover:bg-brand-light-gray cursor-pointer transition-colors"
-                  >
-                    <div className="w-10 h-10 bg-brand-light-gray relative shrink-0">
-                      {p.images[0]?.url ? (
-                        <CatalogImage src={p.images[0].url} alt={p.name} sizes="40px" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[8px]">No Img</div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-brand-black truncate">{p.name}</p>
-                      <p className="text-[10px] text-brand-dark-gray">{p.vendor}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-xs font-extrabold">Rs. {p.price.toLocaleString()}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div 
-                onClick={handleSearchSubmit}
-                className="text-center py-2 text-xs font-bold text-brand-black hover:text-brand-accent transition-colors bg-brand-light-gray cursor-pointer mt-1 uppercase"
-              >
-                View all results
-              </div>
+          {/* Brand Logo */}
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="w-8 h-8 bg-[#FF6600] flex items-center justify-center clip-angled text-black font-black text-lg">
+              T
             </div>
-          )}
+            <div className="flex flex-col">
+              <span className="text-xl sm:text-2xl font-black uppercase tracking-tighter text-white group-hover:text-[#FF6600] transition-colors">
+                TACTICAL<span className="text-[#FF6600]">HUB</span>
+              </span>
+              <span className="text-[8px] font-mono uppercase tracking-widest text-[#4A7C4A] font-extrabold -mt-1">
+                MILITARY & DEFENSE GEAR
+              </span>
+            </div>
+          </Link>
         </div>
 
-        {/* Action Icons Panel */}
-        <div className="flex items-center gap-0 sm:gap-3">
-          {/* Dashboard (Admin Only) */}
+        {/* Omnisearch Trigger Bar */}
+        <button
+          onClick={() => setOmnisearchOpen(true)}
+          className="flex-1 max-w-md hidden sm:flex items-center justify-between bg-[#1A1A1A] border border-[#2A2A2A] hover:border-[#FF6600]/50 py-2 px-4 text-xs text-neutral-400 clip-angled transition-all group"
+        >
+          <div className="flex items-center gap-2">
+            <Search className="w-4 h-4 text-[#FF6600] group-hover:scale-110 transition-transform" />
+            <span>Search tactical equipment, tents, batons...</span>
+          </div>
+          <span className="text-[9px] font-mono bg-[#2A2A2A] px-2 py-0.5 text-neutral-300 border border-neutral-700">
+            SEARCH
+          </span>
+        </button>
+
+        {/* Header Right Action Icons */}
+        <div suppressHydrationWarning className="flex items-center gap-1 sm:gap-3">
+          {/* Mobile Search Button */}
+          <button
+            onClick={() => setOmnisearchOpen(true)}
+            className="sm:hidden p-2 text-neutral-300 hover:text-[#FF6600] transition-colors"
+            aria-label="Search catalog"
+          >
+            <Search className="w-5 h-5" />
+          </button>
+
+          {/* Admin Panel Link */}
           {sessionUser?.role === 'ADMIN' && (
             <Link 
               href="/admin/dashboard" 
-              className="p-2 text-brand-black hover:text-brand-accent transition-colors hidden sm:flex items-center gap-1.5 text-xs font-bold uppercase"
+              className="p-2 text-[#FF6600] hover:bg-[#FF6600]/10 transition-colors flex items-center gap-1 text-xs font-mono font-bold"
               title="Admin Dashboard"
             >
               <LayoutDashboard className="w-4.5 h-4.5" />
-              <span className="hidden md:inline">Admin</span>
-            </Link>
-          )}
-
-          {/* Account Profile / Login - Hidden on mobile, accessible via menu */}
-          {sessionUser ? (
-            <div className="relative group hidden sm:block">
-              <button className="p-2 text-brand-black hover:bg-brand-light-gray transition-colors flex items-center gap-1">
-                <User className="w-5 h-5" />
-                <span className="hidden md:inline text-xs font-bold tracking-tight truncate max-w-[80px]">
-                  {sessionUser.name || 'Account'}
-                </span>
-              </button>
-              <div className="absolute right-0 top-full mt-1 bg-brand-white border border-brand-black/10 shadow-lg hidden group-hover:block z-50 p-1 w-44 clip-angled">
-                <Link href="/account/profile" className="flex items-center gap-2 p-2.5 text-xs font-bold hover:bg-brand-light-gray transition-colors">
-                  <User className="w-4 h-4" /> My Profile
-                </Link>
-                {sessionUser.role === 'ADMIN' && (
-                  <Link href="/admin/dashboard" className="flex items-center gap-2 p-2.5 text-xs font-bold hover:bg-brand-light-gray transition-colors">
-                    <LayoutDashboard className="w-4 h-4" /> Admin Panel
-                  </Link>
-                )}
-                <button 
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-2 p-2.5 text-xs font-bold hover:bg-red-50 text-red-500 transition-colors text-left"
-                >
-                  <LogOut className="w-4 h-4" /> Log Out
-                </button>
-              </div>
-            </div>
-          ) : (
-            <Link 
-              href="/account/login" 
-              className="p-2 text-brand-black hover:bg-brand-light-gray transition-colors flex items-center gap-1 hidden sm:flex"
-              title="My Account"
-            >
-              <User className="w-5 h-5" />
+              <span className="hidden md:inline">ADMIN</span>
             </Link>
           )}
 
           {/* Wishlist Link */}
           <Link
             href="/wishlist"
-            className="p-2 sm:p-2.5 text-brand-black hover:bg-brand-light-gray transition-colors relative min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-2 text-neutral-300 hover:text-white transition-colors relative"
             title="My Wishlist"
             aria-label="Wishlist"
           >
             <Heart className="w-5 h-5" />
-            {wishlist.length > 0 && (
-              <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-brand-black text-brand-white text-[9px] font-extrabold flex items-center justify-center rounded-full border border-brand-white">
-                {wishlist.length > 9 ? '9+' : wishlist.length}
+            {wishlistCount > 0 && (
+              <span className="absolute top-0 right-0 w-4 h-4 bg-[#FF6600] text-black text-[9px] font-mono font-black flex items-center justify-center rounded-full">
+                {wishlistCount}
               </span>
             )}
           </Link>
@@ -310,34 +137,19 @@ export default function StoreHeader() {
           <button
             onClick={() => toggleMiniCart(true)}
             data-testid="cart-button"
-            className="p-2 sm:p-2.5 text-brand-black hover:bg-brand-light-gray transition-colors relative min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-2 text-[#FF6600] hover:bg-[#FF6600]/10 transition-colors relative flex items-center gap-1.5 font-mono text-xs font-bold"
             title="Shopping Cart"
-            aria-label={`Shopping cart, ${totalCartItems} item${totalCartItems !== 1 ? 's' : ''}`}
+            aria-label={`Shopping cart, ${totalCartItems} items`}
           >
             <ShoppingBag className="w-5 h-5" />
+            <span className="hidden sm:inline text-white font-sans">GEAR</span>
             {totalCartItems > 0 && (
-              <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-brand-accent text-brand-black text-[9px] font-extrabold flex items-center justify-center rounded-full border border-brand-white">
-                {totalCartItems > 9 ? '9+' : totalCartItems}
+              <span className="w-4 h-4 bg-[#FF6600] text-black text-[9px] font-black flex items-center justify-center rounded-full shadow-[0_0_8px_#FF6600]">
+                {totalCartItems}
               </span>
             )}
           </button>
         </div>
-      </div>
-
-      {/* Main Navigation (Desktop Only) */}
-      <div className="hidden lg:block border-t border-brand-black/5">
-        <nav className="max-w-7xl mx-auto px-8 flex items-center justify-center gap-8 py-3.5">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              href={link.href}
-              className="text-xs font-bold uppercase tracking-widest text-brand-black hover:text-brand-accent transition-colors relative group py-1"
-            >
-              {link.name}
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-brand-accent transition-all duration-300 group-hover:w-full" />
-            </Link>
-          ))}
-        </nav>
       </div>
 
       {/* Mobile Drawer Navigation Overlay */}
@@ -351,139 +163,63 @@ export default function StoreHeader() {
         >
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-brand-black/60 backdrop-blur-sm"
-            onClick={closeDrawer}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => setIsMobileMenuOpen(false)}
             aria-hidden="true"
           />
           {/* Drawer Panel */}
-          <div className="fixed inset-y-0 left-0 w-[min(320px,85vw)] bg-brand-white shadow-2xl flex flex-col z-50 animate-slide-right">
+          <div className="fixed inset-y-0 left-0 w-[min(320px,85vw)] bg-[#121212] border-r border-[#2A2A2A] shadow-2xl flex flex-col z-50 animate-slide-right">
             {/* Drawer Header */}
-            <div className="px-4 py-3 border-b border-brand-black/5 flex items-center justify-between bg-brand-black text-brand-white shrink-0">
+            <div className="px-4 py-3 border-b border-[#2A2A2A] flex items-center justify-between bg-black text-white shrink-0">
               <span className="font-extrabold tracking-tight text-sm uppercase">TECTICALHUB</span>
               <button
-                ref={drawerCloseRef}
-                onClick={closeDrawer}
+                onClick={() => setIsMobileMenuOpen(false)}
                 aria-label="Close navigation menu"
-                className="text-brand-white/80 hover:text-brand-white p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                className="text-white hover:text-[#FF6600] p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Mobile Search */}
-            <div className="px-4 py-3 border-b border-brand-black/5 shrink-0">
-              <form onSubmit={(e) => { handleSearchSubmit(e); closeDrawer(); }} className="relative">
-                <input
-                  type="search"
-                  placeholder="Search equipment..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  aria-label="Search products"
-                  className="w-full bg-brand-light-gray border border-brand-black/10 py-2.5 pl-3 pr-11 text-sm font-semibold focus:outline-none focus:border-brand-black"
-                />
-                <button
-                  type="submit"
-                  aria-label="Submit search"
-                  className="absolute right-0 top-0 bottom-0 px-3 text-brand-dark-gray hover:text-brand-black min-w-[44px] flex items-center justify-center"
-                >
-                  <Search className="w-4 h-4" />
-                </button>
-              </form>
+            <div className="px-4 py-3 border-b border-[#2A2A2A] shrink-0">
+              <button
+                onClick={() => { setIsMobileMenuOpen(false); setOmnisearchOpen(true); }}
+                className="w-full flex items-center justify-between bg-[#1A1A1A] border border-[#2A2A2A] py-2.5 px-3 text-xs text-neutral-400 clip-angled transition-all"
+              >
+                <div className="flex items-center gap-2">
+                  <Search className="w-4 h-4 text-[#FF6600]" />
+                  <span>Search products...</span>
+                </div>
+              </button>
             </div>
 
             {/* Scrollable Nav Links */}
-            <nav
-              aria-label="Mobile navigation"
-              className="flex-1 overflow-y-auto"
-            >
+            <nav aria-label="Mobile navigation" className="flex-1 overflow-y-auto">
               <div className="px-2 py-2 space-y-0.5">
-                <p className="px-3 pt-3 pb-1 text-[10px] font-black uppercase tracking-widest text-brand-dark-gray/50">
+                <p className="px-3 pt-3 pb-1 text-[10px] font-mono font-black uppercase tracking-widest text-neutral-500">
                   Shop
                 </p>
-                {navLinks.map((link) => (
+                {[
+                  { name: 'Tents', href: '/categories?slug=camping-tents' },
+                  { name: 'Self-Defense', href: '/categories?slug=self-defense' },
+                  { name: 'Outdoor Tools', href: '/categories?slug=outdoor-tools' },
+                  { name: 'Tasers & Baton Sticks', href: '/categories?slug=tasers-baton-sticks' }
+                ].map((link) => (
                   <Link
                     key={link.name}
                     href={link.href}
-                    onClick={closeDrawer}
-                    className="flex items-center px-3 py-3 text-sm font-bold uppercase tracking-wide hover:bg-brand-light-gray text-brand-black transition-colors min-h-[44px]"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center px-3 py-3 text-sm font-bold uppercase tracking-wide hover:bg-neutral-800 text-white transition-colors min-h-[44px]"
                   >
                     {link.name}
                   </Link>
                 ))}
-
-                <div className="border-t border-brand-black/5 mt-2" />
-
-                <p className="px-3 pt-3 pb-1 text-[10px] font-black uppercase tracking-widest text-brand-dark-gray/50">
-                  Account
-                </p>
-                <Link
-                  href="/account/profile"
-                  onClick={closeDrawer}
-                  className="flex items-center gap-3 px-3 py-3 text-sm font-bold hover:bg-brand-light-gray text-brand-black transition-colors min-h-[44px]"
-                >
-                  <User className="w-4 h-4 shrink-0" />
-                  <span>{sessionUser ? (sessionUser.name || 'My Account') : 'Sign In / Register'}</span>
-                </Link>
-                <Link
-                  href="/wishlist"
-                  onClick={closeDrawer}
-                  className="flex items-center gap-3 px-3 py-3 text-sm font-bold hover:bg-brand-light-gray text-brand-black transition-colors min-h-[44px]"
-                >
-                  <Heart className="w-4 h-4 shrink-0" />
-                  <span>Wishlist</span>
-                  {wishlist.length > 0 && (
-                    <span className="ml-auto text-[10px] font-black bg-brand-black text-brand-white rounded-full w-5 h-5 flex items-center justify-center">{wishlist.length}</span>
-                  )}
-                </Link>
-                <button
-                  onClick={() => { toggleMiniCart(true); closeDrawer(); }}
-                  className="w-full flex items-center gap-3 px-3 py-3 text-sm font-bold hover:bg-brand-light-gray text-brand-black transition-colors min-h-[44px] text-left"
-                >
-                  <ShoppingBag className="w-4 h-4 shrink-0" />
-                  <span>Cart</span>
-                  {totalCartItems > 0 && (
-                    <span className="ml-auto text-[10px] font-black bg-brand-accent text-brand-black rounded-full w-5 h-5 flex items-center justify-center">{totalCartItems}</span>
-                  )}
-                </button>
-
-                {sessionUser?.role === 'ADMIN' && (
-                  <>
-                    <div className="border-t border-brand-black/5 mt-2" />
-                    <Link
-                      href="/admin/dashboard"
-                      onClick={closeDrawer}
-                      className="flex items-center gap-3 px-3 py-3 text-sm font-bold hover:bg-brand-light-gray text-brand-black transition-colors min-h-[44px]"
-                    >
-                      <LayoutDashboard className="w-4 h-4 shrink-0" />
-                      <span>Admin Dashboard</span>
-                    </Link>
-                  </>
-                )}
-
-                {sessionUser && (
-                  <button
-                    onClick={() => { handleLogout(); closeDrawer(); }}
-                    className="w-full flex items-center gap-3 px-3 py-3 text-sm font-bold hover:bg-red-50 text-red-500 transition-colors min-h-[44px] text-left"
-                  >
-                    <LogOut className="w-4 h-4 shrink-0" />
-                    <span>Log Out</span>
-                  </button>
-                )}
-
-                <div className="border-t border-brand-black/5 mt-2" />
-                <p className="px-3 pt-3 pb-1 text-[10px] font-black uppercase tracking-widest text-brand-dark-gray/50">
-                  Info
-                </p>
-                <Link href="/pages?slug=faq" onClick={closeDrawer} className="flex items-center px-3 py-3 text-sm font-bold hover:bg-brand-light-gray text-brand-black transition-colors min-h-[44px]">FAQ</Link>
-                <Link href="/pages?slug=shipping-policy" onClick={closeDrawer} className="flex items-center px-3 py-3 text-sm font-bold hover:bg-brand-light-gray text-brand-black transition-colors min-h-[44px]">Shipping Policy</Link>
               </div>
             </nav>
           </div>
         </div>
       )}
-
-      {/* Cart Drawer element */}
-      <CartDrawer />
     </header>
   );
 }

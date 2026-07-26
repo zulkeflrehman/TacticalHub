@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { useStore, CartItemState } from '@/lib/store';
 import { useToastStore } from '@/lib/toast-store';
 import CatalogImage from '@/components/ui/CatalogImage';
-import { Heart, ShoppingCart } from 'lucide-react';
+import { Heart, ShoppingBag } from 'lucide-react';
 
 interface ProductCardProps {
   product: {
@@ -44,10 +45,8 @@ export default function ProductCard({ product }: ProductCardProps) {
     e.stopPropagation();
     toggleWishlist(product.slug);
     addToast(
-      isLiked
-        ? `Removed "${product.name}" from wishlist.`
-        : `Added "${product.name}" to wishlist.`,
-      isLiked ? 'info' : 'success',
+      isLiked ? `Removed "${product.name}" from wishlist.` : `Added "${product.name}" to wishlist.`,
+      isLiked ? 'info' : 'success'
     );
   };
 
@@ -55,7 +54,6 @@ export default function ProductCard({ product }: ProductCardProps) {
     e.preventDefault();
     e.stopPropagation();
 
-    // Debounce rapid taps
     if (adding) return;
 
     const defaultVariant = product.variants[0];
@@ -76,16 +74,18 @@ export default function ProductCard({ product }: ProductCardProps) {
     };
 
     if (!addToCart(cartItem)) {
-      addToast(
-        'Checkout supports up to five different product variants per order.',
-        'error',
-      );
+      addToast('Checkout supports up to five different product variants per order.', 'error');
       return;
     }
 
+    // Haptic response
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate?.([20, 40]);
+    }
+
     setAdding(true);
-    addToast(`Added 1× "${product.name}" to cart.`, 'success');
-    setTimeout(() => setAdding(false), 1200);
+    addToast(`Added 1× "${product.name}" to gear bag.`, 'success');
+    setTimeout(() => setAdding(false), 1000);
   };
 
   const displayPrice = product.price;
@@ -100,94 +100,93 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <article
-      className="group relative flex flex-col h-full bg-brand-white border border-brand-black/5 hover:border-brand-black/25 overflow-hidden transition-standard"
+      className="bento-card group relative flex flex-col h-full overflow-hidden transition-all duration-300 shadow-xl"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Badge row */}
-      <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 pointer-events-none">
+      {/* Editorial Badge Overlay */}
+      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1 pointer-events-none">
         {hasDiscount && (
-          <span className="bg-red-500 text-brand-white text-[9px] font-black uppercase px-1.5 py-0.5 clip-angled-sm select-none">
-            {discountPercent}% OFF
+          <span className="bg-[#EF4444] text-white font-mono text-[9px] font-black uppercase px-2 py-0.5 rounded-md shadow-md">
+            -{discountPercent}%
           </span>
         )}
         {product.isNewArrival && (
-          <span className="bg-brand-black text-brand-white text-[9px] font-black uppercase px-1.5 py-0.5 clip-angled-sm select-none border border-brand-accent/20">
-            NEW
+          <span className="bg-[#2F4F2F]/80 backdrop-blur-md text-white font-mono text-[9px] font-black uppercase px-2 py-0.5 rounded-md border border-white/10">
+            NEW RECON
           </span>
         )}
         {product.isBestSeller && (
-          <span className="bg-brand-accent text-brand-black text-[9px] font-black uppercase px-1.5 py-0.5 clip-angled-sm select-none">
-            HOT
+          <span className="bg-[#FF6600] text-black font-mono text-[9px] font-black uppercase px-2 py-0.5 rounded-md">
+            TOP GEAR
           </span>
         )}
       </div>
 
-      {/* Wishlist button */}
+      {/* Wishlist Button */}
       <button
         onClick={handleWishlistToggle}
         aria-label={isLiked ? 'Remove from wishlist' : 'Add to wishlist'}
-        className={`absolute top-2 right-2 z-10 flex h-[36px] w-[36px] items-center justify-center rounded-full border shadow-sm transition-all focus:outline-none ${
+        className={`absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full border backdrop-blur-md transition-all focus:outline-none ${
           isLiked
-            ? 'bg-brand-black border-brand-black text-brand-white'
-            : 'bg-brand-white border-brand-black/10 text-brand-dark-gray hover:text-brand-black'
+            ? 'bg-[#FF6600] border-[#FF6600] text-black'
+            : 'bg-black/60 border-white/10 text-neutral-400 hover:text-white hover:border-[#FF6600]'
         }`}
       >
         <Heart className="h-3.5 w-3.5" fill={isLiked ? 'currentColor' : 'none'} />
       </button>
 
-      {/* Image — fixed aspect ratio, object-contain keeps full product visible */}
+      {/* Macro Image Viewport */}
       <Link
         href={`/products?slug=${encodeURIComponent(product.slug)}`}
-        className="block relative w-full bg-brand-light-gray overflow-hidden"
+        className="block relative w-full bg-[#070707] overflow-hidden border-b border-white/10"
         style={{ aspectRatio: '1 / 1' }}
-        tabIndex={-1}
-        aria-hidden="true"
       >
         <CatalogImage
           src={hovered ? hoverImage : primaryImage}
           alt={product.name}
-          className="object-contain transition-transform duration-500 ease-out group-hover:scale-105"
+          className="object-contain p-4 transition-transform duration-700 ease-out group-hover:scale-110"
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
         />
       </Link>
 
-      {/* Card body */}
-      <div className="flex flex-1 flex-col justify-between gap-2 p-3 sm:p-4">
+      {/* Bento Card Body */}
+      <div className="flex flex-1 flex-col justify-between gap-3 p-4">
         <div>
-          <p className="text-[10px] font-extrabold uppercase tracking-wider text-brand-dark-gray/60 mb-0.5 truncate">
-            {product.vendor || 'TecticalHub'}
-          </p>
+          <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-[#B8EC44] block truncate mb-1">
+            {product.categoryName || product.vendor}
+          </span>
           <Link href={`/products?slug=${encodeURIComponent(product.slug)}`}>
-            <h3 className="line-clamp-2 text-xs font-bold leading-snug text-brand-black hover:underline sm:text-sm">
+            <h3 className="line-clamp-2 text-xs sm:text-sm font-black uppercase tracking-tight text-white group-hover:text-[#FF6600] transition-colors leading-snug">
               {product.name}
             </h3>
           </Link>
         </div>
 
         <div>
-          {/* Price row */}
-          <div className="mb-2 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-            <span className="text-sm font-extrabold text-brand-black sm:text-base">
-              Rs.&nbsp;{displayPrice.toLocaleString()}
+          {/* Price */}
+          <div className="mb-3 flex items-baseline gap-2 font-mono">
+            <span className="text-sm sm:text-base font-black text-white">
+              Rs. {displayPrice.toLocaleString()}
             </span>
             {hasDiscount && (
-              <span className="text-[11px] font-bold text-brand-dark-gray/50 line-through">
-                Rs.&nbsp;{originalPrice.toLocaleString()}
+              <span className="text-[10px] font-bold text-neutral-500 line-through">
+                Rs. {originalPrice.toLocaleString()}
               </span>
             )}
           </div>
 
-          {/* Add to Cart */}
-          <button
+          {/* Quick Add Action Button */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
             onClick={handleQuickAdd}
             disabled={adding}
             aria-label={`Add ${product.name} to cart`}
-            className="flex w-full items-center justify-center gap-1.5 border border-brand-black bg-brand-black py-2.5 px-3 text-[11px] font-bold uppercase text-brand-white transition-colors hover:bg-brand-accent hover:text-brand-black clip-angled disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-2 bg-[#FF6600] text-black hover:bg-[#E05800] py-2.5 px-3 text-[11px] font-mono font-black uppercase rounded-xl transition-all tactile-press shadow-[0_0_12px_rgba(255,102,0,0.3)] disabled:opacity-60"
           >
-            <ShoppingCart className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{adding ? 'Added!' : 'Quick Add'}</span>
-          </button>
+            <ShoppingBag className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">{adding ? 'ADDED TO GEAR' : 'ADD TO GEAR'}</span>
+          </motion.button>
         </div>
       </div>
     </article>

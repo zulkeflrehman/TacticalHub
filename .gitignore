@@ -61,3 +61,6 @@ firebase-web-config.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# turbo cache
+.turbo/
