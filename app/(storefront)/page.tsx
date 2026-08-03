@@ -7,16 +7,14 @@ import type { CategoryDto, ProductDto } from '@/lib/catalog-types';
 import HeroCinematic from '@/components/home/HeroCinematic';
 import BentoGridCategories from '@/components/home/BentoGridCategories';
 import FluidCarousel from '@/components/home/FluidCarousel';
-import ProductCard from '@/components/product/ProductCard';
-import { HeroShowcaseSkeleton, ProductCardSkeleton } from '@/components/ui/SkeletonLoader';
-import { ShieldCheck, Compass, Anchor, Target, Package, ArrowRight, Filter } from 'lucide-react';
+import { HeroShowcaseSkeleton } from '@/components/ui/SkeletonLoader';
+import { ShieldCheck, Compass, Anchor, Target } from 'lucide-react';
 
 export default function HomePage() {
   const [products, setProducts] = useState<ProductDto[]>([]);
   const [categories, setCategories] = useState<CategoryDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'all' | 'featured' | 'new' | 'bestseller'>('all');
 
   useEffect(() => {
     Promise.all([listPublishedProducts(), listCategories()])
@@ -31,19 +29,6 @@ export default function HomePage() {
   const newArrivals = products.filter((p) => p.isNewArrival);
   const bestSellers = products.filter((p) => p.isBestSeller);
   const featuredItems = products.filter((p) => p.isFeatured);
-
-  const filteredProducts =
-    activeFilter === 'featured' ? featuredItems.length > 0 ? featuredItems : products :
-    activeFilter === 'new' ? newArrivals.length > 0 ? newArrivals : products :
-    activeFilter === 'bestseller' ? bestSellers.length > 0 ? bestSellers : products :
-    products;
-
-  const FILTERS = [
-    { key: 'all', label: 'ALL' },
-    { key: 'featured', label: 'FEATURED' },
-    { key: 'new', label: 'NEW ARRIVALS' },
-    { key: 'bestseller', label: 'BEST SELLERS' },
-  ] as const;
 
   return (
     <div className="space-y-10 sm:space-y-14">
@@ -71,104 +56,6 @@ export default function HomePage() {
           </div>
         ))}
       </section>
-
-      {/* ─── ALL PRODUCTS SECTION ─────────────────────────────────── */}
-      <section id="products" className="scroll-mt-20">
-
-        {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-5 border-b border-[#33506B]">
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-10 bg-[#FFFFFF]" />
-            <div>
-              <span className="text-[10px] font-mono font-bold text-[#A0B1C5] uppercase tracking-widest block mb-0.5">
-                STORE CATALOGUE
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-black uppercase text-white tracking-tight leading-none flex items-center gap-2">
-                <Package className="w-6 h-6 shrink-0" />
-                ALL PRODUCTS
-              </h2>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="hidden sm:flex items-center gap-1.5 text-[10px] font-mono text-[#A0B1C5]">
-              <Filter className="w-3 h-3" /> FILTER
-            </span>
-            <Link
-              href="/products"
-              className="flex items-center gap-1.5 text-[11px] font-mono font-bold text-[#FFFFFF] hover:text-[#F4F1E8] uppercase tracking-wider transition-colors border border-[#33506B] px-3 py-1.5 hover:border-[#FFFFFF]"
-            >
-              View Full Catalog <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Filter Tabs */}
-        <div className="flex gap-1.5 flex-wrap mb-6">
-          {FILTERS.map((f) => (
-            <button
-              key={f.key}
-              onClick={() => setActiveFilter(f.key)}
-              className={`text-[10px] font-mono font-black uppercase tracking-widest px-3 py-1.5 transition-all rounded-none border ${
-                activeFilter === f.key
-                  ? 'bg-[#FFFFFF] text-[#142230] border-[#FFFFFF]'
-                  : 'bg-transparent text-[#A0B1C5] border-[#33506B] hover:border-[#FFFFFF] hover:text-[#FFFFFF]'
-              }`}
-            >
-              {f.label}
-              {f.key !== 'all' && !loading && (
-                <span className={`ml-1.5 ${activeFilter === f.key ? 'text-[#142230]' : 'text-[#33506B]'}`}>
-                  ({f.key === 'featured' ? featuredItems.length : f.key === 'new' ? newArrivals.length : bestSellers.length})
-                </span>
-              )}
-            </button>
-          ))}
-          {!loading && (
-            <span className="ml-auto text-[10px] font-mono text-[#A0B1C5] self-center">
-              {filteredProducts.length} {filteredProducts.length === 1 ? 'ITEM' : 'ITEMS'}
-            </span>
-          )}
-        </div>
-
-        {/* Products Grid */}
-        {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <ProductCardSkeleton key={i} />
-            ))}
-          </div>
-        ) : filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <div className="bento-card p-12 text-center space-y-3">
-            <Package className="w-10 h-10 text-[#33506B] mx-auto" />
-            <p className="text-sm font-mono font-bold text-[#A0B1C5] uppercase">No products found</p>
-            <button
-              onClick={() => setActiveFilter('all')}
-              className="text-[11px] font-mono text-[#FFFFFF] border border-[#33506B] px-4 py-2 hover:border-[#FFFFFF] transition-colors"
-            >
-              Show All Products
-            </button>
-          </div>
-        )}
-
-        {/* Bottom CTA */}
-        {!loading && filteredProducts.length > 0 && (
-          <div className="mt-8 text-center">
-            <Link
-              href="/products"
-              className="inline-flex items-center gap-2 h-11 px-8 bg-[#FFFFFF] text-[#142230] hover:bg-[#F4F1E8] font-mono text-xs font-black uppercase tracking-wider transition-all rounded-none border border-[#FFFFFF] active:scale-[0.98]"
-            >
-              Browse Full Catalog <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        )}
-      </section>
-      {/* ─────────────────────────────────────────────────────────── */}
 
       {/* Editorial Bento Box Categories */}
       <BentoGridCategories categories={categories} />
