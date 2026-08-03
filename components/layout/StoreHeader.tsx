@@ -4,7 +4,7 @@ import { useState, useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { useSpatialMotion } from '@/components/motion/SpatialMotionProvider';
-import { Search, Heart, ShoppingBag, LayoutDashboard, Menu, X, Shield } from 'lucide-react';
+import { Search, Heart, ShoppingBag, LayoutDashboard, Menu, X, Shield, LogIn, User } from 'lucide-react';
 import type { StoreUserDto } from '@/lib/catalog-types';
 import { getUserProfile } from '@/lib/client-services';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -113,6 +113,29 @@ export default function StoreHeader() {
               </span>
             )}
           </Link>
+
+          {/* Login / Account Button */}
+          {sessionUser ? (
+            <Link
+              href="/account/profile"
+              className="h-9 px-3 bg-[#142230] border border-[#33506B] text-[#A0B1C5] hover:text-[#FFFFFF] hover:border-[#FFFFFF] transition-colors flex items-center gap-1.5 font-mono text-xs font-bold rounded-none"
+              title="My Account"
+              aria-label="Account profile"
+            >
+              <User className="w-4 h-4" />
+              <span className="hidden sm:inline uppercase">ACCOUNT</span>
+            </Link>
+          ) : (
+            <Link
+              href="/account/login"
+              className="h-9 px-3 bg-[#142230] border border-[#33506B] text-[#FFFFFF] hover:bg-[#FFFFFF] hover:text-[#142230] transition-colors flex items-center gap-1.5 font-mono text-xs font-bold rounded-none active:scale-[0.98]"
+              title="Login"
+              aria-label="Login to your account"
+            >
+              <LogIn className="w-4 h-4" />
+              <span className="hidden sm:inline uppercase">LOGIN</span>
+            </Link>
+          )}
 
           {/* Square Cart Button with Live Count Badge */}
           <button
