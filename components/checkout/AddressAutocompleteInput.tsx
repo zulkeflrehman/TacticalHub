@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
@@ -67,15 +67,15 @@ export default function AddressAutocompleteInput({ value, onChange, error }: Add
           onChange={handleInputChange}
           onBlur={handleBlur}
           placeholder="Start typing your street address..."
-          className={`w-full bg-[#121212] text-white py-3 pl-10 pr-10 text-xs font-mono border clip-angled transition-all focus:outline-none ${
+          className={`w-full bg-[#1F3346] text-white py-3 pl-10 pr-10 text-xs font-mono border clip-angled transition-all focus:outline-none ${
             isShake || error
               ? 'border-[#EF4444] animate-shake shadow-[0_0_10px_rgba(239,68,68,0.4)]'
               : isValid
               ? 'border-[#10B981] animate-pulse-green'
-              : 'border-[#2A2A2A] focus:border-[#FF6600]'
+              : 'border-[#33506B] focus:border-[#FFFFFF]'
           }`}
         />
-        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FF6600]" />
+        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FFFFFF]" />
 
         {isValid ? (
           <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#10B981]" />
@@ -86,14 +86,14 @@ export default function AddressAutocompleteInput({ value, onChange, error }: Add
 
       {/* Autocomplete Predictions Dropdown */}
       {suggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-[#1A1A1A] border border-[#FF6600]/40 clip-angled shadow-2xl overflow-hidden divide-y divide-[#2A2A2A]">
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-[#1F3346] border border-[#FFFFFF]/40 clip-angled shadow-2xl overflow-hidden divide-y divide-[#33506B]">
           {suggestions.map((addr) => (
             <div
               key={addr}
               onClick={() => handleSelect(addr)}
-              className="p-3 text-xs font-mono text-neutral-300 hover:text-white hover:bg-[#2A2A2A] cursor-pointer flex items-center gap-2 transition-colors"
+              className="p-3 text-xs font-mono text-neutral-300 hover:text-white hover:bg-[#33506B] cursor-pointer flex items-center gap-2 transition-colors"
             >
-              <MapPin className="w-3.5 h-3.5 text-[#FF6600] shrink-0" />
+              <MapPin className="w-3.5 h-3.5 text-[#FFFFFF] shrink-0" />
               <span>{addr}</span>
             </div>
           ))}

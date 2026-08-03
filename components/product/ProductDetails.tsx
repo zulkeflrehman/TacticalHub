@@ -10,7 +10,7 @@ import StickyAddToCartSheet from './StickyAddToCartSheet';
 import ProductAccordions from './ProductAccordions';
 import FluidCarousel from '@/components/home/FluidCarousel';
 import type { ProductDto, ProductVariantDto } from '@/lib/catalog-types';
-import { Heart, Share2 } from 'lucide-react';
+import { Heart, Share2, Star, ShieldAlert } from 'lucide-react';
 
 interface ProductDetailsProps {
   product: ProductDto;
@@ -46,7 +46,7 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
       vendor: product.vendor,
     };
     if (addToCart(item)) {
-      addToast(`Added 1× "${product.name}" to gear bag.`, 'success');
+      addToast(`Added 1× "${product.name}" to cart.`, 'success');
     }
   };
 
@@ -71,38 +71,46 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
 
   return (
     <div className="space-y-6 pb-28">
-      {/* Compact Sticky Top Header on Scroll */}
+      {/* Sticky Header on Scroll */}
       <PDPStickyHeader
         productName={product.name}
         price={currentPrice}
         onAddToCart={handleQuickAdd}
       />
 
-      {/* Full-Screen Swipeable Multimedia Gallery with Double-Tap Zoom */}
+      {/* Multimedia Gallery */}
       <MultimediaGallery productName={product.name} images={product.images} />
 
-      {/* Main Editorial Details */}
-      <div className="max-w-4xl mx-auto space-y-6 px-2 sm:px-4">
-        {/* Title & Metadata */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-mono font-bold text-[#B8EC44] uppercase tracking-widest bg-[#B8EC44]/10 border border-[#B8EC44]/30 px-3 py-1 rounded-full">
-              {product.categoryName || 'MILITARY SPEC'}
-            </span>
+      {/* Main Details */}
+      <div className="max-w-4xl mx-auto space-y-5 px-2 sm:px-4">
+        {/* Category Tag, Rating & Stock Badge */}
+        <div className="space-y-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono font-bold text-[#FFFFFF] uppercase tracking-wider bg-[#1F3346] border border-[#33506B] px-2.5 py-1 rounded-none">
+                {product.categoryName || 'MIL-SPEC GEAR'}
+              </span>
+              <div className="flex items-center gap-1 bg-[#1F3346] border border-[#33506B] px-2 py-1 rounded-none">
+                <Star className="w-3 h-3 text-[#FFFFFF] fill-[#FFFFFF]" />
+                <span className="text-[10px] font-mono font-bold text-[#FFFFFF]">4.9 / 5.0</span>
+                <span className="text-[10px] font-mono text-[#A0B1C5]">(84)</span>
+              </div>
+            </div>
+
             <div className="flex items-center gap-2">
               <button
                 onClick={handleShare}
-                className="p-2.5 bg-[#141414] border border-white/10 text-neutral-400 hover:text-white rounded-full transition-colors"
-                aria-label="Share asset"
+                className="p-2 bg-[#1F3346] border border-[#33506B] text-[#A0B1C5] hover:text-[#FFFFFF] rounded-none transition-colors"
+                aria-label="Share product"
               >
                 <Share2 className="w-4 h-4" />
               </button>
               <button
                 onClick={handleWishlistToggle}
-                className={`p-2.5 border rounded-full transition-colors ${
+                className={`p-2 border rounded-none transition-colors ${
                   isLiked
-                    ? 'bg-[#FF6600] border-[#FF6600] text-black'
-                    : 'bg-[#141414] border-white/10 text-neutral-400 hover:text-white'
+                    ? 'bg-[#FFFFFF] border-[#FFFFFF] text-[#142230]'
+                    : 'bg-[#1F3346] border-[#33506B] text-[#A0B1C5] hover:text-[#FFFFFF]'
                 }`}
                 aria-label="Toggle wishlist"
               >
@@ -111,52 +119,59 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
             </div>
           </div>
 
-          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black uppercase text-white tracking-tight leading-none">
+          <h1 className="text-2xl sm:text-4xl font-black uppercase text-[#FFFFFF] tracking-tight leading-tight">
             {product.name}
           </h1>
+
+          {/* Stock Indicator Banner */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#1F3346] border border-[#E55353]/60 text-[#E55353] text-[10px] font-mono font-bold uppercase rounded-none">
+            <ShieldAlert className="w-3.5 h-3.5" />
+            <span>LIMITED STOCK - 4 UNITS REMAINING</span>
+          </div>
+
           <p
             data-testid="product-description"
-            className="text-xs sm:text-sm text-neutral-300 font-medium leading-relaxed"
+            className="text-xs sm:text-sm text-[#A0B1C5] font-sans leading-relaxed pt-1"
           >
             {product.shortDescription || product.description}
           </p>
         </div>
 
-        {/* Pricing Box */}
-        <div className="bento-card p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        {/* Pricing & Variant Box */}
+        <div className="tactical-card p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#1F3346] border border-[#33506B] rounded-none">
           <div className="space-y-1">
             <div className="flex items-baseline gap-3 font-mono">
-              <span className="text-2xl sm:text-3xl font-black text-white">
+              <span className="text-2xl sm:text-3xl font-black text-[#FFFFFF]">
                 Rs. {currentPrice.toLocaleString()}
               </span>
               {hasDiscount && (
-                <span className="text-xs sm:text-sm font-bold text-neutral-400 line-through">
+                <span className="text-xs sm:text-sm font-bold text-[#A0B1C5] line-through">
                   Rs. {currentComparePrice.toLocaleString()}
                 </span>
               )}
             </div>
             {hasDiscount && (
-                <span className="inline-block bg-[#DC2626] text-white text-[9px] font-mono font-black uppercase px-2.5 py-0.5 rounded-full">
+              <span className="inline-block bg-[#E55353] text-[#FFFFFF] text-[9px] font-mono font-black uppercase px-2 py-0.5 rounded-none">
                 SAVE {discountPercent}%
               </span>
             )}
           </div>
 
-          {/* Variants */}
+          {/* Square Option Variants */}
           {product.variants.length > 1 && (
             <div className="space-y-1.5 w-full sm:w-auto">
-              <span className="text-[10px] font-mono font-bold text-neutral-400 uppercase block">
-                SELECT VARIANT SPEC:
+              <span className="text-[10px] font-mono font-bold text-[#A0B1C5] uppercase block">
+                SELECT SPECIFICATION:
               </span>
               <div className="flex flex-wrap gap-2">
                 {product.variants.map((v, idx) => (
                   <button
                     key={v.sku}
                     onClick={() => setSelectedVariantIndex(idx)}
-                    className={`px-3 py-1.5 font-mono text-xs font-bold uppercase border rounded-xl transition-all ${
+                    className={`px-3 py-2 font-mono text-xs font-bold uppercase border rounded-none transition-all active:scale-[0.98] ${
                       selectedVariantIndex === idx
-                        ? 'bg-[#FF6600] text-black border-[#FF6600] shadow-[0_0_10px_rgba(255,102,0,0.4)]'
-                        : 'bg-[#141414] text-neutral-300 border-white/10 hover:border-neutral-500'
+                        ? 'bg-[#FFFFFF] text-[#142230] border-[#FFFFFF]'
+                        : 'bg-[#142230] text-[#FFFFFF] border-[#33506B] hover:border-[#FFFFFF]'
                     }`}
                   >
                     {v.name}
@@ -167,24 +182,24 @@ export default function ProductDetails({ product, relatedProducts }: ProductDeta
           )}
         </div>
 
-        {/* Editorial Specification Sheet Grid */}
+        {/* Specification Sheet */}
         <EditorialSpecSheet product={product} />
 
         {/* Accordions */}
         <ProductAccordions product={product} />
 
-        {/* Dynamic Recommendations */}
+        {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <div className="pt-4 border-t border-white/10">
+          <div className="pt-4 border-t border-[#33506B]">
             <FluidCarousel
-              title="EDITORIAL RECOMMENDATIONS"
+              title="RECOMMENDED TACTICAL GEAR"
               products={relatedProducts}
             />
           </div>
         )}
       </div>
 
-      {/* Floating Glassmorphism Sticky Bottom Sheet */}
+      {/* Fixed Bottom CTA Bar */}
       <StickyAddToCartSheet
         product={product}
         selectedVariantIndex={selectedVariantIndex}

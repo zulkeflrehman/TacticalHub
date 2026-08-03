@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import Link from 'next/link';
@@ -25,7 +25,7 @@ export default function BentoGridCategories({ categories = [] }: BentoGridCatego
       {/* Section Header */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <Compass className="w-5 h-5 text-[#FF6600]" />
+          <Compass className="w-5 h-5 text-[#FFFFFF]" />
           <h2 className="text-lg sm:text-2xl font-black uppercase text-white tracking-tight">
             EDITORIAL DEPLOYMENT BENTO
           </h2>
@@ -49,17 +49,17 @@ export default function BentoGridCategories({ categories = [] }: BentoGridCatego
               backgroundImage: `url('${macroShots['camping-tents']}')`,
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0B0B0B] via-[#0B0B0B]/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#142230] via-[#142230]/40 to-transparent" />
 
           <div className="relative z-10 flex items-center justify-between">
-            <span className="text-[10px] font-mono font-bold text-[#FF6600] uppercase tracking-widest bg-black/60 px-3 py-1 rounded-full border border-white/10">
+            <span className="text-[10px] font-mono font-bold text-[#FFFFFF] uppercase tracking-widest bg-black/60 px-3 py-1 rounded-full border border-white/10">
               MACRO WEAVE // WATERPROOF
             </span>
-            <Flame className="w-5 h-5 text-[#FF6600]" />
+            <Flame className="w-5 h-5 text-[#FFFFFF]" />
           </div>
 
           <div className="relative z-10 space-y-2">
-            <h3 className="text-2xl font-black uppercase text-white tracking-tight group-hover:text-[#FF6600] transition-colors">
+            <h3 className="text-2xl font-black uppercase text-white tracking-tight group-hover:text-[#FFFFFF] transition-colors">
               AUTOMATIC CAMPING TENTS
             </h3>
             <p className="text-xs text-neutral-300 line-clamp-1 font-medium">
@@ -67,7 +67,7 @@ export default function BentoGridCategories({ categories = [] }: BentoGridCatego
             </p>
             <Link
               href="/categories?slug=camping-tents"
-              className="inline-flex items-center gap-1.5 text-xs font-mono font-black text-[#FF6600] uppercase tracking-wider group-hover:translate-x-1 transition-transform"
+              className="inline-flex items-center gap-1.5 text-xs font-mono font-black text-[#FFFFFF] uppercase tracking-wider group-hover:translate-x-1 transition-transform"
             >
               <span>EXPLORE SHELTERS</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -87,7 +87,7 @@ export default function BentoGridCategories({ categories = [] }: BentoGridCatego
               backgroundImage: `url('${macroShots['knives-tasers']}')`,
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0B0B0B] via-[#0B0B0B]/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#142230] via-[#142230]/40 to-transparent" />
 
           <div className="relative z-10 flex items-center justify-between">
             <span className="text-[10px] font-mono font-bold text-[#B8EC44] uppercase tracking-widest bg-black/60 px-3 py-1 rounded-full border border-white/10">
@@ -122,7 +122,7 @@ export default function BentoGridCategories({ categories = [] }: BentoGridCatego
               backgroundImage: `url('${macroShots['travel-camping']}')`,
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0B0B0B] via-[#0B0B0B]/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#142230] via-[#142230]/40 to-transparent" />
 
           <div className="relative z-10 flex items-center justify-between">
             <span className="text-[10px] font-mono font-bold text-white uppercase tracking-widest bg-black/60 px-3 py-1 rounded-full border border-white/10">
@@ -132,12 +132,12 @@ export default function BentoGridCategories({ categories = [] }: BentoGridCatego
           </div>
 
           <div className="relative z-10 space-y-1">
-            <h3 className="text-xl font-black uppercase text-white tracking-tight group-hover:text-[#FF6600] transition-colors">
+            <h3 className="text-xl font-black uppercase text-white tracking-tight group-hover:text-[#FFFFFF] transition-colors">
               TRAVEL & CAMPING
             </h3>
             <Link
               href="/categories?slug=travel-camping"
-              className="inline-flex items-center gap-1 text-xs font-mono font-black text-[#FF6600] uppercase tracking-wider group-hover:translate-x-1 transition-transform pt-1"
+              className="inline-flex items-center gap-1 text-xs font-mono font-black text-[#FFFFFF] uppercase tracking-wider group-hover:translate-x-1 transition-transform pt-1"
             >
               <span>DISCOVER</span>
               <ArrowRight className="w-3.5 h-3.5" />

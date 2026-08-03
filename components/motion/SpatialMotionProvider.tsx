@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { createContext, useContext, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -103,7 +103,7 @@ export function SpatialMotionProvider({ children }: { children: React.ReactNode 
               damping: 30,
               mass: 0.8,
             }}
-            className="bg-[#161616] border border-[#FF6600]/40 overflow-hidden shadow-2xl pointer-events-none flex items-center justify-center"
+            className="bg-[#1F3346] border border-[#FFFFFF]/40 overflow-hidden shadow-2xl pointer-events-none flex items-center justify-center"
           >
             <motion.img
               src={activeTransition.image}
@@ -113,8 +113,8 @@ export function SpatialMotionProvider({ children }: { children: React.ReactNode 
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.3 }}
             />
-            <div className="absolute bottom-4 left-4 right-4 bg-[#0A0A0A]/80 backdrop-blur-md border border-[#FF6600]/30 p-3 clip-angled">
-              <span className="text-[10px] font-mono text-[#FF6600] uppercase tracking-widest block">INITIALIZING SPATIAL PDP...</span>
+            <div className="absolute bottom-4 left-4 right-4 bg-[#142230]/80 backdrop-blur-md border border-[#FFFFFF]/30 p-3 clip-angled">
+              <span className="text-[10px] font-mono text-[#FFFFFF] uppercase tracking-widest block">INITIALIZING SPATIAL PDP...</span>
               <span className="text-xs font-black uppercase text-white tracking-wider truncate block">{activeTransition.name}</span>
             </div>
           </motion.div>

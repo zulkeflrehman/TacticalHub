@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { motion } from 'framer-motion';
@@ -21,7 +21,7 @@ export default function FluidCarousel({ title, categorySlug, products }: FluidCa
       {/* Header Row */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <Flame className="w-5 h-5 text-[#FF6600]" />
+          <Flame className="w-5 h-5 text-[#FFFFFF]" />
           <h2 className="text-lg sm:text-2xl font-black uppercase tracking-tight text-white">
             {title}
           </h2>
@@ -29,7 +29,7 @@ export default function FluidCarousel({ title, categorySlug, products }: FluidCa
         {categorySlug && (
           <Link
             href={`/categories?slug=${encodeURIComponent(categorySlug)}`}
-            className="text-xs font-mono font-bold uppercase text-[#FF6600] hover:underline flex items-center gap-1 group"
+            className="text-xs font-mono font-bold uppercase text-[#FFFFFF] hover:underline flex items-center gap-1 group"
           >
             <span>VIEW CATALOG</span>
             <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />

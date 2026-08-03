@@ -76,13 +76,13 @@ export default function StickyAddToCartSheet({ product, selectedVariantIndex = 0
     setTimeout(() => {
       if (addToCart(item)) {
         setButtonState('ADDED');
-        addToast(`Added ${quantity}× "${product.name}" to gear bag.`, 'success');
+        addToast(`Added ${quantity}× "${product.name}" to cart.`, 'success');
         setTimeout(() => setButtonState('IDLE'), 1800);
       } else {
         setButtonState('IDLE');
         addToast('Cart limit reached (max 5 distinct items).', 'error');
       }
-    }, 450);
+    }, 400);
   };
 
   return (
@@ -90,64 +90,64 @@ export default function StickyAddToCartSheet({ product, selectedVariantIndex = 0
       <motion.div
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="max-w-md mx-auto bg-[#0B0B0B]/90 backdrop-blur-xl border border-white/10 p-3.5 rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.9)] pointer-events-auto flex items-center justify-between gap-3"
+        className="max-w-md mx-auto bg-[#1F3346] border border-[#33506B] p-3 rounded-none shadow-2xl pointer-events-auto flex items-center justify-between gap-3"
       >
         {/* Price & Quantity Summary */}
         <div className="min-w-0 flex-1">
-          <span className="text-[10px] font-mono text-[#FF6600] uppercase font-bold tracking-widest block truncate">
+          <span className="text-[10px] font-mono text-[#FFFFFF] uppercase font-bold tracking-wider block truncate">
             Rs. {unitPrice.toLocaleString()} × {quantity}
           </span>
-          <h4 className="text-xs font-black uppercase text-white truncate leading-tight">
+          <h4 className="text-xs font-black uppercase text-[#FFFFFF] truncate leading-tight">
             {product.name}
           </h4>
         </div>
 
-        {/* Stepper */}
-        <div className="flex items-center bg-[#141414] border border-white/10 rounded-xl">
+        {/* Square Stepper */}
+        <div className="flex items-center bg-[#142230] border border-[#33506B] rounded-none">
           <button
             onClick={handleDecrease}
-            className="p-2 text-neutral-400 hover:text-white transition-colors"
+            className="p-2 text-[#A0B1C5] hover:text-[#FFFFFF] transition-colors rounded-none"
             aria-label="Decrease quantity"
           >
             <Minus className="w-3.5 h-3.5" />
           </button>
-          <span className="w-7 text-center font-mono text-xs font-black text-white">
+          <span className="w-7 text-center font-mono text-xs font-black text-[#FFFFFF]">
             {quantity}
           </span>
           <button
             onClick={handleIncrease}
-            className="p-2 text-neutral-400 hover:text-white transition-colors"
+            className="p-2 text-[#A0B1C5] hover:text-[#FFFFFF] transition-colors rounded-none"
             aria-label="Increase quantity"
           >
             <Plus className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Button Morphing State (Idle -> Loading Spinner -> Added Checkmark) */}
+        {/* Solid White Add to Cart CTA */}
         <motion.button
-          whileTap={{ scale: 0.95 }}
+          whileTap={{ scale: 0.96 }}
           onClick={handleAddToCart}
           disabled={buttonState !== 'IDLE' || (selectedVariant && selectedVariant.stock <= 0)}
-          className={`py-3 px-5 rounded-xl font-mono text-xs font-black uppercase flex items-center justify-center gap-2 shrink-0 tactile-press transition-all duration-300 ${
+          className={`h-11 px-4 rounded-none font-mono text-xs font-black uppercase flex items-center justify-center gap-2 shrink-0 transition-all border ${
             buttonState === 'ADDED'
-              ? 'bg-[#10B981] text-black shadow-[0_0_20px_rgba(16,185,129,0.6)]'
-              : 'bg-[#FF6600] text-black hover:bg-[#E05800] shadow-[0_0_20px_rgba(255,102,0,0.5)]'
+              ? 'bg-[#10B981] text-[#142230] border-[#10B981]'
+              : 'bg-[#FFFFFF] text-[#142230] hover:bg-[#F4F1E8] border-[#FFFFFF]'
           }`}
         >
           {buttonState === 'LOADING' ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin text-[#142230]" />
               <span>ADDING...</span>
             </>
           ) : buttonState === 'ADDED' ? (
             <>
-              <Check className="w-4 h-4 stroke-[3]" />
+              <Check className="w-4 h-4 stroke-[3] text-[#142230]" />
               <span>ADDED!</span>
             </>
           ) : (
             <>
-              <ShoppingBag className="w-4 h-4" />
-              <span>ADD TO GEAR</span>
+              <ShoppingBag className="w-4 h-4 text-[#142230]" />
+              <span>ADD TO CART</span>
             </>
           )}
         </motion.button>

@@ -26,7 +26,7 @@ export default function StorefrontLayout({
 
   return (
     <SpatialMotionProvider>
-      <div className="min-h-screen flex flex-col bg-[#121212] text-[#F5F5F5] overflow-x-hidden selection:bg-[#FF6600] selection:text-black">
+      <div className="min-h-screen flex flex-col bg-[#142230] text-[#FFFFFF] overflow-x-hidden selection:bg-[#FFFFFF] selection:text-[#142230] rounded-none">
         <StoreHeader />
         
         <main

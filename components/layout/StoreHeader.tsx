@@ -4,7 +4,7 @@ import { useState, useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { useSpatialMotion } from '@/components/motion/SpatialMotionProvider';
-import { Search, Heart, ShoppingBag, LayoutDashboard, Menu, X } from 'lucide-react';
+import { Search, Heart, ShoppingBag, LayoutDashboard, Menu, X, Shield } from 'lucide-react';
 import type { StoreUserDto } from '@/lib/catalog-types';
 import { getUserProfile } from '@/lib/client-services';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -33,87 +33,68 @@ export default function StoreHeader() {
   return (
     <header 
       suppressHydrationWarning
-      className="w-full bg-[#0A0A0A]/95 backdrop-blur-md border-b border-[#2A2A2A] z-40 sticky top-0 overflow-x-hidden"
+      className="w-full h-14 bg-[#1F3346] border-b border-[#33506B] z-40 sticky top-0 flex items-center rounded-none"
     >
-      {/* Tactical Status Ribbon */}
       <div 
         suppressHydrationWarning
-        className="bg-[#121212] border-b border-[#2A2A2A] px-4 py-1 flex items-center justify-between text-[10px] font-mono text-neutral-400"
-      >
-        <div suppressHydrationWarning className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
-          <span className="text-white font-bold tracking-wider">TACTICAL HUB SYSTEM // ONLINE</span>
-        </div>
-        <div suppressHydrationWarning className="hidden sm:flex items-center gap-4 text-neutral-400">
-          <span className="text-[#FF6600]">NATIONWIDE COD AVAILABLE</span>
-          <span>PKR (₨)</span>
-        </div>
-      </div>
-
-      {/* Main Header Row */}
-      <div 
-        suppressHydrationWarning
-        className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-2 sm:gap-4"
+        className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 sm:gap-4"
       >
         <div className="flex items-center gap-2">
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(true)}
-            className="lg:hidden p-2 text-neutral-300 hover:text-white transition-colors"
+            className="lg:hidden p-2 text-[#A0B1C5] hover:text-[#FFFFFF] transition-colors rounded-none touch-target"
             aria-label="Open navigation menu"
           >
-            <Menu className="w-6 h-6" />
+            <Menu className="w-5 h-5" />
           </button>
 
-          {/* Brand Logo */}
+          {/* Brand Logo with Square Shield Icon */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 bg-[#FF6600] flex items-center justify-center clip-angled text-black font-black text-lg">
-              T
+            <div className="w-8 h-8 bg-[#FFFFFF] flex items-center justify-center text-[#142230] rounded-none shadow-sm">
+              <Shield className="w-5 h-5 fill-[#142230] stroke-[#142230]" />
             </div>
             <div className="flex flex-col">
-              <span className="text-base sm:text-2xl font-black uppercase tracking-tighter text-white group-hover:text-[#FF6600] transition-colors">
-                TACTICAL<span className="text-[#FF6600]">HUB</span>
-              </span>
-              <span className="hidden sm:block text-[8px] font-mono uppercase tracking-widest text-[#9BCB77] font-extrabold -mt-1">
-                MILITARY &amp; DEFENSE GEAR
+              <span className="text-base sm:text-lg font-black uppercase tracking-wider text-[#FFFFFF] group-hover:text-[#F4F1E8] transition-colors">
+                TACTICAL <span className="text-[#FFFFFF]">HUB</span>
               </span>
             </div>
           </Link>
         </div>
 
-        {/* Omnisearch Trigger Bar */}
+        {/* Omnisearch Trigger Bar (Desktop) */}
         <button
           onClick={() => setOmnisearchOpen(true)}
-          className="flex-1 max-w-md hidden sm:flex items-center justify-between bg-[#1A1A1A] border border-[#2A2A2A] hover:border-[#FF6600]/50 py-2 px-4 text-xs text-neutral-400 clip-angled transition-all group"
+          className="flex-1 max-w-md hidden sm:flex items-center justify-between bg-[#142230] border border-[#33506B] hover:border-[#FFFFFF] py-2 px-3 text-xs text-[#A0B1C5] rounded-none transition-all group"
         >
           <div className="flex items-center gap-2">
-            <Search className="w-4 h-4 text-[#FF6600] group-hover:scale-110 transition-transform" />
-            <span>Search tactical equipment, tents, batons...</span>
+            <Search className="w-4 h-4 text-[#FFFFFF] group-hover:scale-110 transition-transform" />
+            <span>Search tactical gear, knives, optics...</span>
           </div>
-          <span className="text-[9px] font-mono bg-[#2A2A2A] px-2 py-0.5 text-neutral-300 border border-neutral-700">
+          <span className="text-[9px] font-mono bg-[#1F3346] px-2 py-0.5 text-[#FFFFFF] border border-[#33506B] rounded-none">
             SEARCH
           </span>
         </button>
 
-        {/* Header Right Action Icons */}
-        <div suppressHydrationWarning className="flex items-center gap-1 sm:gap-3">
-          {/* Mobile Search Button */}
+        {/* Header Right Action Buttons */}
+        <div suppressHydrationWarning className="flex items-center gap-2">
+          {/* Square Search Button (Mobile) */}
           <button
             onClick={() => setOmnisearchOpen(true)}
-            className="sm:hidden p-2 text-neutral-300 hover:text-[#FF6600] transition-colors"
+            className="sm:hidden p-2 text-[#FFFFFF] hover:bg-[#142230] border border-[#33506B] rounded-none transition-colors touch-target flex items-center justify-center"
             aria-label="Search catalog"
           >
             <Search className="w-5 h-5" />
           </button>
 
-          {/* Admin Panel Link */}
+          {/* Admin Dashboard Link */}
           {sessionUser?.role === 'ADMIN' && (
             <Link 
               href="/admin/dashboard" 
-              className="p-2 text-[#FF6600] hover:bg-[#FF6600]/10 transition-colors flex items-center gap-1 text-xs font-mono font-bold"
+              className="p-2 bg-[#142230] border border-[#33506B] text-[#FFFFFF] hover:bg-[#FFFFFF] hover:text-[#142230] transition-colors flex items-center gap-1 text-xs font-mono font-bold rounded-none"
               title="Admin Dashboard"
             >
-              <LayoutDashboard className="w-4.5 h-4.5" />
+              <LayoutDashboard className="w-4 h-4" />
               <span className="hidden md:inline">ADMIN</span>
             </Link>
           )}
@@ -121,38 +102,36 @@ export default function StoreHeader() {
           {/* Wishlist Link */}
           <Link
             href="/wishlist"
-            className="p-2 text-neutral-300 hover:text-white transition-colors relative"
+            className="p-2 text-[#A0B1C5] hover:text-[#FFFFFF] hover:bg-[#142230] border border-[#33506B] rounded-none transition-colors relative"
             title="My Wishlist"
             aria-label="Wishlist"
           >
             <Heart className="w-5 h-5" />
             {wishlistCount > 0 && (
-              <span className="absolute top-0 right-0 w-4 h-4 bg-[#FF6600] text-black text-[9px] font-mono font-black flex items-center justify-center rounded-full">
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#FFFFFF] text-[#142230] text-[9px] font-mono font-black flex items-center justify-center rounded-none border border-[#33506B]">
                 {wishlistCount}
               </span>
             )}
           </Link>
 
-          {/* Cart Icon Drawer Trigger */}
+          {/* Square Cart Button with Live Count Badge */}
           <button
             onClick={() => toggleMiniCart(true)}
             data-testid="cart-button"
-            className="p-2 text-[#FF6600] hover:bg-[#FF6600]/10 transition-colors relative flex items-center gap-1.5 font-mono text-xs font-bold"
+            className="h-9 px-3 bg-[#FFFFFF] text-[#142230] hover:bg-[#F4F1E8] transition-colors relative flex items-center gap-2 font-mono text-xs font-bold rounded-none border border-[#FFFFFF] active:scale-[0.98]"
             title="Shopping Cart"
             aria-label={`Shopping cart, ${totalCartItems} items`}
           >
-            <ShoppingBag className="w-5 h-5" />
-            <span className="hidden sm:inline text-white font-sans">GEAR</span>
-            {totalCartItems > 0 && (
-              <span className="w-4 h-4 bg-[#FF6600] text-black text-[9px] font-black flex items-center justify-center rounded-full shadow-[0_0_8px_#FF6600]">
-                {totalCartItems}
-              </span>
-            )}
+            <ShoppingBag className="w-4 h-4 text-[#142230]" />
+            <span className="hidden sm:inline font-sans text-xs uppercase font-extrabold text-[#142230]">CART</span>
+            <span className="w-5 h-5 bg-[#142230] text-[#FFFFFF] text-[10px] font-mono font-black flex items-center justify-center rounded-none">
+              {totalCartItems}
+            </span>
           </button>
         </div>
       </div>
 
-      {/* Mobile Drawer Navigation Overlay */}
+      {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div
           id="mobile-nav-drawer"
@@ -161,56 +140,54 @@ export default function StoreHeader() {
           aria-label="Navigation menu"
           className="fixed inset-0 z-50 lg:hidden"
         >
-          {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 bg-[#142230]/80 backdrop-blur-sm"
             onClick={() => setIsMobileMenuOpen(false)}
             aria-hidden="true"
           />
-          {/* Drawer Panel */}
-          <div className="fixed inset-y-0 left-0 w-[min(320px,85vw)] bg-[#121212] border-r border-[#2A2A2A] shadow-2xl flex flex-col z-50 animate-slide-right">
-            {/* Drawer Header */}
-            <div className="px-4 py-3 border-b border-[#2A2A2A] flex items-center justify-between bg-black text-white shrink-0">
-              <span className="font-extrabold tracking-tight text-sm uppercase">TECTICALHUB</span>
+          <div className="fixed inset-y-0 left-0 w-[min(320px,85vw)] bg-[#1F3346] border-r border-[#33506B] shadow-2xl flex flex-col z-50 animate-slide-right rounded-none">
+            <div className="px-4 py-3 border-b border-[#33506B] flex items-center justify-between bg-[#142230] text-[#FFFFFF] shrink-0 rounded-none">
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-[#FFFFFF]" />
+                <span className="font-extrabold tracking-wider text-sm uppercase text-[#FFFFFF]">TACTICAL HUB</span>
+              </div>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
                 aria-label="Close navigation menu"
-                className="text-white hover:text-[#FF6600] p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                className="text-[#A0B1C5] hover:text-[#FFFFFF] p-2 rounded-none"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Mobile Search */}
-            <div className="px-4 py-3 border-b border-[#2A2A2A] shrink-0">
+            <div className="px-4 py-3 border-b border-[#33506B] shrink-0">
               <button
                 onClick={() => { setIsMobileMenuOpen(false); setOmnisearchOpen(true); }}
-                className="w-full flex items-center justify-between bg-[#1A1A1A] border border-[#2A2A2A] py-2.5 px-3 text-xs text-neutral-400 clip-angled transition-all"
+                className="w-full flex items-center justify-between bg-[#142230] border border-[#33506B] py-2.5 px-3 text-xs text-[#A0B1C5] rounded-none"
               >
                 <div className="flex items-center gap-2">
-                  <Search className="w-4 h-4 text-[#FF6600]" />
+                  <Search className="w-4 h-4 text-[#FFFFFF]" />
                   <span>Search products...</span>
                 </div>
               </button>
             </div>
 
-            {/* Scrollable Nav Links */}
             <nav aria-label="Mobile navigation" className="flex-1 overflow-y-auto">
-              <div className="px-2 py-2 space-y-0.5">
-                <p className="px-3 pt-3 pb-1 text-[10px] font-mono font-black uppercase tracking-widest text-neutral-400">
-                  Shop
+              <div className="px-2 py-2 space-y-1">
+                <p className="px-3 pt-3 pb-1 text-[10px] font-mono font-black uppercase tracking-widest text-[#A0B1C5]">
+                  Categories
                 </p>
                 {[
-                  { name: 'Tents', href: '/categories?slug=camping-tents' },
-                  { name: 'Self-Defense', href: '/categories?slug=self-defense' },
-                  { name: 'Outdoor Tools', href: '/categories?slug=outdoor-tools' },
+                  { name: 'Tents & Shelter', href: '/categories?slug=camping-tents' },
+                  { name: 'Self Defense Gear', href: '/categories?slug=self-defense' },
+                  { name: 'Outdoor Survival Tools', href: '/categories?slug=outdoor-tools' },
                   { name: 'Tasers & Baton Sticks', href: '/categories?slug=tasers-baton-sticks' }
                 ].map((link) => (
                   <Link
                     key={link.name}
                     href={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center px-3 py-3 text-sm font-bold uppercase tracking-wide hover:bg-neutral-800 text-white transition-colors min-h-[44px]"
+                    className="flex items-center px-3 py-3 text-xs font-bold uppercase tracking-wider hover:bg-[#142230] text-[#FFFFFF] border border-transparent hover:border-[#33506B] rounded-none transition-colors"
                   >
                     {link.name}
                   </Link>

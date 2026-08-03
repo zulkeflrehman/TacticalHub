@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -48,7 +48,7 @@ export default function HomePage() {
           { icon: Anchor, title: "COD NATIONWIDE", desc: "Pay on receipt across Pakistan" },
         ].map((f, i) => (
           <div key={i} className="bento-card flex gap-3 items-center p-4">
-            <f.icon className="w-5 h-5 text-[#FF6600] shrink-0" />
+            <f.icon className="w-5 h-5 text-[#FFFFFF] shrink-0" />
             <div>
               <h4 className="text-xs font-mono font-black uppercase text-white">{f.title}</h4>
               <p className="text-[10px] text-neutral-400 mt-0.5">{f.desc}</p>
@@ -86,7 +86,7 @@ export default function HomePage() {
       )}
 
       {/* Editorial Promo Sales Banner */}
-      <section className="bento-card bento-card-lg bg-gradient-to-r from-[#2F4F2F]/60 via-[#121212] to-[#FF6600]/20 border border-[#B8EC44]/30 text-white p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
+      <section className="bento-card bento-card-lg bg-gradient-to-r from-[#2F4F2F]/60 via-[#1F3346] to-[#FFFFFF]/20 border border-[#B8EC44]/30 text-white p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
         <div className="space-y-2 max-w-xl">
           <span className="text-xs font-mono font-bold text-[#B8EC44] uppercase tracking-widest block">
             VERIFIED DISCOUNT SYSTEM
@@ -100,7 +100,7 @@ export default function HomePage() {
         </div>
         <Link 
           href="/categories?slug=camping-tents"
-          className="bg-[#FF6600] text-black hover:bg-[#E05800] text-xs font-mono font-black uppercase py-4 px-8 rounded-xl transition-colors shrink-0 tactile-press shadow-[0_0_20px_rgba(255,102,0,0.5)]"
+          className="bg-[#FFFFFF] text-black hover:bg-[#F4F1E8] text-xs font-mono font-black uppercase py-4 px-8 rounded-xl transition-colors shrink-0 tactile-press shadow-[0_0_20px_rgba(255,102,0,0.5)]"
         >
           CLAIM PROMO GEAR
         </Link>

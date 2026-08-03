@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
@@ -74,10 +74,10 @@ export default function OmnisearchOverlay() {
 
   // Dynamic glowing gradient border color based on confidence score
   const getConfidenceBorder = () => {
-    if (searchConfidence >= 90) return 'border-[#FF6600] shadow-[0_0_20px_rgba(255,102,0,0.6)]';
+    if (searchConfidence >= 90) return 'border-[#FFFFFF] shadow-[0_0_20px_rgba(255,102,0,0.6)]';
     if (searchConfidence >= 70) return 'border-[#4A7C4A] shadow-[0_0_15px_rgba(74,124,74,0.4)]';
     if (searchConfidence > 0) return 'border-amber-500/50';
-    return 'border-[#2A2A2A]';
+    return 'border-[#33506B]';
   };
 
   return (
@@ -86,22 +86,22 @@ export default function OmnisearchOverlay() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-[#0A0A0A]/90 backdrop-blur-2xl flex flex-col p-4 sm:p-6 overflow-hidden"
+        className="fixed inset-0 z-50 bg-[#142230]/90 backdrop-blur-2xl flex flex-col p-4 sm:p-6 overflow-hidden"
       >
         {/* Background 3D Tactical Shader Grid Simulation */}
         <div className="absolute inset-0 tactical-grid-accent opacity-20 pointer-events-none" />
 
         {/* Top Close Row */}
-        <div className="flex items-center justify-between z-10 max-w-3xl w-full mx-auto pb-4 border-b border-[#2A2A2A]">
+        <div className="flex items-center justify-between z-10 max-w-3xl w-full mx-auto pb-4 border-b border-[#33506B]">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-[#FF6600]" />
+            <ShieldCheck className="w-5 h-5 text-[#FFFFFF]" />
             <span className="text-xs font-mono font-bold tracking-widest text-white uppercase">
               OMNISEARCH // INTELLIGENCE SYSTEM
             </span>
           </div>
           <button
             onClick={handleClose}
-            className="p-2 text-neutral-400 hover:text-white bg-[#1A1A1A] border border-[#2A2A2A] clip-angled transition-colors"
+            className="p-2 text-neutral-400 hover:text-white bg-[#1F3346] border border-[#33506B] clip-angled transition-colors"
             aria-label="Close search"
           >
             <X className="w-5 h-5" />
@@ -118,13 +118,13 @@ export default function OmnisearchOverlay() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search tactical equipment, tents, batons, defense gear..."
-                className="w-full bg-[#121212] text-white py-4 pl-12 pr-28 text-base sm:text-lg font-bold placeholder-neutral-500 focus:outline-none"
+                className="w-full bg-[#1F3346] text-white py-4 pl-12 pr-28 text-base sm:text-lg font-bold placeholder-neutral-500 focus:outline-none"
               />
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#FF6600]" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#FFFFFF]" />
               
               <button
                 type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#FF6600] text-black hover:bg-[#E05800] px-4 py-2 font-mono text-xs font-black uppercase clip-angled transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#FFFFFF] text-black hover:bg-[#F4F1E8] px-4 py-2 font-mono text-xs font-black uppercase clip-angled transition-colors"
               >
                 EXECUTE
               </button>
@@ -135,17 +135,17 @@ export default function OmnisearchOverlay() {
           {query.trim().length > 0 && (
             <div className="flex items-center justify-between text-[11px] font-mono px-2">
               <span className="text-neutral-400 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-[#FF6600]" />
+                <Sparkles className="w-3 h-3 text-[#FFFFFF]" />
                 RELEVANCE MATRIX
               </span>
               <div className="flex items-center gap-2">
-                <div className="w-24 h-1.5 bg-[#1E1E1E] rounded-full overflow-hidden">
+                <div className="w-24 h-1.5 bg-[#1F3346] rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-[#2F4F2F] via-[#4A7C4A] to-[#FF6600] transition-all duration-300"
+                    className="h-full bg-gradient-to-r from-[#2F4F2F] via-[#4A7C4A] to-[#FFFFFF] transition-all duration-300"
                     style={{ width: `${searchConfidence}%` }}
                   />
                 </div>
-                <span className="font-bold text-[#FF6600]">{searchConfidence}% CONFIDENCE</span>
+                <span className="font-bold text-[#FFFFFF]">{searchConfidence}% CONFIDENCE</span>
               </div>
             </div>
           )}
@@ -163,9 +163,9 @@ export default function OmnisearchOverlay() {
                   <button
                     key={cat}
                     onClick={() => setQuery(cat)}
-                    className="p-3 bg-[#1A1A1A] border border-[#2A2A2A] hover:border-[#FF6600]/40 clip-angled text-left transition-all group"
+                    className="p-3 bg-[#1F3346] border border-[#33506B] hover:border-[#FFFFFF]/40 clip-angled text-left transition-all group"
                   >
-                    <span className="text-xs font-bold text-white group-hover:text-[#FF6600] transition-colors block">
+                    <span className="text-xs font-bold text-white group-hover:text-[#FFFFFF] transition-colors block">
                       {cat}
                     </span>
                     <span className="text-[9px] font-mono text-neutral-400 uppercase block mt-1">QUICK FILTER</span>
@@ -186,9 +186,9 @@ export default function OmnisearchOverlay() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
                     onClick={() => handleProductSelect(product.slug)}
-                    className="p-3 bg-[#161616] border border-[#2A2A2A] hover:border-[#FF6600] clip-angled cursor-pointer flex gap-3 items-center group transition-all"
+                    className="p-3 bg-[#1F3346] border border-[#33506B] hover:border-[#FFFFFF] clip-angled cursor-pointer flex gap-3 items-center group transition-all"
                   >
-                    <div className="w-14 h-14 bg-[#121212] border border-[#2A2A2A] relative shrink-0 overflow-hidden clip-angled-sm">
+                    <div className="w-14 h-14 bg-[#1F3346] border border-[#33506B] relative shrink-0 overflow-hidden clip-angled-sm">
                       {product.images[0]?.url ? (
                         <CatalogImage src={product.images[0].url} alt={product.name} sizes="56px" />
                       ) : (
@@ -198,17 +198,17 @@ export default function OmnisearchOverlay() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-[9px] font-mono text-[#FF6600] uppercase font-bold block truncate">
+                      <span className="text-[9px] font-mono text-[#FFFFFF] uppercase font-bold block truncate">
                         {product.categoryName}
                       </span>
-                      <h4 className="text-xs font-black uppercase text-white truncate group-hover:text-[#FF6600] transition-colors">
+                      <h4 className="text-xs font-black uppercase text-white truncate group-hover:text-[#FFFFFF] transition-colors">
                         {product.name}
                       </h4>
                       <p className="text-xs font-mono font-extrabold text-white mt-1">
                         Rs. {product.price.toLocaleString()}
                       </p>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:text-[#FF6600] group-hover:translate-x-1 transition-all shrink-0" />
+                    <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:text-[#FFFFFF] group-hover:translate-x-1 transition-all shrink-0" />
                   </motion.div>
                 ))}
               </div>

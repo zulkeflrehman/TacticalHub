@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
@@ -27,7 +27,7 @@ export default function MomentumCarousel({ title, categorySlug, products }: Mome
       {/* Header Row */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <Shield className="w-5 h-5 text-[#FF6600]" />
+          <Shield className="w-5 h-5 text-[#FFFFFF]" />
           <h2 className="text-base sm:text-xl font-black uppercase tracking-wider text-white">
             {title}
           </h2>
@@ -35,7 +35,7 @@ export default function MomentumCarousel({ title, categorySlug, products }: Mome
         {categorySlug && (
           <Link
             href={`/categories?slug=${encodeURIComponent(categorySlug)}`}
-            className="text-xs font-mono font-bold uppercase text-[#FF6600] hover:underline flex items-center gap-1 group"
+            className="text-xs font-mono font-bold uppercase text-[#FFFFFF] hover:underline flex items-center gap-1 group"
           >
             <span>EXPLORE ALL</span>
             <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />

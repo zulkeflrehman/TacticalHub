@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useRef } from 'react';
 import Link from 'next/link';
@@ -51,14 +51,14 @@ export default function HeroCinematic({ featuredProducts = [] }: HeroCinematicPr
           />
         </video>
         {/* Dark Vignette Overlay for Premium Readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0B0B0B] via-[#0B0B0B]/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0B0B0B]/80 via-transparent to-[#0B0B0B]/80" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#142230] via-[#142230]/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#142230]/80 via-transparent to-[#142230]/80" />
       </motion.div>
 
       {/* Top Banner: Authentic E-commerce Badges for Pakistan */}
       <div className="relative z-10 flex items-center justify-between gap-3 pointer-events-auto">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex items-center gap-1.5 bg-[#FF6600]/10 border border-[#FF6600]/40 py-1.5 px-4 rounded-full text-[10px] font-mono text-[#FF6600] font-black uppercase tracking-widest shadow-[0_0_12px_rgba(255,102,0,0.15)]">
+          <div className="inline-flex items-center gap-1.5 bg-[#FFFFFF]/10 border border-[#FFFFFF]/40 py-1.5 px-4 rounded-full text-[10px] font-mono text-[#FFFFFF] font-black uppercase tracking-widest shadow-[0_0_12px_rgba(255,102,0,0.15)]">
             <MapPin className="w-3.5 h-3.5" />
             <span>DELIVERY ALL OVER PAKISTAN</span>
           </div>
@@ -73,12 +73,12 @@ export default function HeroCinematic({ featuredProducts = [] }: HeroCinematicPr
       {/* Foreground Content */}
       <motion.div style={{ y: textY }} className="relative z-10 space-y-5 max-w-3xl pointer-events-auto mt-auto text-left">
         <div className="space-y-3">
-          <span className="text-xs font-mono font-bold text-[#FF6600] tracking-widest uppercase block">
+          <span className="text-xs font-mono font-bold text-[#FFFFFF] tracking-widest uppercase block">
             PREMIUM OUTDOOR & SELF-DEFENSE EQUIPMENT
           </span>
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black uppercase text-white tracking-tight leading-none">
             GEAR UP FOR <br />
-            THE <span className="text-[#FF6600] drop-shadow-[0_0_15px_rgba(255,102,0,0.45)]">UNEXPLORED</span>
+            THE <span className="text-[#FFFFFF] drop-shadow-[0_0_15px_rgba(255,102,0,0.45)]">UNEXPLORED</span>
           </h1>
           <p className="text-xs sm:text-sm text-neutral-200 font-medium leading-relaxed max-w-2xl">
             {heroItem.shortDescription || 'Professional grade equipment sourced for extreme outdoor durability.'}
@@ -88,7 +88,7 @@ export default function HeroCinematic({ featuredProducts = [] }: HeroCinematicPr
         <div className="flex flex-wrap items-center gap-3 pt-1">
           <Link
             href={`/products?slug=${encodeURIComponent(heroItem.slug)}`}
-            className="bg-[#FF6600] text-black hover:bg-[#E05800] text-xs font-mono font-black uppercase py-4 px-8 rounded-xl transition-all flex items-center gap-2.5 tactile-press shadow-[0_0_20px_rgba(255,102,0,0.4)] border border-[#FF6600]"
+            className="bg-[#FFFFFF] text-black hover:bg-[#F4F1E8] text-xs font-mono font-black uppercase py-4 px-8 rounded-xl transition-all flex items-center gap-2.5 tactile-press shadow-[0_0_20px_rgba(255,102,0,0.4)] border border-[#FFFFFF]"
           >
             <span>INSPECT GEAR</span>
             <ArrowRight className="w-4 h-4" />

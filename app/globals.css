@@ -1,149 +1,153 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;800&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #0B0B0B;
-  --foreground: #F5F5F5;
-  
-  --color-obsidian-dark: #070707;
-  --color-obsidian: #0B0B0B;
-  --color-obsidian-card: #121212;
-  --color-obsidian-border: rgba(255, 255, 255, 0.1);
+  --background: #142230;
+  --foreground: #FFFFFF;
 
-  --color-electric-orange: #FF6600;
-  --color-neon-lime: #B8EC44;
+  --color-base: #142230;
+  --color-surface: #1F3346;
+  --color-border: #33506B;
+  --color-ivory: #F4F1E8;
+  --color-muted: #A0B1C5;
+  --color-alert: #E55353;
 
-  --color-accent: #FF6600;
-  --color-accent-hover: #E05800;
-  --color-black: #070707;
-  --color-dark-gray: #141414;
-  --color-light-gray: #F3F4F6;
+  --color-accent: #FFFFFF;
+  --color-accent-hover: #F4F1E8;
+  --color-black: #142230;
+  --color-dark-gray: #1F3346;
+  --color-light-gray: #F4F1E8;
   --color-white: #FFFFFF;
-  
+
   --color-success: #10B981;
-  --color-error: #EF4444;
+  --color-error: #E55353;
   --color-warning: #F59E0B;
   --color-info: #3B82F6;
 }
 
 @theme inline {
-  --font-sans: "Plus Jakarta Sans", sans-serif;
+  --font-sans: "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
-  --color-accent: #FF6600;
-  --color-accent-hover: #E05800;
-  --color-brand-accent: #FF6600;
-  --color-brand-accent-hover: #E05800;
-  --color-[#B8EC44]: #B8EC44;
-  --color-brand-black: #010101;
-  --color-brand-dark-gray: #141414;
-  --color-brand-light-gray: #F3F4F6;
+  --color-accent: #FFFFFF;
+  --color-accent-hover: #F4F1E8;
+  --color-brand-accent: #FFFFFF;
+  --color-brand-accent-hover: #F4F1E8;
+  --color-brand-black: #142230;
+  --color-brand-dark-gray: #1F3346;
+  --color-brand-light-gray: #F4F1E8;
   --color-brand-white: #FFFFFF;
-  --color-success: #047857;
-  --color-error: #DC2626;
-  --color-warning: #B45309;
-  --color-info: #1D4ED8;
+  --color-success: #10B981;
+  --color-error: #E55353;
+  --color-warning: #F59E0B;
+  --color-info: #3B82F6;
+}
+
+/* STRICT MANDATE: 0px Sharp Square Geometry Globally */
+*, *::before, *::after {
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 0px !important;
 }
 
 html, body {
-  background-color: #0B0B0B;
-  color: #F5F5F5;
+  background-color: #142230;
+  color: #FFFFFF;
   scroll-behavior: smooth;
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-family: "Inter", sans-serif;
   overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 
-/*
- * Readability guardrails
- *
- * The dark editorial storefront and the light account/admin surfaces share
- * these semantic colors. Keep light surfaces dark-on-light and dark surfaces
- * light-on-dark even when a component relies on inherited text color.
- */
+/* Scrollbar Hiding Utility */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Readability guardrails for storefront and light account surfaces */
 :where(.bg-brand-white, .bg-brand-light-gray, .bg-white) {
-  color: var(--color-brand-black);
+  color: #142230;
 }
 
 :where(.bg-brand-black) {
-  color: var(--color-brand-white);
+  color: #FFFFFF;
 }
 
 .light-surface {
-  color: var(--color-brand-black);
+  color: #142230;
 }
 
 .light-surface :where(.text-brand-accent),
 .light-surface:where(.text-brand-accent),
 .light-surface :where(.hover\:text-brand-accent):hover {
-  color: #C2410C;
+  color: #FFFFFF;
 }
 
 .light-surface :where(.border-brand-accent),
 .light-surface:where(.border-brand-accent) {
-  border-color: #C2410C;
-}
-
-.light-surface :where(.accent-brand-accent) {
-  accent-color: #C2410C;
+  border-color: #33506B;
 }
 
 :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]), textarea, select) {
   color: inherit;
   opacity: 1;
+  border-radius: 0px !important;
 }
 
 :where(input, textarea)::placeholder {
-  color: color-mix(in srgb, currentColor 65%, transparent);
+  color: #A0B1C5;
   opacity: 1;
 }
 
 :where(option, optgroup) {
-  background-color: #FFFFFF;
-  color: #070707;
+  background-color: #1F3346;
+  color: #FFFFFF;
 }
 
 :where(button, input, select, textarea):disabled {
-  opacity: 0.7 !important;
+  opacity: 0.6 !important;
 }
 
 @media (max-width: 640px) {
   :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]), textarea, select) {
-    min-height: 44px;
+    min-height: 48px;
     font-size: 16px;
   }
 }
 
-/* Editorial Bento Card Utilities */
-.bento-card {
-  background: rgba(18, 18, 18, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1rem;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+/* Tactical Surface Card Utility */
+.tactical-card {
+  background-color: #1F3346;
+  border: 1px solid #33506B;
+  border-radius: 0px !important;
+  transition: border-color 0.2s ease, transform 0.1s ease;
 }
-.bento-card:hover {
-  border-color: rgba(255, 102, 0, 0.35);
+.tactical-card:active {
+  transform: scale(0.98);
 }
 
-.bento-card-lg {
-  border-radius: 1.5rem;
+/* Bento Card Legacy Compatibility Utility */
+.bento-card {
+  background-color: #1F3346;
+  border: 1px solid #33506B;
+  border-radius: 0px !important;
+  transition: border-color 0.2s ease, transform 0.1s ease;
 }
 
 /* Tactile Micro-Interactions */
 .tactile-press {
-  transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), filter 0.12s ease;
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .tactile-press:active {
-  transform: scale(0.96);
-  filter: brightness(0.9);
+  transform: scale(0.98);
 }
 
-/* Glassmorphism Panel */
-.glass-panel {
-  background: rgba(11, 11, 11, 0.78);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+/* Minimum Touch Target Guardrail */
+.touch-target {
+  min-width: 48px;
+  min-height: 48px;
 }
 
 /* Shimmer Skeleton Loader */
@@ -159,39 +163,21 @@ html, body {
 .skeleton-shimmer {
   background: linear-gradient(
     90deg,
-    #141414 25%,
-    #222222 37%,
-    #141414 63%
+    #1F3346 25%,
+    #33506B 37%,
+    #1F3346 63%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite ease-in-out;
+  border-radius: 0px !important;
 }
 
-/* Form Shake Animation */
-@keyframes shake-horizontal {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-6px); }
-  40%, 80% { transform: translateX(6px); }
-}
-
-.animate-shake {
-  animation: shake-horizontal 0.4s ease-in-out;
-}
-
-/* Success Pulse Animation */
-@keyframes pulse-green {
-  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
-  70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-}
-
-.animate-pulse-green {
-  animation: pulse-green 1.2s cubic-bezier(0, 0, 0.2, 1);
-}
-
-/* Safe area padding on mobile */
+/* Safe Area Inset Utility */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* Slide Animations */
@@ -201,6 +187,14 @@ html, body {
 }
 
 .animate-slide-left {
-  animation: slide-left 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: slide-left 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+@keyframes slide-right {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-slide-right {
+  animation: slide-right 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

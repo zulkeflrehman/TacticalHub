@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -182,25 +182,25 @@ export default function CheckoutStepperModal({ isOpen, onClose }: CheckoutSteppe
           }}
         />
       ) : (
-        <div className="fixed inset-0 z-50 bg-[#0A0A0A]/90 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-[#142230]/90 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
           {/* Main Modal Shell */}
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="relative max-w-xl w-full bg-[#121212] border border-[#FF6600]/40 clip-angled shadow-[0_0_40px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden my-auto"
+            className="relative max-w-xl w-full bg-[#1F3346] border border-[#FFFFFF]/40 clip-angled shadow-[0_0_40px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden my-auto"
           >
             {/* Modal Top Bar */}
-            <div className="px-4 py-3 bg-[#0A0A0A] border-b border-[#2A2A2A] flex items-center justify-between">
+            <div className="px-4 py-3 bg-[#142230] border-b border-[#33506B] flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-[#FF6600]" />
+                <ShieldCheck className="w-5 h-5 text-[#FFFFFF]" />
                 <span className="text-xs font-mono font-black text-white uppercase tracking-widest">
                   TACTICAL CHECKOUT PIPELINE
                 </span>
               </div>
               <button
                 onClick={onClose}
-                className="p-1.5 text-neutral-400 hover:text-white bg-[#1A1A1A] border border-[#2A2A2A] clip-angled transition-colors"
+                className="p-1.5 text-neutral-400 hover:text-white bg-[#1F3346] border border-[#33506B] clip-angled transition-colors"
                 aria-label="Close checkout modal"
               >
                 <X className="w-4 h-4" />
@@ -208,20 +208,20 @@ export default function CheckoutStepperModal({ isOpen, onClose }: CheckoutSteppe
             </div>
 
             {/* Express Checkout Section */}
-            <div className="p-4 bg-[#161616] border-b border-[#2A2A2A] space-y-2">
-              <span className="text-[10px] font-mono font-bold text-[#FF6600] uppercase tracking-wider block">
+            <div className="p-4 bg-[#1F3346] border-b border-[#33506B] space-y-2">
+              <span className="text-[10px] font-mono font-bold text-[#FFFFFF] uppercase tracking-wider block">
                 EXPRESS ONE-CLICK CHECKOUT
               </span>
               <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={() => handleExpressPay('Apple Pay')}
-                  className="py-2 px-3 bg-black border border-[#2A2A2A] hover:border-white text-white font-mono text-xs font-bold clip-angled transition-all text-center"
+                  className="py-2 px-3 bg-black border border-[#33506B] hover:border-white text-white font-mono text-xs font-bold clip-angled transition-all text-center"
                 >
                    Pay
                 </button>
                 <button
                   onClick={() => handleExpressPay('Google Pay')}
-                  className="py-2 px-3 bg-black border border-[#2A2A2A] hover:border-white text-white font-mono text-xs font-bold clip-angled transition-all text-center"
+                  className="py-2 px-3 bg-black border border-[#33506B] hover:border-white text-white font-mono text-xs font-bold clip-angled transition-all text-center"
                 >
                   G Pay
                 </button>
@@ -235,7 +235,7 @@ export default function CheckoutStepperModal({ isOpen, onClose }: CheckoutSteppe
             </div>
 
             {/* Stepper Progress Bar */}
-            <div className="grid grid-cols-3 text-center border-b border-[#2A2A2A] font-mono text-[10px] font-bold">
+            <div className="grid grid-cols-3 text-center border-b border-[#33506B] font-mono text-[10px] font-bold">
               {[
                 { id: 'SHIPPING', label: '1. SHIPPING' },
                 { id: 'PAYMENT', label: '2. PAYMENT' },
@@ -245,8 +245,8 @@ export default function CheckoutStepperModal({ isOpen, onClose }: CheckoutSteppe
                 return (
                   <div
                     key={s.id}
-                    className={`py-2.5 transition-colors border-r last:border-r-0 border-[#2A2A2A] ${
-                      isActive ? 'bg-[#FF6600] text-black font-black' : 'bg-[#0A0A0A] text-neutral-400'
+                    className={`py-2.5 transition-colors border-r last:border-r-0 border-[#33506B] ${
+                      isActive ? 'bg-[#FFFFFF] text-black font-black' : 'bg-[#142230] text-neutral-400'
                     }`}
                   >
                     {s.label}
@@ -276,7 +276,7 @@ export default function CheckoutStepperModal({ isOpen, onClose }: CheckoutSteppe
                           type="text"
                           value={firstName}
                           onChange={(e) => setFirstName(e.target.value)}
-                          className="w-full bg-[#121212] text-white p-2.5 text-xs font-mono border border-[#2A2A2A] focus:border-[#FF6600] clip-angled outline-none"
+                          className="w-full bg-[#1F3346] text-white p-2.5 text-xs font-mono border border-[#33506B] focus:border-[#FFFFFF] clip-angled outline-none"
                         />
                         {errors.firstName && <span className="text-[9px] text-[#EF4444] font-mono">{errors.firstName}</span>}
                       </div>
@@ -288,7 +288,7 @@ export default function CheckoutStepperModal({ isOpen, onClose }: CheckoutSteppe
                           type="text"
                           value={lastName}
                           onChange={(e) => setLastName(e.target.value)}
-                          className="w-full bg-[#121212] text-white p-2.5 text-xs font-mono border border-[#2A2A2A] focus:border-[#FF6600] clip-angled outline-none"
+                          className="w-full bg-[#1F3346] text-white p-2.5 text-xs font-mono border border-[#33506B] focus:border-[#FFFFFF] clip-angled outline-none"
                         />
                         {errors.lastName && <span className="text-[9px] text-[#EF4444] font-mono">{errors.lastName}</span>}
                       </div>
@@ -302,7 +302,7 @@ export default function CheckoutStepperModal({ isOpen, onClose }: CheckoutSteppe
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-[#121212] text-white p-2.5 text-xs font-mono border border-[#2A2A2A] focus:border-[#FF6600] clip-angled outline-none"
+                        className="w-full bg-[#1F3346] text-white p-2.5 text-xs font-mono border border-[#33506B] focus:border-[#FFFFFF] clip-angled outline-none"
                       />
                       {errors.email && <span className="text-[9px] text-[#EF4444] font-mono">{errors.email}</span>}
                     </div>
@@ -316,7 +316,7 @@ export default function CheckoutStepperModal({ isOpen, onClose }: CheckoutSteppe
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="03001234567"
-                        className="w-full bg-[#121212] text-white p-2.5 text-xs font-mono border border-[#2A2A2A] focus:border-[#FF6600] clip-angled outline-none"
+                        className="w-full bg-[#1F3346] text-white p-2.5 text-xs font-mono border border-[#33506B] focus:border-[#FFFFFF] clip-angled outline-none"
                       />
                       {errors.phone && <span className="text-[9px] text-[#EF4444] font-mono">{errors.phone}</span>}
                     </div>
@@ -339,9 +339,9 @@ export default function CheckoutStepperModal({ isOpen, onClose }: CheckoutSteppe
                     transition={{ duration: 0.2 }}
                     className="space-y-4"
                   >
-                    <div className="bg-[#1A1A1A] border border-[#FF6600] p-4 clip-angled flex items-center justify-between">
+                    <div className="bg-[#1F3346] border border-[#FFFFFF] p-4 clip-angled flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <Truck className="w-6 h-6 text-[#FF6600]" />
+                        <Truck className="w-6 h-6 text-[#FFFFFF]" />
                         <div>
                           <h4 className="text-xs font-mono font-black uppercase text-white">
                             CASH ON DELIVERY (COD) NATIONWIDE
@@ -365,7 +365,7 @@ export default function CheckoutStepperModal({ isOpen, onClose }: CheckoutSteppe
                           value={couponCode}
                           onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                           placeholder="TACTICAL10"
-                          className="flex-1 bg-[#121212] text-white p-2.5 text-xs font-mono border border-[#2A2A2A] clip-angled outline-none uppercase"
+                          className="flex-1 bg-[#1F3346] text-white p-2.5 text-xs font-mono border border-[#33506B] clip-angled outline-none uppercase"
                         />
                         <button
                           onClick={handleApplyCoupon}
@@ -387,7 +387,7 @@ export default function CheckoutStepperModal({ isOpen, onClose }: CheckoutSteppe
                     transition={{ duration: 0.2 }}
                     className="space-y-4 font-mono text-xs"
                   >
-                    <div className="bg-[#161616] border border-[#2A2A2A] p-3 clip-angled space-y-1">
+                    <div className="bg-[#1F3346] border border-[#33506B] p-3 clip-angled space-y-1">
                       <span className="text-[9px] text-[#9BCB77] font-bold uppercase">RECIPIENT & DESTINATION</span>
                       <p className="text-white font-bold uppercase">{firstName} {lastName} ({phone})</p>
                       <p className="text-neutral-400">{address}, {city}, {stateName}</p>
@@ -404,7 +404,7 @@ export default function CheckoutStepperModal({ isOpen, onClose }: CheckoutSteppe
                       ))}
                     </div>
 
-                    <div className="border-t border-[#2A2A2A] pt-3 space-y-1 text-neutral-400">
+                    <div className="border-t border-[#33506B] pt-3 space-y-1 text-neutral-400">
                       <div className="flex justify-between">
                         <span>SUBTOTAL</span>
                         <span>Rs. {subtotal.toLocaleString()}</span>
@@ -419,7 +419,7 @@ export default function CheckoutStepperModal({ isOpen, onClose }: CheckoutSteppe
                         <span>SHIPPING</span>
                         <span>{shippingCost === 0 ? 'FREE' : `Rs. ${shippingCost}`}</span>
                       </div>
-                      <div className="flex justify-between text-base font-black text-[#FF6600] pt-2 border-t border-[#2A2A2A]">
+                      <div className="flex justify-between text-base font-black text-[#FFFFFF] pt-2 border-t border-[#33506B]">
                         <span>GRAND TOTAL</span>
                         <span>Rs. {total.toLocaleString()}</span>
                       </div>
@@ -430,11 +430,11 @@ export default function CheckoutStepperModal({ isOpen, onClose }: CheckoutSteppe
             </div>
 
             {/* Modal Bottom Actions */}
-            <div className="p-4 bg-[#0A0A0A] border-t border-[#2A2A2A] flex items-center justify-between gap-3">
+            <div className="p-4 bg-[#142230] border-t border-[#33506B] flex items-center justify-between gap-3">
               {step !== 'SHIPPING' ? (
                 <button
                   onClick={handlePrevStep}
-                  className="bg-[#1A1A1A] text-neutral-300 hover:text-white px-4 py-3 font-mono text-xs font-bold uppercase clip-angled flex items-center gap-1 border border-[#2A2A2A]"
+                  className="bg-[#1F3346] text-neutral-300 hover:text-white px-4 py-3 font-mono text-xs font-bold uppercase clip-angled flex items-center gap-1 border border-[#33506B]"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>BACK</span>
@@ -444,7 +444,7 @@ export default function CheckoutStepperModal({ isOpen, onClose }: CheckoutSteppe
               {step !== 'REVIEW' ? (
                 <button
                   onClick={handleNextStep}
-                  className="bg-[#FF6600] text-black hover:bg-[#E05800] px-6 py-3 font-mono text-xs font-black uppercase clip-angled flex items-center gap-1.5 tactile-depress shadow-[0_0_15px_rgba(255,102,0,0.4)] ml-auto"
+                  className="bg-[#FFFFFF] text-black hover:bg-[#F4F1E8] px-6 py-3 font-mono text-xs font-black uppercase clip-angled flex items-center gap-1.5 tactile-depress shadow-[0_0_15px_rgba(255,102,0,0.4)] ml-auto"
                 >
                   <span>CONTINUE</span>
                   <ArrowRight className="w-4 h-4" />
@@ -453,7 +453,7 @@ export default function CheckoutStepperModal({ isOpen, onClose }: CheckoutSteppe
                 <button
                   onClick={handleSubmitOrder}
                   disabled={submitting}
-                  className="bg-[#FF6600] text-black hover:bg-[#E05800] px-6 py-3.5 font-mono text-xs font-black uppercase clip-angled flex items-center gap-2 tactile-depress shadow-[0_0_20px_rgba(255,102,0,0.6)] ml-auto disabled:opacity-60"
+                  className="bg-[#FFFFFF] text-black hover:bg-[#F4F1E8] px-6 py-3.5 font-mono text-xs font-black uppercase clip-angled flex items-center gap-2 tactile-depress shadow-[0_0_20px_rgba(255,102,0,0.6)] ml-auto disabled:opacity-60"
                 >
                   <ShieldCheck className="w-4 h-4" />
                   <span>{submitting ? 'DISPATCHING...' : 'CONFIRM COD ORDER'}</span>

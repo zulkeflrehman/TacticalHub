@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
@@ -96,7 +96,7 @@ export default function KineticSuccessModal({ orderNumber, onClose }: KineticSuc
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-2xl flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-[#142230]/95 backdrop-blur-2xl flex items-center justify-center p-4">
       {/* Three.js Particle Canvas Background */}
       <div ref={mountRef} className="absolute inset-0 pointer-events-none z-0" />
 
@@ -105,7 +105,7 @@ export default function KineticSuccessModal({ orderNumber, onClose }: KineticSuc
         initial={{ scale: 0.7, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-        className="relative z-10 max-w-sm w-full bg-[#121212] border border-[#FF6600]/60 p-6 clip-angled shadow-[0_0_50px_rgba(255,102,0,0.5)] text-center space-y-5"
+        className="relative z-10 max-w-sm w-full bg-[#1F3346] border border-[#FFFFFF]/60 p-6 clip-angled shadow-[0_0_50px_rgba(255,102,0,0.5)] text-center space-y-5"
       >
         {/* Holographic Hologram Icon Pop */}
         <div className="relative w-20 h-20 mx-auto">
@@ -113,10 +113,10 @@ export default function KineticSuccessModal({ orderNumber, onClose }: KineticSuc
             initial={{ scale: 0 }}
             animate={{ scale: 1, rotate: 360 }}
             transition={{ duration: 0.6, ease: 'backOut' }}
-            className="w-full h-full bg-gradient-to-tr from-[#2F4F2F] to-[#FF6600] rounded-full p-0.5 flex items-center justify-center shadow-[0_0_30px_#FF6600]"
+            className="w-full h-full bg-gradient-to-tr from-[#2F4F2F] to-[#FFFFFF] rounded-full p-0.5 flex items-center justify-center shadow-[0_0_30px_#FFFFFF]"
           >
-            <div className="w-full h-full bg-[#0A0A0A] rounded-full flex items-center justify-center">
-              <Check className="w-10 h-10 text-[#FF6600] stroke-[3]" />
+            <div className="w-full h-full bg-[#142230] rounded-full flex items-center justify-center">
+              <Check className="w-10 h-10 text-[#FFFFFF] stroke-[3]" />
             </div>
           </motion.div>
         </div>
@@ -124,7 +124,7 @@ export default function KineticSuccessModal({ orderNumber, onClose }: KineticSuc
         {/* Text Details */}
         <div className="space-y-1">
           <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#9BCB77] uppercase tracking-widest bg-[#2F4F2F]/20 border border-[#2F4F2F] px-3 py-1 clip-angled-sm">
-            <ShieldCheck className="w-4 h-4 text-[#FF6600]" />
+            <ShieldCheck className="w-4 h-4 text-[#FFFFFF]" />
             <span>MISSION DISPATCH CONFIRMED</span>
           </div>
           <h2 className="text-xl font-black uppercase text-white tracking-tight pt-2">
@@ -139,7 +139,7 @@ export default function KineticSuccessModal({ orderNumber, onClose }: KineticSuc
         <Link
           href="/"
           onClick={onClose}
-          className="block w-full bg-[#FF6600] text-black hover:bg-[#E05800] py-3 px-4 font-mono text-xs font-black uppercase clip-angled shadow-[0_0_15px_rgba(255,102,0,0.4)] transition-all"
+          className="block w-full bg-[#FFFFFF] text-black hover:bg-[#F4F1E8] py-3 px-4 font-mono text-xs font-black uppercase clip-angled shadow-[0_0_15px_rgba(255,102,0,0.4)] transition-all"
         >
           RETURN TO HUB HEADQUARTERS
         </Link>

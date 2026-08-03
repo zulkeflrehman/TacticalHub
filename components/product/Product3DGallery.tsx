@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import * as THREE from 'three';
@@ -212,18 +212,18 @@ export default function Product3DGallery({ productName, images }: Product3DGalle
   const displayImages = images.length > 0 ? images : [{ url: '' }];
 
   return (
-    <div className="relative w-full h-[55vh] min-h-[380px] sm:h-[65vh] bg-[#121212] border-b border-[#2A2A2A] overflow-hidden flex flex-col justify-between">
+    <div className="relative w-full h-[55vh] min-h-[380px] sm:h-[65vh] bg-[#1F3346] border-b border-[#33506B] overflow-hidden flex flex-col justify-between">
       {/* Background Grid */}
       <div className="absolute inset-0 tactical-grid-bg opacity-30 pointer-events-none" />
 
       {/* View Switcher Header */}
       <div className="relative z-20 flex items-center justify-between p-4 max-w-7xl mx-auto w-full">
-        <div className="flex items-center gap-1.5 bg-[#1A1A1A] border border-[#2A2A2A] p-1 clip-angled">
+        <div className="flex items-center gap-1.5 bg-[#1F3346] border border-[#33506B] p-1 clip-angled">
           <button
             onClick={() => setActiveTab('3D')}
             className={`px-3 py-1.5 font-mono text-xs font-black uppercase clip-angled-sm transition-all flex items-center gap-1.5 ${
               activeTab === '3D'
-                ? 'bg-[#FF6600] text-black shadow-[0_0_10px_rgba(255,102,0,0.4)]'
+                ? 'bg-[#FFFFFF] text-black shadow-[0_0_10px_rgba(255,102,0,0.4)]'
                 : 'text-neutral-400 hover:text-white'
             }`}
           >
@@ -234,7 +234,7 @@ export default function Product3DGallery({ productName, images }: Product3DGalle
             onClick={() => setActiveTab('PHOTOS')}
             className={`px-3 py-1.5 font-mono text-xs font-black uppercase clip-angled-sm transition-all flex items-center gap-1.5 ${
               activeTab === 'PHOTOS'
-                ? 'bg-[#FF6600] text-black shadow-[0_0_10px_rgba(255,102,0,0.4)]'
+                ? 'bg-[#FFFFFF] text-black shadow-[0_0_10px_rgba(255,102,0,0.4)]'
                 : 'text-neutral-400 hover:text-white'
             }`}
           >
@@ -291,8 +291,8 @@ export default function Product3DGallery({ productName, images }: Product3DGalle
       {/* Bottom Controls Bar */}
       <div className="relative z-20 p-4 max-w-7xl mx-auto w-full flex flex-col sm:flex-row items-center justify-between gap-3">
         {activeTab === '3D' ? (
-          <div className="w-full sm:max-w-md bg-[#161616]/90 backdrop-blur-md border border-[#2A2A2A] p-2.5 clip-angled flex items-center gap-3">
-            <Layers className="w-4 h-4 text-[#FF6600] shrink-0" />
+          <div className="w-full sm:max-w-md bg-[#1F3346]/90 backdrop-blur-md border border-[#33506B] p-2.5 clip-angled flex items-center gap-3">
+            <Layers className="w-4 h-4 text-[#FFFFFF] shrink-0" />
             <span className="text-[10px] font-mono font-bold text-white uppercase whitespace-nowrap">
               3D ANIMATION DEPLOYMENT: {explodedStep}%
             </span>
@@ -302,7 +302,7 @@ export default function Product3DGallery({ productName, images }: Product3DGalle
               max="100"
               value={explodedStep}
               onChange={(e) => setExplodedStep(Number(e.target.value))}
-              className="w-full accent-[#FF6600] cursor-pointer"
+              className="w-full accent-[#FFFFFF] cursor-pointer"
             />
           </div>
         ) : (
@@ -311,8 +311,8 @@ export default function Product3DGallery({ productName, images }: Product3DGalle
               <button
                 key={idx}
                 onClick={() => setCurrentImageIndex(idx)}
-                className={`w-12 h-12 bg-[#1A1A1A] border clip-angled-sm overflow-hidden transition-all shrink-0 ${
-                  idx === currentImageIndex ? 'border-[#FF6600] scale-105' : 'border-[#2A2A2A] opacity-60'
+                className={`w-12 h-12 bg-[#1F3346] border clip-angled-sm overflow-hidden transition-all shrink-0 ${
+                  idx === currentImageIndex ? 'border-[#FFFFFF] scale-105' : 'border-[#33506B] opacity-60'
                 }`}
               >
                 {img.url && <CatalogImage src={img.url} alt={`Thumb ${idx}`} sizes="48px" />}

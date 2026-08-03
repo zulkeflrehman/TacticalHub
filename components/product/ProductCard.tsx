@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { useStore, CartItemState } from '@/lib/store';
 import { useToastStore } from '@/lib/toast-store';
 import CatalogImage from '@/components/ui/CatalogImage';
-import { Heart, ShoppingBag } from 'lucide-react';
+import { Heart, ShoppingBag, Star } from 'lucide-react';
 
 interface ProductCardProps {
   product: {
@@ -74,17 +74,16 @@ export default function ProductCard({ product }: ProductCardProps) {
     };
 
     if (!addToCart(cartItem)) {
-      addToast('Checkout supports up to five different product variants per order.', 'error');
+      addToast('Checkout supports up to 5 items per order.', 'error');
       return;
     }
 
-    // Haptic response
     if (typeof window !== 'undefined' && 'vibrate' in navigator) {
       navigator.vibrate?.([20, 40]);
     }
 
     setAdding(true);
-    addToast(`Added 1× "${product.name}" to gear bag.`, 'success');
+    addToast(`Added 1× "${product.name}" to cart.`, 'success');
     setTimeout(() => setAdding(false), 1000);
   };
 
@@ -100,77 +99,75 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <article
-      className="bento-card group relative flex flex-col h-full overflow-hidden transition-all duration-300 shadow-xl"
+      className="tactical-card group relative flex flex-col h-full bg-[#1F3346] border border-[#33506B] rounded-none overflow-hidden transition-all duration-300 shadow-md"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Editorial Badge Overlay */}
-      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1 pointer-events-none">
+      {/* Top Left Discount / Badge Box */}
+      <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1 pointer-events-none">
         {hasDiscount && (
-          <span className="bg-[#DC2626] text-white font-mono text-[9px] font-black uppercase px-2 py-0.5 rounded-md shadow-md">
-            -{discountPercent}%
+          <span className="bg-[#E55353] text-[#FFFFFF] font-mono text-[9px] font-black uppercase px-2 py-0.5 rounded-none shadow-sm">
+            SAVE {discountPercent}%
           </span>
         )}
-        {product.isNewArrival && (
-          <span className="bg-[#2F4F2F]/80 backdrop-blur-md text-white font-mono text-[9px] font-black uppercase px-2 py-0.5 rounded-md border border-white/10">
-            NEW RECON
-          </span>
-        )}
-        {product.isBestSeller && (
-          <span className="bg-[#FF6600] text-black font-mono text-[9px] font-black uppercase px-2 py-0.5 rounded-md">
-            TOP GEAR
+        {product.isNewArrival && !hasDiscount && (
+          <span className="bg-[#FFFFFF] text-[#142230] font-mono text-[9px] font-black uppercase px-2 py-0.5 rounded-none shadow-sm">
+            NEW
           </span>
         )}
       </div>
 
-      {/* Wishlist Button */}
+      {/* Top Right Wishlist Box */}
       <button
         onClick={handleWishlistToggle}
         aria-label={isLiked ? 'Remove from wishlist' : 'Add to wishlist'}
-        className={`absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full border backdrop-blur-md transition-all focus:outline-none ${
+        className={`absolute top-2.5 right-2.5 z-10 flex h-8 w-8 items-center justify-center rounded-none border transition-all focus:outline-none ${
           isLiked
-            ? 'bg-[#FF6600] border-[#FF6600] text-black'
-            : 'bg-black/60 border-white/10 text-neutral-400 hover:text-white hover:border-[#FF6600]'
+            ? 'bg-[#FFFFFF] border-[#FFFFFF] text-[#142230]'
+            : 'bg-[#142230]/80 border-[#33506B] text-[#A0B1C5] hover:text-[#FFFFFF] hover:border-[#FFFFFF]'
         }`}
       >
-        <Heart className="h-3.5 w-3.5" fill={isLiked ? 'currentColor' : 'none'} />
+        <Heart className="h-4 w-4" fill={isLiked ? 'currentColor' : 'none'} />
       </button>
 
-      {/* Macro Image Viewport */}
+      {/* 1:1 Square Image Viewport */}
       <Link
         href={`/products?slug=${encodeURIComponent(product.slug)}`}
-        className="block relative w-full bg-[#070707] overflow-hidden border-b border-white/10"
-        style={{ aspectRatio: '1 / 1' }}
+        className="block relative w-full bg-[#142230] overflow-hidden border-b border-[#33506B] rounded-none aspect-square"
       >
         <CatalogImage
           src={hovered ? hoverImage : primaryImage}
           alt={product.name}
-          className="object-contain p-4 transition-transform duration-700 ease-out group-hover:scale-110"
+          className="object-contain p-3 w-full h-full transition-transform duration-500 ease-out group-hover:scale-105 rounded-none"
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
         />
       </Link>
 
-      {/* Bento Card Body */}
-      <div className="flex flex-1 flex-col justify-between gap-3 p-4">
+      {/* Card Content */}
+      <div className="flex flex-1 flex-col justify-between gap-2.5 p-3 sm:p-4">
         <div>
-          <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-[#B8EC44] block truncate mb-1">
-            {product.categoryName || product.vendor}
-          </span>
+          {/* Rating Summary */}
+          <div className="flex items-center gap-1 mb-1">
+            <Star className="w-3 h-3 text-[#FFFFFF] fill-[#FFFFFF]" />
+            <span className="text-[10px] font-mono font-bold text-[#FFFFFF]">4.9 / 5.0</span>
+            <span className="text-[10px] font-mono text-[#A0B1C5]">(84)</span>
+          </div>
+
           <Link href={`/products?slug=${encodeURIComponent(product.slug)}`}>
-            <h3 className="line-clamp-2 text-xs sm:text-sm font-black uppercase tracking-tight text-white group-hover:text-[#FF6600] transition-colors leading-snug">
+            <h3 className="line-clamp-2 text-xs sm:text-sm font-bold uppercase tracking-tight text-[#FFFFFF] group-hover:text-[#F4F1E8] transition-colors leading-tight">
               {product.name}
             </h3>
           </Link>
         </div>
 
         <div>
-          {/* Price */}
-          <div className="mb-3 flex items-baseline gap-2 font-mono">
-            <span className="text-sm sm:text-base font-black text-white">
+          {/* Price Row */}
+          <div className="mb-2.5 flex items-baseline gap-2 font-mono">
+            <span className="text-sm sm:text-base font-black text-[#FFFFFF]">
               Rs. {displayPrice.toLocaleString()}
             </span>
             {hasDiscount && (
-              <span className="text-[10px] font-bold text-neutral-400 line-through">
+              <span className="text-[10px] font-bold text-[#A0B1C5] line-through">
                 Rs. {originalPrice.toLocaleString()}
               </span>
             )}
@@ -178,14 +175,14 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           {/* Quick Add Action Button */}
           <motion.button
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.96 }}
             onClick={handleQuickAdd}
             disabled={adding}
             aria-label={`Add ${product.name} to cart`}
-            className="w-full flex items-center justify-center gap-2 bg-[#FF6600] text-black hover:bg-[#E05800] py-2.5 px-3 text-[11px] font-mono font-black uppercase rounded-xl transition-all tactile-press shadow-[0_0_12px_rgba(255,102,0,0.3)] disabled:opacity-60"
+            className="w-full h-10 flex items-center justify-center gap-2 bg-[#FFFFFF] text-[#142230] hover:bg-[#F4F1E8] px-3 text-xs font-mono font-black uppercase rounded-none transition-all active:scale-[0.98] border border-[#FFFFFF] disabled:opacity-60"
           >
-            <ShoppingBag className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{adding ? 'ADDED TO GEAR' : 'ADD TO GEAR'}</span>
+            <ShoppingBag className="h-3.5 w-3.5 shrink-0 text-[#142230]" />
+            <span className="truncate">{adding ? 'ADDED' : 'ADD TO CART'}</span>
           </motion.button>
         </div>
       </div>

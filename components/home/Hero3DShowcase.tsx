@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -284,16 +284,16 @@ export default function Hero3DShowcase({ featuredProducts }: Hero3DShowcaseProps
   };
 
   return (
-    <div className="relative w-full h-[500px] sm:h-[580px] bg-[#0A0A0A] border border-[#2A2A2A] clip-angled-lg overflow-hidden group shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
+    <div className="relative w-full h-[500px] sm:h-[580px] bg-[#142230] border border-[#33506B] clip-angled-lg overflow-hidden group shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
       {/* Three.js Canvas Viewport */}
       <div ref={mountRef} className="absolute inset-0 z-0 cursor-grab active:cursor-grabbing" />
 
       {/* Glassmorphic Gradient Vignette */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-[#0A0A0A]/60 pointer-events-none z-10" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#142230] via-transparent to-[#142230]/60 pointer-events-none z-10" />
 
       {/* Top 3D Model Badge */}
-      <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-[#121212]/90 backdrop-blur-md border border-[#FF6600]/40 px-3 py-1.5 clip-angled-sm shadow-lg">
-        <Rotate3d className={`w-4 h-4 text-[#FF6600] ${isInteracting ? 'animate-spin' : ''}`} />
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-[#1F3346]/90 backdrop-blur-md border border-[#FFFFFF]/40 px-3 py-1.5 clip-angled-sm shadow-lg">
+        <Rotate3d className={`w-4 h-4 text-[#FFFFFF] ${isInteracting ? 'animate-spin' : ''}`} />
         <span className="text-[9px] font-mono font-black text-white uppercase tracking-widest">
           {modelTypeLabel}
         </span>
@@ -303,14 +303,14 @@ export default function Hero3DShowcase({ featuredProducts }: Hero3DShowcaseProps
       <div className="absolute top-1/2 -translate-y-1/2 left-3 right-3 z-20 flex justify-between pointer-events-none">
         <button
           onClick={handlePrev}
-          className="p-2.5 bg-[#121212]/80 backdrop-blur-md border border-[#2A2A2A] hover:border-[#FF6600] text-white clip-angled pointer-events-auto transition-all"
+          className="p-2.5 bg-[#1F3346]/80 backdrop-blur-md border border-[#33506B] hover:border-[#FFFFFF] text-white clip-angled pointer-events-auto transition-all"
           aria-label="Previous item"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
         <button
           onClick={handleNext}
-          className="p-2.5 bg-[#121212]/80 backdrop-blur-md border border-[#2A2A2A] hover:border-[#FF6600] text-white clip-angled pointer-events-auto transition-all"
+          className="p-2.5 bg-[#1F3346]/80 backdrop-blur-md border border-[#33506B] hover:border-[#FFFFFF] text-white clip-angled pointer-events-auto transition-all"
           aria-label="Next item"
         >
           <ChevronRight className="w-5 h-5" />
@@ -321,7 +321,7 @@ export default function Hero3DShowcase({ featuredProducts }: Hero3DShowcaseProps
       <div className="relative z-20 h-full flex flex-col justify-between p-6 sm:p-10 pointer-events-none">
         {/* Top Tag */}
         <div className="inline-flex items-center gap-2 border border-[#4A7C4A] bg-[#2F4F2F]/30 py-1.5 px-3.5 text-[#9BCB77] text-xs font-mono font-black uppercase tracking-widest clip-angled-sm w-fit pointer-events-auto">
-          <ShieldCheck className="w-4 h-4 text-[#FF6600]" />
+          <ShieldCheck className="w-4 h-4 text-[#FFFFFF]" />
           <span>TACTICAL HUB // REAL 3D MODEL</span>
         </div>
 
@@ -336,7 +336,7 @@ export default function Hero3DShowcase({ featuredProducts }: Hero3DShowcaseProps
               transition={{ duration: 0.25 }}
               className="space-y-2"
             >
-              <span className="text-xs font-mono font-bold text-[#FF6600] tracking-widest uppercase block">
+              <span className="text-xs font-mono font-bold text-[#FFFFFF] tracking-widest uppercase block">
                 {currentItem.categoryName}
               </span>
               <h2 className="text-2xl sm:text-4xl font-black uppercase text-white tracking-tight leading-none">
@@ -354,7 +354,7 @@ export default function Hero3DShowcase({ featuredProducts }: Hero3DShowcaseProps
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <Link
               href={`/products?slug=${encodeURIComponent(currentItem.slug || 'automatic-telescopic-selfdefence-stick')}`}
-              className="bg-[#FF6600] text-black hover:bg-[#E05800] text-xs font-mono font-black uppercase py-3.5 px-8 transition-all clip-angled flex items-center gap-2 tactile-depress shadow-[0_0_20px_rgba(255,102,0,0.5)]"
+              className="bg-[#FFFFFF] text-black hover:bg-[#F4F1E8] text-xs font-mono font-black uppercase py-3.5 px-8 transition-all clip-angled flex items-center gap-2 tactile-depress shadow-[0_0_20px_rgba(255,102,0,0.5)]"
             >
               <span>INSPECT GEAR</span>
               <ArrowRight className="w-4 h-4" />
@@ -367,7 +367,7 @@ export default function Hero3DShowcase({ featuredProducts }: Hero3DShowcaseProps
                   key={idx}
                   onClick={() => setActiveIndex(idx)}
                   className={`h-2 transition-all clip-angled-sm ${
-                    idx === activeIndex ? 'w-8 bg-[#FF6600]' : 'w-2 bg-[#2A2A2A] hover:bg-neutral-500'
+                    idx === activeIndex ? 'w-8 bg-[#FFFFFF]' : 'w-2 bg-[#33506B] hover:bg-neutral-500'
                   }`}
                   aria-label={`Go to item ${idx + 1}`}
                 />

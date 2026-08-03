@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { ShieldCheck, Droplets, Compass, Layers, Lock, Cpu } from 'lucide-react';
@@ -24,7 +24,7 @@ export default function EditorialSpecSheet({ product }: EditorialSpecSheetProps)
   return (
     <div className="bento-card bento-card-lg p-6 space-y-4 my-6">
       <div className="flex items-center justify-between border-b border-white/10 pb-3">
-        <span className="text-xs font-mono font-bold text-[#FF6600] uppercase tracking-widest">
+        <span className="text-xs font-mono font-bold text-[#FFFFFF] uppercase tracking-widest">
           EDITORIAL SPECIFICATION SHEET
         </span>
         <span className="text-[10px] font-mono text-[#B8EC44] bg-[#B8EC44]/10 border border-[#B8EC44]/30 px-2.5 py-0.5 rounded-full font-bold">
@@ -37,8 +37,8 @@ export default function EditorialSpecSheet({ product }: EditorialSpecSheetProps)
         {specBadges.map((spec, i) => {
           const Icon = spec.icon;
           return (
-            <div key={i} className="bg-[#141414] border border-white/10 p-3.5 rounded-xl space-y-1">
-              <Icon className="w-4 h-4 text-[#FF6600]" />
+            <div key={i} className="bg-[#1F3346] border border-white/10 p-3.5 rounded-xl space-y-1">
+              <Icon className="w-4 h-4 text-[#FFFFFF]" />
               <span className="text-[9px] font-mono font-bold text-neutral-400 uppercase block pt-1">
                 {spec.label}
               </span>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -172,7 +172,7 @@ export default function AccordionCheckoutModal({ isOpen, onClose }: AccordionChe
           }}
         />
       ) : (
-        <div className="fixed inset-0 z-50 bg-[#070707]/90 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-[#142230]/90 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -180,16 +180,16 @@ export default function AccordionCheckoutModal({ isOpen, onClose }: AccordionChe
             className="relative max-w-xl w-full bento-card bento-card-lg shadow-2xl flex flex-col overflow-hidden my-auto border border-white/10"
           >
             {/* Header */}
-            <div className="px-5 py-4 bg-[#0B0B0B] border-b border-white/10 flex items-center justify-between">
+            <div className="px-5 py-4 bg-[#142230] border-b border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Lock className="w-5 h-5 text-[#FF6600]" />
+                <Lock className="w-5 h-5 text-[#FFFFFF]" />
                 <span className="text-xs font-mono font-black text-white uppercase tracking-widest">
                   256-BIT SECURE CHECKOUT
                 </span>
               </div>
               <button
                 onClick={onClose}
-                className="p-1.5 text-neutral-400 hover:text-white bg-[#141414] border border-white/10 rounded-full transition-colors"
+                className="p-1.5 text-neutral-400 hover:text-white bg-[#1F3346] border border-white/10 rounded-full transition-colors"
                 aria-label="Close modal"
               >
                 <X className="w-4 h-4" />
@@ -197,13 +197,13 @@ export default function AccordionCheckoutModal({ isOpen, onClose }: AccordionChe
             </div>
 
             {/* Authentic Visual Trust Badges Bar */}
-            <div className="grid grid-cols-3 gap-2 px-5 py-2.5 bg-[#141414] border-b border-white/10 text-[10px] font-mono text-neutral-300">
+            <div className="grid grid-cols-3 gap-2 px-5 py-2.5 bg-[#1F3346] border-b border-white/10 text-[10px] font-mono text-neutral-300">
               <div className="flex items-center gap-1.5 justify-center">
                 <Lock className="w-3.5 h-3.5 text-[#10B981]" />
                 <span>SSL ENCRYPTED</span>
               </div>
               <div className="flex items-center gap-1.5 justify-center border-x border-white/10">
-                <Truck className="w-3.5 h-3.5 text-[#FF6600]" />
+                <Truck className="w-3.5 h-3.5 text-[#FFFFFF]" />
                 <span>VERIFIED COD</span>
               </div>
               <div className="flex items-center gap-1.5 justify-center">
@@ -220,11 +220,11 @@ export default function AccordionCheckoutModal({ isOpen, onClose }: AccordionChe
               <div className="bento-card overflow-hidden">
                 <button
                   onClick={() => { triggerHaptic(); setActiveSection('SHIPPING'); }}
-                  className="w-full p-4 flex items-center justify-between bg-[#141414] hover:bg-[#1A1A1A] transition-colors text-left"
+                  className="w-full p-4 flex items-center justify-between bg-[#1F3346] hover:bg-[#1F3346] transition-colors text-left"
                 >
                   <div className="flex items-center gap-2">
                     <span className={`w-5 h-5 rounded-full font-mono text-[10px] font-black flex items-center justify-center ${
-                      checkShippingValid() ? 'bg-[#10B981] text-black' : 'bg-[#FF6600] text-black'
+                      checkShippingValid() ? 'bg-[#10B981] text-black' : 'bg-[#FFFFFF] text-black'
                     }`}>
                       1
                     </span>
@@ -253,7 +253,7 @@ export default function AccordionCheckoutModal({ isOpen, onClose }: AccordionChe
                             type="text"
                             value={firstName}
                             onChange={(e) => setFirstName(e.target.value)}
-                            className="w-full bg-[#070707] text-white p-2.5 text-xs font-mono border border-white/10 focus:border-[#FF6600] rounded-xl outline-none"
+                            className="w-full bg-[#142230] text-white p-2.5 text-xs font-mono border border-white/10 focus:border-[#FFFFFF] rounded-xl outline-none"
                           />
                           {errors.firstName && <span className="text-[9px] text-[#EF4444] font-mono">{errors.firstName}</span>}
                         </div>
@@ -265,7 +265,7 @@ export default function AccordionCheckoutModal({ isOpen, onClose }: AccordionChe
                             type="text"
                             value={lastName}
                             onChange={(e) => setLastName(e.target.value)}
-                            className="w-full bg-[#070707] text-white p-2.5 text-xs font-mono border border-white/10 focus:border-[#FF6600] rounded-xl outline-none"
+                            className="w-full bg-[#142230] text-white p-2.5 text-xs font-mono border border-white/10 focus:border-[#FFFFFF] rounded-xl outline-none"
                           />
                           {errors.lastName && <span className="text-[9px] text-[#EF4444] font-mono">{errors.lastName}</span>}
                         </div>
@@ -279,7 +279,7 @@ export default function AccordionCheckoutModal({ isOpen, onClose }: AccordionChe
                           type="email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="w-full bg-[#070707] text-white p-2.5 text-xs font-mono border border-white/10 focus:border-[#FF6600] rounded-xl outline-none"
+                          className="w-full bg-[#142230] text-white p-2.5 text-xs font-mono border border-white/10 focus:border-[#FFFFFF] rounded-xl outline-none"
                         />
                         {errors.email && <span className="text-[9px] text-[#EF4444] font-mono">{errors.email}</span>}
                       </div>
@@ -293,7 +293,7 @@ export default function AccordionCheckoutModal({ isOpen, onClose }: AccordionChe
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                           placeholder="03001234567"
-                          className="w-full bg-[#070707] text-white p-2.5 text-xs font-mono border border-white/10 focus:border-[#FF6600] rounded-xl outline-none"
+                          className="w-full bg-[#142230] text-white p-2.5 text-xs font-mono border border-white/10 focus:border-[#FFFFFF] rounded-xl outline-none"
                         />
                         {errors.phone && <span className="text-[9px] text-[#EF4444] font-mono">{errors.phone}</span>}
                       </div>
@@ -306,7 +306,7 @@ export default function AccordionCheckoutModal({ isOpen, onClose }: AccordionChe
 
                       <button
                         onClick={handleShippingSubmit}
-                        className="w-full bg-[#FF6600] text-black hover:bg-[#E05800] py-3 text-xs font-mono font-black uppercase rounded-xl flex items-center justify-center gap-1.5 tactile-press pt-2"
+                        className="w-full bg-[#FFFFFF] text-black hover:bg-[#F4F1E8] py-3 text-xs font-mono font-black uppercase rounded-xl flex items-center justify-center gap-1.5 tactile-press pt-2"
                       >
                         <span>CONFIRM SHIPPING & CONTINUE</span>
                         <ArrowRight className="w-4 h-4" />
@@ -320,10 +320,10 @@ export default function AccordionCheckoutModal({ isOpen, onClose }: AccordionChe
               <div className="bento-card overflow-hidden">
                 <button
                   onClick={() => { triggerHaptic(); setActiveSection('REVIEW'); }}
-                  className="w-full p-4 flex items-center justify-between bg-[#141414] hover:bg-[#1A1A1A] transition-colors text-left"
+                  className="w-full p-4 flex items-center justify-between bg-[#1F3346] hover:bg-[#1F3346] transition-colors text-left"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-[#FF6600] font-mono text-[10px] font-black text-black flex items-center justify-center">
+                    <span className="w-5 h-5 rounded-full bg-[#FFFFFF] font-mono text-[10px] font-black text-black flex items-center justify-center">
                       2
                     </span>
                     <span className="text-xs font-mono font-black text-white uppercase tracking-wider">
@@ -343,7 +343,7 @@ export default function AccordionCheckoutModal({ isOpen, onClose }: AccordionChe
                       className="p-4 space-y-4 font-mono text-xs border-t border-white/10"
                     >
                       {/* Cash on Delivery Policy Indicator */}
-                      <div className="bg-[#141414] border border-[#B8EC44]/40 p-3.5 rounded-xl flex items-center gap-3">
+                      <div className="bg-[#1F3346] border border-[#B8EC44]/40 p-3.5 rounded-xl flex items-center gap-3">
                         <Truck className="w-5 h-5 text-[#B8EC44] shrink-0" />
                         <div>
                           <h4 className="text-[11px] font-black text-white uppercase">
@@ -355,7 +355,7 @@ export default function AccordionCheckoutModal({ isOpen, onClose }: AccordionChe
                         </div>
                       </div>
 
-                      <div className="bg-[#141414] p-3 rounded-xl space-y-1">
+                      <div className="bg-[#1F3346] p-3 rounded-xl space-y-1">
                         <span className="text-[9px] text-[#B8EC44] font-bold uppercase">RECIPIENT DESTINATION</span>
                         <p className="text-white font-bold uppercase">{firstName} {lastName} ({phone})</p>
                         <p className="text-neutral-400">{address}, {city}, {stateName}</p>
@@ -372,7 +372,7 @@ export default function AccordionCheckoutModal({ isOpen, onClose }: AccordionChe
                             value={couponCode}
                             onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                             placeholder="TACTICAL10"
-                            className="flex-1 bg-[#070707] text-white p-2.5 text-xs font-mono border border-white/10 rounded-xl outline-none uppercase"
+                            className="flex-1 bg-[#142230] text-white p-2.5 text-xs font-mono border border-white/10 rounded-xl outline-none uppercase"
                           />
                           <button
                             onClick={handleApplyCoupon}
@@ -409,7 +409,7 @@ export default function AccordionCheckoutModal({ isOpen, onClose }: AccordionChe
                           <span>SHIPPING</span>
                           <span>{shippingCost === 0 ? 'FREE' : `Rs. ${shippingCost}`}</span>
                         </div>
-                        <div className="flex justify-between text-base font-black text-[#FF6600] pt-2 border-t border-white/10">
+                        <div className="flex justify-between text-base font-black text-[#FFFFFF] pt-2 border-t border-white/10">
                           <span>GRAND TOTAL</span>
                           <span>Rs. {total.toLocaleString()}</span>
                         </div>
@@ -418,7 +418,7 @@ export default function AccordionCheckoutModal({ isOpen, onClose }: AccordionChe
                       <button
                         onClick={handleSubmitOrder}
                         disabled={submitting}
-                        className="w-full bg-[#FF6600] text-black hover:bg-[#E05800] py-3.5 text-xs font-mono font-black uppercase rounded-xl flex items-center justify-center gap-2 tactile-press shadow-[0_0_20px_rgba(255,102,0,0.6)] disabled:opacity-60"
+                        className="w-full bg-[#FFFFFF] text-black hover:bg-[#F4F1E8] py-3.5 text-xs font-mono font-black uppercase rounded-xl flex items-center justify-center gap-2 tactile-press shadow-[0_0_20px_rgba(255,102,0,0.6)] disabled:opacity-60"
                       >
                         <ShieldCheck className="w-4 h-4" />
                         <span>{submitting ? 'DISPATCHING...' : 'CONFIRM COD DISPATCH'}</span>
