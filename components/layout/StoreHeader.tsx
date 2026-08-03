@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useSyncExternalStore } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { useSpatialMotion } from '@/components/motion/SpatialMotionProvider';
-import { Search, Heart, ShoppingBag, LayoutDashboard, Menu, X, Shield, LogIn, User } from 'lucide-react';
+import { Search, Heart, ShoppingBag, LayoutDashboard, Menu, X, LogIn, User } from 'lucide-react';
 import type { StoreUserDto } from '@/lib/catalog-types';
 import { getUserProfile } from '@/lib/client-services';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -49,10 +50,17 @@ export default function StoreHeader() {
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Brand Logo with Square Shield Icon */}
+          {/* Brand Logo with logo.png */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 bg-[#FFFFFF] flex items-center justify-center text-[#142230] rounded-none shadow-sm">
-              <Shield className="w-5 h-5 fill-[#142230] stroke-[#142230]" />
+            <div className="w-9 h-9 bg-white flex items-center justify-center rounded-none shadow-sm overflow-hidden p-0.5 border border-[#33506B]">
+              <Image
+                src="/logo.png"
+                alt="Tactical Hub Logo"
+                width={36}
+                height={36}
+                className="w-full h-full object-contain"
+                priority
+              />
             </div>
             <div className="flex flex-col">
               <span className="text-base sm:text-lg font-black uppercase tracking-wider text-[#FFFFFF] group-hover:text-[#F4F1E8] transition-colors">
@@ -171,7 +179,15 @@ export default function StoreHeader() {
           <div className="fixed inset-y-0 left-0 w-[min(320px,85vw)] bg-[#1F3346] border-r border-[#33506B] shadow-2xl flex flex-col z-50 animate-slide-right rounded-none">
             <div className="px-4 py-3 border-b border-[#33506B] flex items-center justify-between bg-[#142230] text-[#FFFFFF] shrink-0 rounded-none">
               <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-[#FFFFFF]" />
+                <div className="w-6 h-6 bg-white flex items-center justify-center rounded-none overflow-hidden p-0.5 border border-[#33506B]">
+                  <Image
+                    src="/logo.png"
+                    alt="Tactical Hub Logo"
+                    width={24}
+                    height={24}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
                 <span className="font-extrabold tracking-wider text-sm uppercase text-[#FFFFFF]">TACTICAL HUB</span>
               </div>
               <button

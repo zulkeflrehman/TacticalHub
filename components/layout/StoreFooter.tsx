@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useToastStore } from '@/lib/toast-store';
 import { Mail, ShieldCheck } from 'lucide-react';
@@ -56,8 +57,19 @@ export default function StoreFooter() {
           
           {/* Brand Info */}
           <div className="space-y-4">
-            <Link href="/" className="text-xl font-black uppercase tracking-tighter text-brand-white">
-              TECTICAL<span className="text-brand-accent">HUB</span>
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="w-8 h-8 bg-white flex items-center justify-center rounded-none overflow-hidden p-0.5 border border-[#33506B]">
+                <Image
+                  src="/logo.png"
+                  alt="Tactical Hub Logo"
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <span className="text-xl font-black uppercase tracking-tighter text-brand-white">
+                TACTICAL<span className="text-brand-accent">HUB</span>
+              </span>
             </Link>
             <p className="text-xs text-brand-white/70 leading-relaxed font-medium">
               Independent outdoor and tactical equipment storefront serving customers across Pakistan.
