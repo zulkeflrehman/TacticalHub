@@ -7,8 +7,9 @@ import type { CategoryDto, ProductDto } from '@/lib/catalog-types';
 import HeroCinematic from '@/components/home/HeroCinematic';
 import BentoGridCategories from '@/components/home/BentoGridCategories';
 import FluidCarousel from '@/components/home/FluidCarousel';
+import ProductCard from '@/components/product/ProductCard';
 import { HeroShowcaseSkeleton, ProductCardSkeleton } from '@/components/ui/SkeletonLoader';
-import { ShieldCheck, Compass, Anchor, Target } from 'lucide-react';
+import { ShieldCheck, Compass, Anchor, Target, Package } from 'lucide-react';
 
 export default function HomePage() {
   const [products, setProducts] = useState<ProductDto[]>([]);
@@ -40,7 +41,7 @@ export default function HomePage() {
       )}
 
       {/* Feature Badges Grid */}
-      <section id="products" className="scroll-mt-20 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 py-2">
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 py-2">
         {[
           { icon: ShieldCheck, title: "MILITARY SPEC", desc: "Extreme outdoor durability" },
           { icon: Compass, title: "TERRAIN READY", desc: "Tested in rugged environments" },
@@ -57,18 +58,45 @@ export default function HomePage() {
         ))}
       </section>
 
+      {/* All Products Section - Direct scroll target for "Shop Now" */}
+      <section id="products" className="scroll-mt-20 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-[#33506B] pb-4">
+          <div>
+            <span className="text-[10px] font-mono font-bold text-[#A0B1C5] uppercase tracking-widest block">
+              STORE CATALOGUE
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black uppercase text-white tracking-tight flex items-center gap-2">
+              <Package className="w-6 h-6 text-[#FFFFFF]" />
+              ALL PRODUCTS
+            </h2>
+          </div>
+          <span className="text-xs font-mono font-bold bg-[#1F3346] border border-[#33506B] text-[#FFFFFF] px-3 py-1.5 w-fit rounded-none">
+            {products.length} {products.length === 1 ? 'ITEM' : 'ITEMS'} AVAILABLE
+          </span>
+        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+            <ProductCardSkeleton />
+            <ProductCardSkeleton />
+            <ProductCardSkeleton />
+            <ProductCardSkeleton />
+          </div>
+        ) : products.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <div className="bento-card p-8 text-center text-xs font-mono text-[#A0B1C5]">
+            No products found in the catalog.
+          </div>
+        )}
+      </section>
+
       {/* Editorial Bento Box Categories */}
       <BentoGridCategories categories={categories} />
-
-      {/* Loading Skeletons */}
-      {loading && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <ProductCardSkeleton />
-          <ProductCardSkeleton />
-          <ProductCardSkeleton />
-          <ProductCardSkeleton />
-        </div>
-      )}
 
       {error && (
         <div className="bento-card border-red-500/40 bg-red-950/20 p-4 text-center text-xs font-mono font-bold text-red-400">
