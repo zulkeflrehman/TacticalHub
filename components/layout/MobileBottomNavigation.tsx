@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useStore } from '@/lib/store';
-import { Home, LayoutGrid, Tag, ShoppingBag, User } from 'lucide-react';
+import { Home, LayoutGrid, Package, ShoppingBag, User } from 'lucide-react';
 
 const emptySubscribe = () => () => {};
 const useIsMounted = () => useSyncExternalStore(emptySubscribe, () => true, () => false);
@@ -35,9 +35,9 @@ export default function MobileBottomNavigation() {
       href: '/categories',
     },
     {
-      name: 'Deals',
-      icon: Tag,
-      href: '/categories?slug=deals',
+      name: 'Products',
+      icon: Package,
+      href: '/products',
     },
     {
       name: 'Cart',

@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { useSpatialMotion } from '@/components/motion/SpatialMotionProvider';
-import { Search, Heart, ShoppingBag, LayoutDashboard, Menu, X, LogIn, User } from 'lucide-react';
+import { Search, Heart, ShoppingBag, LayoutDashboard, Menu, X, LogIn, User, Package } from 'lucide-react';
 import type { StoreUserDto } from '@/lib/catalog-types';
 import { getUserProfile } from '@/lib/client-services';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -206,6 +206,16 @@ export default function StoreHeader() {
 
             <nav aria-label="Mobile navigation" className="flex-1 overflow-y-auto">
               <div className="px-2 py-2 space-y-1">
+                {/* Products quick link */}
+                <Link
+                  href="/products"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-3 text-xs font-black uppercase tracking-wider bg-[#FFFFFF] text-[#142230] hover:bg-[#F4F1E8] border border-transparent rounded-none transition-colors mb-2"
+                >
+                  <Package className="w-4 h-4" />
+                  All Products
+                </Link>
+
                 <p className="px-3 pt-3 pb-1 text-[10px] font-mono font-black uppercase tracking-widest text-[#A0B1C5]">
                   Categories
                 </p>
