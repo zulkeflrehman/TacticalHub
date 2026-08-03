@@ -2,8 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ReviewRatingDistribution from './ReviewRatingDistribution';
-import { ChevronDown, ShieldCheck, Ruler, MessageSquare, CheckCircle, Truck } from 'lucide-react';
+import { ChevronDown, ShieldCheck, Ruler, Truck } from 'lucide-react';
 
 interface ProductAccordionsProps {
   product: {
@@ -14,9 +13,9 @@ interface ProductAccordionsProps {
 }
 
 export default function ProductAccordions({ product }: ProductAccordionsProps) {
-  const [openSection, setOpenSection] = useState<'SPECS' | 'DURABILITY' | 'REVIEWS' | null>('SPECS');
+  const [openSection, setOpenSection] = useState<'SPECS' | 'DURABILITY' | 'SHIPPING' | null>('SPECS');
 
-  const toggleSection = (section: 'SPECS' | 'DURABILITY' | 'REVIEWS') => {
+  const toggleSection = (section: 'SPECS' | 'DURABILITY' | 'SHIPPING') => {
     setOpenSection((prev) => (prev === section ? null : section));
   };
 
@@ -85,33 +84,24 @@ export default function ProductAccordions({ product }: ProductAccordionsProps) {
       ),
     },
     {
-      id: 'REVIEWS' as const,
-      title: 'SHIPPING & FIELD REVIEWS',
-      icon: MessageSquare,
+      id: 'SHIPPING' as const,
+      title: 'SHIPPING & DELIVERY',
+      icon: Truck,
       content: (
-        <div className="space-y-4">
+        <div className="space-y-3 text-xs font-mono text-[#A0B1C5]">
           <div className="flex items-center gap-2 p-3 bg-[#142230] border border-[#33506B] text-xs font-mono text-[#10B981] font-bold rounded-none">
             <Truck className="w-4 h-4 shrink-0" />
             <span>NATIONWIDE EXPRESS SHIPPING (2-4 BUSINESS DAYS)</span>
           </div>
-
-          <ReviewRatingDistribution />
-
-          <div className="space-y-2">
-            {[
-              { author: 'Major R. Malik', text: 'Used in northern mountain deployment. Exceptional build quality and waterproof sealing.', date: '2 DAYS AGO' },
-              { author: 'Captain Tariq A.', text: 'Fast delivery across Lahore. Product matched the exact tactical specifications.', date: '1 WEEK AGO' },
-            ].map((rev, idx) => (
-              <div key={idx} className="bg-[#142230] border border-[#33506B] p-3 rounded-none space-y-1">
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="font-bold text-[#FFFFFF] flex items-center gap-1">
-                    <CheckCircle className="w-3.5 h-3.5 text-[#10B981]" /> {rev.author}
-                  </span>
-                  <span className="text-[9px] text-[#A0B1C5]">{rev.date}</span>
-                </div>
-                <p className="text-xs text-[#A0B1C5] font-sans">{rev.text}</p>
-              </div>
-            ))}
+          <div className="grid grid-cols-1 gap-2">
+            <div className="bg-[#142230] p-2.5 border border-[#33506B] rounded-none">
+              <span className="text-[9px] text-[#A0B1C5] block uppercase font-bold mb-1">CASH ON DELIVERY</span>
+              <span className="font-bold text-[#FFFFFF] text-xs">Available across all major cities in Pakistan</span>
+            </div>
+            <div className="bg-[#142230] p-2.5 border border-[#33506B] rounded-none">
+              <span className="text-[9px] text-[#A0B1C5] block uppercase font-bold mb-1">RETURNS</span>
+              <span className="font-bold text-[#FFFFFF] text-xs">7-day return policy on unopened items</span>
+            </div>
           </div>
         </div>
       ),
