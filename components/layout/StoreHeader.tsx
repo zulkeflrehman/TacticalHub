@@ -50,20 +50,20 @@ export default function StoreHeader() {
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Brand Logo with logo.png */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 bg-white flex items-center justify-center rounded-none shadow-sm overflow-hidden p-0.5 border border-[#33506B]">
+          {/* Brand Logo with zoomed logo.png */}
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 bg-white flex items-center justify-center rounded-none shadow-sm overflow-hidden border border-[#33506B] shrink-0">
               <Image
                 src="/logo.png"
                 alt="Tactical Hub Logo"
-                width={36}
-                height={36}
-                className="w-full h-full object-contain"
+                width={52}
+                height={52}
+                className="w-full h-full object-cover scale-[1.35] transition-transform duration-300 group-hover:scale-[1.45]"
                 priority
               />
             </div>
-            <div className="flex flex-col">
-              <span className="text-base sm:text-lg font-black uppercase tracking-wider text-[#FFFFFF] group-hover:text-[#F4F1E8] transition-colors">
+            <div className="flex flex-col justify-center">
+              <span className="text-base sm:text-xl font-black uppercase tracking-wider text-[#FFFFFF] group-hover:text-[#F4F1E8] transition-colors leading-tight">
                 TACTICAL <span className="text-[#FFFFFF]">HUB</span>
               </span>
             </div>
@@ -179,13 +179,13 @@ export default function StoreHeader() {
           <div className="fixed inset-y-0 left-0 w-[min(320px,85vw)] bg-[#1F3346] border-r border-[#33506B] shadow-2xl flex flex-col z-50 animate-slide-right rounded-none">
             <div className="px-4 py-3 border-b border-[#33506B] flex items-center justify-between bg-[#142230] text-[#FFFFFF] shrink-0 rounded-none">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-white flex items-center justify-center rounded-none overflow-hidden p-0.5 border border-[#33506B]">
+                <div className="w-8 h-8 bg-white flex items-center justify-center rounded-none overflow-hidden border border-[#33506B] shrink-0">
                   <Image
                     src="/logo.png"
                     alt="Tactical Hub Logo"
-                    width={24}
-                    height={24}
-                    className="w-full h-full object-contain"
+                    width={36}
+                    height={36}
+                    className="w-full h-full object-cover scale-[1.35]"
                   />
                 </div>
                 <span className="font-extrabold tracking-wider text-sm uppercase text-[#FFFFFF]">TACTICAL HUB</span>

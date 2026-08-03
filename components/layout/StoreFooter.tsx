@@ -57,14 +57,14 @@ export default function StoreFooter() {
           
           {/* Brand Info */}
           <div className="space-y-4">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 bg-white flex items-center justify-center rounded-none overflow-hidden p-0.5 border border-[#33506B]">
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <div className="w-10 h-10 bg-white flex items-center justify-center rounded-none overflow-hidden border border-[#33506B] shrink-0">
                 <Image
                   src="/logo.png"
                   alt="Tactical Hub Logo"
-                  width={32}
-                  height={32}
-                  className="w-full h-full object-contain"
+                  width={44}
+                  height={44}
+                  className="w-full h-full object-cover scale-[1.35]"
                 />
               </div>
               <span className="text-xl font-black uppercase tracking-tighter text-brand-white">
