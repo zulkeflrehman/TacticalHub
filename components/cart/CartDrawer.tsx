@@ -63,7 +63,7 @@ export default function CartDrawer() {
       />
 
       {/* Slide-Up / Right Drawer Panel */}
-      <div className="absolute inset-y-0 right-0 flex w-full max-w-lg flex-col bg-[#1F3346] border-l border-[#33506B] shadow-2xl animate-slide-left rounded-none">
+      <div className="absolute inset-y-0 right-0 flex w-[min(340px,88vw)] max-w-full flex-col bg-[#1F3346] border-l border-[#33506B] shadow-2xl animate-slide-left rounded-none">
         {/* Header */}
         <div className="flex shrink-0 items-center justify-between bg-[#142230] px-4 py-3.5 border-b border-[#33506B] rounded-none">
           <div className="flex items-center gap-2">

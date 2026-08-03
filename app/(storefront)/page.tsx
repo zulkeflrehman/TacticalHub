@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -40,7 +40,7 @@ export default function HomePage() {
       )}
 
       {/* Feature Badges Grid */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 py-2">
+      <section id="products" className="scroll-mt-20 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 py-2">
         {[
           { icon: ShieldCheck, title: "MILITARY SPEC", desc: "Extreme outdoor durability" },
           { icon: Compass, title: "TERRAIN READY", desc: "Tested in rugged environments" },

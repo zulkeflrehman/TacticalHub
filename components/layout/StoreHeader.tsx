@@ -59,58 +59,53 @@ export default function StoreHeader() {
           </button>
 
           {/* Brand Logo with circular logo.png */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 bg-white flex items-center justify-center !rounded-full shadow-sm overflow-hidden border border-[#33506B] shrink-0">
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-white flex items-center justify-center !rounded-full shadow-sm overflow-hidden border border-[#33506B]/60 shrink-0">
               <Image
                 src="/logo.png"
                 alt="Tactical Hub Logo"
-                width={52}
-                height={52}
+                width={40}
+                height={40}
                 className="w-full h-full object-cover scale-[1.35] transition-transform duration-300 group-hover:scale-[1.45] !rounded-full"
                 priority
               />
             </div>
             <div className="flex flex-col justify-center">
-              <span className="text-base sm:text-xl font-black uppercase tracking-wider text-[#FFFFFF] group-hover:text-[#F4F1E8] transition-colors leading-tight">
+              <span className="text-sm sm:text-base font-extrabold uppercase tracking-wider text-[#FFFFFF] group-hover:text-[#F4F1E8] transition-colors leading-tight">
                 TACTICAL <span className="text-[#FFFFFF]">HUB</span>
               </span>
             </div>
           </Link>
         </div>
 
-        {/* Omnisearch Trigger Bar (Desktop) */}
+        {/* Borderless Narrow Omnisearch Trigger Bar (Desktop) */}
         <button
           onClick={() => setOmnisearchOpen(true)}
-          className="flex-1 max-w-md hidden sm:flex items-center justify-between bg-[#142230] border border-[#33506B] hover:border-[#FFFFFF] py-2 px-3 text-xs text-[#A0B1C5] rounded-none transition-all group"
+          className="max-w-[220px] hidden sm:flex items-center gap-2 bg-transparent text-[11px] text-[#A0B1C5] hover:text-[#FFFFFF] py-1.5 px-2 rounded-none transition-colors group cursor-pointer"
         >
-          <div className="flex items-center gap-2">
-            <Search className="w-4 h-4 text-[#FFFFFF] group-hover:scale-110 transition-transform" />
-            <span>Search tactical gear, knives, optics...</span>
-          </div>
-          <span className="text-[9px] font-mono bg-[#1F3346] px-2 py-0.5 text-[#FFFFFF] border border-[#33506B] rounded-none">
-            SEARCH
-          </span>
+          <Search className="w-3.5 h-3.5 text-[#A0B1C5] group-hover:text-[#FFFFFF] group-hover:scale-110 transition-all shrink-0" />
+          <span className="truncate">Search products...</span>
         </button>
 
         {/* Header Right Action Buttons */}
-        <div suppressHydrationWarning className="flex items-center gap-2">
-          {/* Square Search Button (Mobile) */}
+        <div suppressHydrationWarning className="flex items-center gap-1.5">
+          {/* Borderless Search Icon Button (Mobile) */}
           <button
             onClick={() => setOmnisearchOpen(true)}
-            className="sm:hidden p-2 text-[#FFFFFF] hover:bg-[#142230] border border-[#33506B] rounded-none transition-colors touch-target flex items-center justify-center"
+            className="sm:hidden p-1.5 text-[#A0B1C5] hover:text-[#FFFFFF] transition-colors touch-target flex items-center justify-center"
             aria-label="Search catalog"
           >
-            <Search className="w-5 h-5" />
+            <Search className="w-4 h-4" />
           </button>
 
           {/* Admin Dashboard Link */}
           {sessionUser?.role === 'ADMIN' && (
             <Link 
               href="/admin/dashboard" 
-              className="p-2 bg-[#142230] border border-[#33506B] text-[#FFFFFF] hover:bg-[#FFFFFF] hover:text-[#142230] transition-colors flex items-center gap-1 text-xs font-mono font-bold rounded-none"
+              className="p-1.5 sm:px-2 bg-[#142230] border border-[#33506B] text-[#FFFFFF] hover:bg-[#FFFFFF] hover:text-[#142230] transition-colors flex items-center gap-1 text-[11px] font-mono font-bold rounded-none"
               title="Admin Dashboard"
             >
-              <LayoutDashboard className="w-4 h-4" />
+              <LayoutDashboard className="w-3.5 h-3.5" />
               <span className="hidden md:inline">ADMIN</span>
             </Link>
           )}
@@ -118,13 +113,13 @@ export default function StoreHeader() {
           {/* Wishlist Link */}
           <Link
             href="/wishlist"
-            className="p-2 text-[#A0B1C5] hover:text-[#FFFFFF] hover:bg-[#142230] border border-[#33506B] rounded-none transition-colors relative"
+            className="p-1.5 text-[#A0B1C5] hover:text-[#FFFFFF] border border-[#33506B] rounded-none transition-colors relative"
             title="My Wishlist"
             aria-label="Wishlist"
           >
-            <Heart className="w-5 h-5" />
+            <Heart className="w-4 h-4" />
             {wishlistCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#FFFFFF] text-[#142230] text-[9px] font-mono font-black flex items-center justify-center rounded-none border border-[#33506B]">
+              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[#FFFFFF] text-[#142230] text-[8px] font-mono font-black flex items-center justify-center rounded-none border border-[#33506B]">
                 {wishlistCount}
               </span>
             )}
@@ -134,21 +129,21 @@ export default function StoreHeader() {
           {sessionUser ? (
             <Link
               href="/account/profile"
-              className="h-9 px-3 bg-[#142230] border border-[#33506B] text-[#A0B1C5] hover:text-[#FFFFFF] hover:border-[#FFFFFF] transition-colors flex items-center gap-1.5 font-mono text-xs font-bold rounded-none"
+              className="h-8 px-2.5 bg-[#142230] border border-[#33506B] text-[#A0B1C5] hover:text-[#FFFFFF] hover:border-[#FFFFFF] transition-colors flex items-center gap-1.5 font-mono text-[11px] font-bold rounded-none"
               title="My Account"
               aria-label="Account profile"
             >
-              <User className="w-4 h-4" />
+              <User className="w-3.5 h-3.5" />
               <span className="hidden sm:inline uppercase">ACCOUNT</span>
             </Link>
           ) : (
             <Link
               href="/account/login"
-              className="h-9 px-3 bg-[#142230] border border-[#33506B] text-[#FFFFFF] hover:bg-[#FFFFFF] hover:text-[#142230] transition-colors flex items-center gap-1.5 font-mono text-xs font-bold rounded-none active:scale-[0.98]"
+              className="h-8 px-2.5 bg-[#142230] border border-[#33506B] text-[#FFFFFF] hover:bg-[#FFFFFF] hover:text-[#142230] transition-colors flex items-center gap-1.5 font-mono text-[11px] font-bold rounded-none active:scale-[0.98]"
               title="Login"
               aria-label="Login to your account"
             >
-              <LogIn className="w-4 h-4" />
+              <LogIn className="w-3.5 h-3.5" />
               <span className="hidden sm:inline uppercase">LOGIN</span>
             </Link>
           )}
@@ -157,20 +152,20 @@ export default function StoreHeader() {
           <button
             onClick={() => toggleMiniCart(true)}
             data-testid="cart-button"
-            className="h-9 px-3 bg-[#FFFFFF] text-[#142230] hover:bg-[#F4F1E8] transition-colors relative flex items-center gap-2 font-mono text-xs font-bold rounded-none border border-[#FFFFFF] active:scale-[0.98]"
+            className="h-8 px-2.5 bg-[#FFFFFF] text-[#142230] hover:bg-[#F4F1E8] transition-colors relative flex items-center gap-1.5 font-mono text-[11px] font-bold rounded-none border border-[#FFFFFF] active:scale-[0.98]"
             title="Shopping Cart"
             aria-label={`Shopping cart, ${totalCartItems} items`}
           >
-            <ShoppingBag className="w-4 h-4 text-[#142230]" />
-            <span className="hidden sm:inline font-sans text-xs uppercase font-extrabold text-[#142230]">CART</span>
-            <span className="w-5 h-5 bg-[#142230] text-[#FFFFFF] text-[10px] font-mono font-black flex items-center justify-center rounded-none">
+            <ShoppingBag className="w-3.5 h-3.5 text-[#142230]" />
+            <span className="hidden sm:inline font-sans text-[11px] uppercase font-extrabold text-[#142230]">CART</span>
+            <span className="w-4 h-4 bg-[#142230] text-[#FFFFFF] text-[9px] font-mono font-black flex items-center justify-center rounded-none">
               {totalCartItems}
             </span>
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay - Narrow & Mobile Friendly */}
       {isMobileMenuOpen && (
         <div
           id="mobile-nav-drawer"
@@ -184,38 +179,36 @@ export default function StoreHeader() {
             onClick={() => setIsMobileMenuOpen(false)}
             aria-hidden="true"
           />
-          <div className="fixed inset-y-0 left-0 w-[min(320px,85vw)] bg-[#1F3346] border-r border-[#33506B] shadow-2xl flex flex-col z-50 animate-slide-right rounded-none">
-            <div className="px-4 py-3 border-b border-[#33506B] flex items-center justify-between bg-[#142230] text-[#FFFFFF] shrink-0 rounded-none">
+          <div className="fixed inset-y-0 left-0 w-[260px] sm:w-[270px] bg-[#1F3346] border-r border-[#33506B] shadow-2xl flex flex-col z-50 animate-slide-right rounded-none">
+            <div className="px-3 py-2.5 border-b border-[#33506B] flex items-center justify-between bg-[#142230] text-[#FFFFFF] shrink-0 rounded-none">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-white flex items-center justify-center !rounded-full overflow-hidden border border-[#33506B] shrink-0">
+                <div className="w-7 h-7 bg-white flex items-center justify-center !rounded-full overflow-hidden border border-[#33506B] shrink-0">
                   <Image
                     src="/logo.png"
                     alt="Tactical Hub Logo"
-                    width={36}
-                    height={36}
+                    width={32}
+                    height={32}
                     className="w-full h-full object-cover scale-[1.35] !rounded-full"
                   />
                 </div>
-                <span className="font-extrabold tracking-wider text-sm uppercase text-[#FFFFFF]">TACTICAL HUB</span>
+                <span className="font-extrabold tracking-wider text-xs uppercase text-[#FFFFFF]">TACTICAL HUB</span>
               </div>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
                 aria-label="Close navigation menu"
-                className="text-[#A0B1C5] hover:text-[#FFFFFF] p-2 rounded-none"
+                className="text-[#A0B1C5] hover:text-[#FFFFFF] p-1.5 rounded-none"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="px-4 py-3 border-b border-[#33506B] shrink-0">
+            <div className="px-3 py-2 border-b border-[#33506B] shrink-0">
               <button
                 onClick={() => { setIsMobileMenuOpen(false); setOmnisearchOpen(true); }}
-                className="w-full flex items-center justify-between bg-[#142230] border border-[#33506B] py-2.5 px-3 text-xs text-[#A0B1C5] rounded-none"
+                className="w-full flex items-center gap-2 bg-[#142230] border border-[#33506B] py-2 px-2.5 text-xs text-[#A0B1C5] rounded-none"
               >
-                <div className="flex items-center gap-2">
-                  <Search className="w-4 h-4 text-[#FFFFFF]" />
-                  <span>Search products...</span>
-                </div>
+                <Search className="w-3.5 h-3.5 text-[#FFFFFF]" />
+                <span>Search products...</span>
               </button>
             </div>
 
